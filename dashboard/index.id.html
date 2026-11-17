@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CNN CIFAR-10: penjelajah optimizer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22%3E%3Crect width=%2220%22 height=%2220%22 rx=%224%22 fill=%22%232563EB%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Design read: model-inspection tool for a statistics student and lecturer, calm instrument style
+   (Lingua navy rail + CNN Explainer flow canvas). Dials ENERGY 2 / RHYTHM 2 / MOTION 1.
+   Reasons: navy rail = stable navigation anchor from the Lingua reference; one blue accent = activation strength
+   and selection, nothing else; green/red only for the cocok / tidak cocok verdict; Inter for dense numeric UI
+   with tabular figures; shadow only on the flow canvas (the focal element) and the detail panel above it. */
+:root{
+  --rail:#13213C; --rail-ink:#E7ECF5; --rail-muted:#B7C2D6;
+  --canvas:#F3F5F9; --surface:#FFFFFF; --sunken:#EEF1F6; --line:#DCE2EB; --link:#C9D2DF;
+  --ink:#0F172A; --muted:#475467; --accent:#2563EB; --accent-soft:#E6EEFE;
+  --ok:#15803D; --ok-soft:#E3F4E8; --bad:#B42318; --bad-soft:#FBE7E5;
+  --map0:#F8FAFC; --map1:#93C5FD; --map2:#1E3A8A;
+  --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.07);
+  --r-panel:14px; --r-tile:8px; --r-chip:6px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --rail:#0A1222; --rail-ink:#E7ECF5; --rail-muted:#A9B5CA;
+  --canvas:#0E1626; --surface:#16213A; --sunken:#1C2945; --line:#2A3A5C; --link:#33456B;
+  --ink:#E8ECF4; --muted:#A8B3C7; --accent:#6EA0FF; --accent-soft:#1E3260;
+  --ok:#4ADE80; --ok-soft:#173A28; --bad:#FF8A7A; --bad-soft:#47201C;
+  --map0:#16213A; --map1:#3B6FD9; --map2:#DCE8FF;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--canvas);color:var(--ink);
+  font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+h1,h2,h3{margin:0;line-height:1.2;letter-spacing:-.01em}
+p{margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* layout */
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.rail{background:var(--rail);color:var(--rail-ink);position:sticky;top:0;height:100vh;padding:24px 16px;display:flex;flex-direction:column;gap:28px}
+.brand{display:flex;gap:12px;align-items:center;padding:0 8px}
+.brand-mark{width:36px;height:36px;border-radius:10px;background:var(--accent);display:grid;place-items:center;flex:none}
+.brand-mark svg{display:block}
+.brand b{display:block;font-size:15px}
+.brand span{font-size:13px;color:var(--rail-muted)}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a{color:var(--rail-ink);text-decoration:none;padding:10px 12px;border-radius:var(--r-tile);display:flex;gap:10px;align-items:center;min-height:44px;font-weight:500}
+.nav a:hover{background:rgba(255,255,255,.07)}
+.nav a.on{background:rgba(255,255,255,.12)}
+.nav svg{flex:none;opacity:.85}
+.rail-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--rail-muted)}
+.theme-btn{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--rail-ink);
+  border-radius:var(--r-tile);padding:10px 12px;min-height:44px;cursor:pointer;text-align:left}
+.theme-btn:hover{background:rgba(255,255,255,.13)}
+.rail :focus-visible{outline-color:#9DBBFF}
+
+main{padding:28px 32px 64px;display:flex;flex-direction:column;gap:40px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel)}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.sec-head h2{font-size:24px}
+.sec-head p{color:var(--muted);max-width:68ch;margin-top:6px}
+
+/* header */
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end}
+.top h1{font-size:30px;font-weight:700}
+.top p{color:var(--muted);margin-top:8px;max-width:64ch}
+.facts{display:flex;gap:28px;margin:0}
+.facts div{display:flex;flex-direction:column}
+.facts dt{font-size:13px;color:var(--muted)}
+.facts dd{margin:0;font-size:20px;font-weight:600}
+
+/* sample strip */
+.strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin}
+.thumb{flex:none;width:64px;padding:0;border:2px solid transparent;border-radius:var(--r-tile);background:var(--sunken);cursor:pointer;
+  display:flex;flex-direction:column;align-items:stretch;overflow:hidden}
+.thumb canvas,.thumb img{width:60px;height:60px;display:block;image-rendering:pixelated;object-fit:cover}
+.thumb span{font-size:11px;padding:2px 0 3px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thumb[aria-pressed="true"]{border-color:var(--accent)}
+.thumb:hover{border-color:var(--link)}
+.thumb[aria-pressed="true"]:hover{border-color:var(--accent)}
+.upload{flex:none;width:64px;min-height:83px;border:2px dashed var(--link);border-radius:var(--r-tile);background:transparent;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--muted);font-size:11px}
+.upload:hover,.upload.drag{border-color:var(--accent);color:var(--accent)}
+.strip-msg{font-size:13px;color:var(--muted);margin-top:4px;min-height:20px}
+.strip-msg.err{color:var(--bad)}
+
+/* flow */
+.flow-wrap{box-shadow:var(--shadow);overflow:hidden}
+.flow-bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)}
+.verdict-line{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.verdict-line strong{font-size:17px}
+.seg{display:inline-flex;background:var(--sunken);border-radius:var(--r-tile);padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 12px;border-radius:6px;cursor:pointer;color:var(--muted);font-weight:500;min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(15,23,42,.12)}
+.flow-scroll{overflow-x:auto}
+.flow{position:relative;display:grid;grid-template-columns:repeat(7,auto);justify-content:space-between;column-gap:40px;padding:18px 22px 22px;min-width:1080px}
+.flow svg.links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.links path{fill:none;stroke:var(--link);stroke-width:1;opacity:.55}
+.links path.hot{stroke:var(--accent);opacity:.9;stroke-width:1.4}
+.col{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1}
+.col-h{text-align:center;min-height:40px}
+.col-h b{display:block;font-size:13px;font-weight:600}
+.col-h small{font-size:12px;color:var(--muted)}
+.maps{display:flex;flex-direction:column;gap:8px;justify-content:center;flex:1}
+.map{padding:0;border:1px solid var(--line);background:var(--surface);border-radius:6px;cursor:pointer;position:relative;display:block}
+.map canvas{display:block;width:52px;height:52px;image-rendering:pixelated;border-radius:5px}
+.map .idx{position:absolute;left:-30px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);width:26px;text-align:right}
+.map:hover{border-color:var(--accent)}
+.map[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.map.in canvas{width:60px;height:60px}
+.chan{font-size:12px;font-weight:600;text-align:center;margin-top:-2px}
+.dense canvas{width:52px;height:104px;image-rendering:pixelated;display:block;border-radius:5px}
+.out{display:flex;flex-direction:column;gap:6px;justify-content:center;flex:1;min-width:190px}
+.out-row{display:grid;grid-template-columns:84px 1fr 46px;align-items:center;gap:8px;font-size:13px}
+.out-row .bar{height:8px;background:var(--sunken);border-radius:4px;overflow:hidden}
+.out-row .bar i{display:block;height:100%;background:var(--link);border-radius:4px}
+.out-row.top .bar i{background:var(--accent)}
+.out-row.top{font-weight:600}
+.out-row.truth span:first-child::after{content:" (asli)";color:var(--muted);font-weight:400}
+.out-row em{font-style:normal;text-align:right;color:var(--muted)}
+.out-row.top em{color:var(--ink)}
+.legend{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);padding:0 18px 14px}
+.ramp{width:120px;height:8px;border-radius:4px}
+
+/* verdict tab: identity motif, the label that sits on top of every image */
+.tab{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 8px;border-radius:var(--r-chip)}
+.tab::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.tab.ok{background:var(--ok-soft);color:var(--ok)}
+.tab.bad{background:var(--bad-soft);color:var(--bad)}
+.tab.unk{background:var(--sunken);color:var(--muted)}
+
+/* detail */
+.detail{margin-top:16px;padding:18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;box-shadow:var(--shadow)}
+.detail[hidden]{display:none}
+.detail-big canvas{width:208px;height:208px;image-rendering:pixelated;border-radius:var(--r-tile);border:1px solid var(--line);display:block}
+.detail h3{font-size:18px}
+.detail .d-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.detail p{color:var(--muted);margin-top:6px;max-width:70ch}
+.stats{display:flex;gap:24px;margin:14px 0}
+.stats div{font-size:13px;color:var(--muted)}
+.stats b{display:block;font-size:17px;color:var(--ink)}
+.kernels{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.kern{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted)}
+.kern canvas{width:42px;height:42px;image-rendering:pixelated;border:1px solid var(--line);border-radius:4px}
+.icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-tile);min-width:44px;min-height:44px;cursor:pointer;display:grid;place-items:center}
+.icon-btn:hover{border-color:var(--accent)}
+
+/* gallery */
+.controls{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.ctrl-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ctrl-row > label,.ctrl-row > .lbl{font-size:13px;color:var(--muted);min-width:64px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-chip);padding:6px 10px;cursor:pointer;font-size:13px;min-height:36px}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{color:#0A1222}
+select{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-chip);padding:7px 10px;min-height:36px}
+.summary{padding:12px 18px;font-size:14px;color:var(--muted);border-bottom:1px solid var(--line)}
+.summary b{color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;padding:18px}
+.card{border:1px solid var(--line);border-radius:var(--r-tile);background:var(--surface);padding:10px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:8px}
+.card:hover{border-color:var(--accent)}
+.card canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:6px;display:block;background:var(--sunken)}
+.card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:13px}
+.card dt{color:var(--muted)}
+.card dd{margin:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conf{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.conf .bar{flex:1;height:6px;background:var(--sunken);border-radius:3px;overflow:hidden}
+.conf .bar i{display:block;height:100%;background:var(--accent)}
+.empty{padding:40px 18px;text-align:center;color:var(--muted)}
+.more{display:flex;justify-content:center;padding:0 18px 18px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-tile);padding:10px 16px;min-height:44px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+
+/* training */
+.train-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.train-grid .panel{padding:18px}
+.train-grid h3{font-size:16px;margin-bottom:4px}
+.train-grid .note{font-size:13px;color:var(--muted);margin-bottom:12px}
+.span-7{grid-column:span 7}.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-12{grid-column:span 12}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+thead th{font-weight:600;color:var(--muted);font-size:13px}
+tbody th{font-weight:600}
+tr.grp td{color:var(--muted);font-size:13px;padding-top:14px;text-align:left}
+.pos{color:var(--ok);font-weight:600}
+.curves{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.curves svg{width:100%;height:auto;display:block}
+.curves text{fill:var(--muted);font-size:10px}
+.ckey{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.ckey span{display:inline-flex;align-items:center;gap:6px}
+.ckey i{display:inline-block;width:18px;height:0;border-top:2px solid}
+.pcls{display:flex;flex-direction:column;gap:7px}
+.pcls button{display:grid;grid-template-columns:86px 1fr 52px;gap:10px;align-items:center;font-size:13px;border:0;background:none;padding:2px 0;cursor:pointer;text-align:left;min-height:28px}
+.pcls button:hover span:first-child{color:var(--accent)}
+.pcls .bar{height:10px;background:var(--sunken);border-radius:5px;overflow:hidden}
+.pcls .bar i{display:block;height:100%;background:var(--accent)}
+.pcls em{font-style:normal;text-align:right}
+.cm-scroll{overflow-x:auto}
+.cm{border-collapse:separate;border-spacing:2px;font-size:11px;margin:0 auto}
+.cm td,.cm th{border:0;padding:0;text-align:center}
+.cm td{width:44px;height:30px;border-radius:3px}
+.cm th{color:var(--muted);font-weight:500;padding:0 6px}
+.cm thead th{height:58px;vertical-align:bottom;writing-mode:vertical-rl;transform:rotate(180deg);padding:4px 0}
+.cm .ax{font-size:12px;color:var(--muted)}
+.prov{font-size:13px;color:var(--muted);max-width:90ch}
+
+/* states */
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+.loading.err{color:var(--bad)}
+
+@media (max-width:1100px){.span-7,.span-5,.span-6{grid-column:span 12}}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{min-width:0;position:sticky;top:0;z-index:5;height:auto;flex-direction:row;align-items:center;padding:10px 14px;gap:10px}
+  .brand span,.brand b{display:none}
+  .nav{flex-direction:row;gap:2px;overflow-x:auto;flex:1}
+  .nav a{padding:8px 10px;white-space:nowrap;font-size:14px}
+  .nav svg{display:none}
+  .rail-foot{margin:0;flex-direction:row}
+  .rail-foot p{display:none}
+  .theme-btn span{display:none}
+  main{padding:20px 16px 48px;gap:32px}
+  .top{grid-template-columns:1fr}
+  .top h1{font-size:24px}
+  .facts{gap:18px;flex-wrap:wrap}
+  .facts dd{font-size:17px}
+  .detail{grid-template-columns:1fr}
+  .detail-big canvas{width:160px;height:160px}
+  .curves{grid-template-columns:1fr}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));padding:14px;gap:10px}
+}
+</style>
+<style>
+/* additions for optimizer control */
+.optbox{margin-top:22px;padding:18px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:start}
+.optbox h2{font-size:17px}
+.optlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.optbtn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-chip);padding:8px 12px;min-height:44px;cursor:pointer;font-weight:500;display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:92px}
+.optbtn small{font-size:12px;color:var(--muted);font-weight:400}
+.optbtn:hover{border-color:var(--accent)}
+.optbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.optbtn[aria-pressed="true"] small{color:rgba(255,255,255,.85)}
+:root[data-theme="dark"] .optbtn[aria-pressed="true"]{color:#0A1222}
+:root[data-theme="dark"] .optbtn[aria-pressed="true"] small{color:rgba(10,18,34,.8)}
+.optinfo h3{font-size:22px}
+.optinfo .cfg{font-size:13px;color:var(--muted);margin-top:2px}
+.optinfo dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:14px 0 0;font-size:14px}
+.optinfo dt{color:var(--muted)}
+.optinfo dd{margin:0}
+.optstats{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:14px 20px;margin-top:14px}
+.optstats div{font-size:13px;color:var(--muted)}
+.optstats b{display:block;font-size:20px;color:var(--ink);font-weight:600}
+.optmsg{font-size:13px;color:var(--muted);margin-top:10px;min-height:20px}
+.optmsg.err{color:var(--bad)}
+.flow-wrap.busy .flow{opacity:.35;transition:opacity .15s}
+.compare{margin-top:16px;padding:18px}
+.compare .c-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.compare h3{font-size:16px}
+.compare p.note{font-size:13px;color:var(--muted);margin-top:4px}
+.crows{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:14px}
+.crow{border:1px solid var(--line);border-radius:var(--r-tile);background:var(--surface);padding:10px 12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.crow:hover{border-color:var(--accent)}
+.crow[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.crow .r1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.crow b{font-size:14px}
+.crow span.p{font-size:13px;color:var(--muted)}
+.crow span.p strong{color:var(--ink);font-weight:600}
+.cmp-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);min-height:36px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.check[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+.card .vs{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:7px}
+.card .vs .tab{font-size:11px;padding:1px 6px}
+tr.sel th,tr.sel td{background:var(--accent-soft)}
+tr.click{cursor:pointer}
+tr.click:hover th,tr.click:hover td{background:var(--sunken)}
+tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
+.optrow-btn{all:unset;cursor:pointer;font-weight:600}
+.optrow-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.curves2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.curves2 svg{width:100%;height:auto;display:block}
+.curves2 text{fill:var(--muted);font-size:10px}
+.okey{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.okey button{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-chip);padding:5px 9px;font-size:12px;cursor:pointer;min-height:32px;display:inline-flex;align-items:center;gap:6px}
+.okey button i{width:14px;height:0;border-top:2px solid var(--link)}
+.okey button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.okey button[aria-pressed="true"] i{border-top:3px solid var(--accent)}
+.okey button:hover{border-color:var(--accent)}
+.bars{display:flex;flex-direction:column;gap:7px}
+.bars button{display:grid;grid-template-columns:104px 1fr 56px;gap:10px;align-items:center;font-size:13px;border:0;background:none;padding:2px 0;cursor:pointer;text-align:left;min-height:28px}
+.bars .bar{height:10px;background:var(--sunken);border-radius:5px;overflow:hidden}
+.bars .bar i{display:block;height:100%;background:var(--muted);opacity:.45}
+.bars button[aria-pressed="true"] .bar i{opacity:1}
+.bars button[aria-pressed="true"] .bar i{background:var(--accent)}
+.bars button[aria-pressed="true"]{font-weight:600}
+.bars em{font-style:normal;text-align:right}
+.lang-btn{text-decoration:none}
+.tab{white-space:nowrap;flex:none}
+.lang-short{display:none;font-weight:600}
+.span-4{grid-column:span 4}.span-8{grid-column:span 8}
+@media (max-width:1100px){.span-4,.span-8{grid-column:span 12}.optbox{grid-template-columns:1fr}}
+@media (max-width:860px){.lang-btn span{display:none}.lang-short{display:inline}.curves2{grid-template-columns:1fr}.optbtn{min-width:0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 20 20"><rect x="1" y="1" width="8" height="8" rx="1.5" fill="#fff"/><rect x="11" y="1" width="8" height="8" rx="1.5" fill="#fff" opacity=".6"/><rect x="1" y="11" width="8" height="8" rx="1.5" fill="#fff" opacity=".6"/><rect x="11" y="11" width="8" height="8" rx="1.5" fill="#fff" opacity=".3"/></svg>
+      </div>
+      <div><b>CNN CIFAR-10</b><span>Analisis Data Citra</span></div>
+    </div>
+    <nav class="nav" aria-label="Bagian halaman">
+      <a href="#alur" class="on"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="5" width="4" height="8" rx="1"/><rect x="7" y="3" width="4" height="12" rx="1"/><rect x="12.5" y="6.5" width="4" height="5" rx="1"/></svg>Alur jaringan</a>
+      <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg>Hasil uji</a>
+      <a href="#training"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 15.5h15M3 12l4-4 3 3 5-6"/></svg>Perbandingan optimizer</a>
+    </nav>
+    <div class="rail-foot">
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Ganti tema terang atau gelap">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 10.5A6.5 6.5 0 0 1 7.5 3a6.5 6.5 0 1 0 7.5 7.5Z"/></svg>
+        <span id="themeLbl">Tema gelap</span>
+      </button>
+      <a class="theme-btn lang-btn" href="index.html" lang="en" hreflang="en"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="9" r="7.2"/><path d="M1.8 9h14.4M9 1.8c2 2.2 2.9 4.6 2.9 7.2S11 14 9 16.2C7 14 6.1 11.6 6.1 9S7 4 9 1.8Z"/></svg><span>English</span><b class="lang-short">EN</b></a>
+      <p>Model berjalan di browser. Gambar yang kamu unggah tidak dikirim ke mana pun.</p>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div id="boot" class="loading" role="status">Memuat data uji dan hasil training…</div>
+
+    <section id="alur" hidden>
+      <div class="top">
+        <div>
+          <h1>Bagaimana CNN membaca gambar 32 × 32</h1>
+          <p>Arsitektur CNN-nya sama, tetapi dilatih dengan delapan optimizer berbeda. Pilih optimizer, lalu lihat bagaimana bobot hasil latihannya membaca gambar yang sama.</p>
+        </div>
+        <dl class="facts" id="facts"></dl>
+      </div>
+
+      <div class="panel optbox">
+        <div>
+          <h2 id="lblOpt">Optimizer</h2>
+          <div class="optlist" role="group" aria-labelledby="lblOpt" id="optList"></div>
+          <p class="optmsg" id="optMsg" aria-live="polite"></p>
+        </div>
+        <div class="optinfo" id="optInfo"></div>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="strip" id="strip" role="group" aria-label="Pilih gambar untuk diperiksa"></div>
+        <input type="file" id="file" accept="image/*" class="sr" tabindex="-1">
+        <p class="strip-msg" id="stripMsg" aria-live="polite">Unggah JPG atau PNG, atau tarik gambar ke kotak +. Gambar dipotong persegi di tengah lalu diperkecil ke 32 × 32.</p>
+      </div>
+
+      <div class="panel flow-wrap" id="flowWrap" style="margin-top:12px">
+        <div class="flow-bar">
+          <div class="verdict-line" id="verdict" aria-live="polite"></div>
+          <div class="seg" role="group" aria-label="Channel yang ditampilkan">
+            <button type="button" data-ch="top" aria-pressed="true">8 paling aktif</button>
+            <button type="button" data-ch="first" aria-pressed="false">Channel #0 sampai #7</button>
+          </div>
+        </div>
+        <div class="flow-scroll"><div class="flow" id="flow"></div></div>
+        <div class="legend"><span>Aktivasi rendah</span><span class="ramp" id="ramp"></span><span>tinggi (skala per kolom). Klik peta untuk melihat detailnya.</span></div>
+      </div>
+
+      <div class="panel detail" id="detail" hidden aria-live="polite"></div>
+
+      <div class="panel compare">
+        <div class="c-head">
+          <div>
+            <h3>Gambar ini menurut kedelapan optimizer</h3>
+            <p class="note" id="cmpNote">Bobot optimizer lain dimuat saat kamu memintanya (sekitar 0,8 MB per optimizer).</p>
+          </div>
+          <button class="btn" type="button" id="cmpBtn">Bandingkan semua optimizer</button>
+        </div>
+        <div class="crows" id="crows" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="hasil" hidden>
+      <div class="sec-head">
+        <div>
+          <h2>Hasil pada data uji</h2>
+          <p>Kumpulan tetap 1.000 citra uji (100 per kelas, dipilih acak). Status cocok dan tidak cocok mengikuti optimizer yang dipilih, jadi kamu bisa melihat gambar yang sama berubah status saat optimizer diganti.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="controls">
+          <div class="ctrl-row">
+            <span class="lbl" id="lblStatus">Status</span>
+            <div class="seg" role="group" aria-labelledby="lblStatus" id="fStatus">
+              <button type="button" data-v="all" aria-pressed="true">Semua</button>
+              <button type="button" data-v="ok" aria-pressed="false">Cocok</button>
+              <button type="button" data-v="bad" aria-pressed="false">Tidak cocok</button>
+            </div>
+            <label for="fSort" style="min-width:auto;margin-left:auto">Urutkan</label>
+            <select id="fSort">
+              <option value="hi">Keyakinan tertinggi</option>
+              <option value="lo">Keyakinan terendah</option>
+              <option value="idx">Indeks citra</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <span class="lbl" id="lblKelas">Kelas asli</span>
+            <div class="chips" role="group" aria-labelledby="lblKelas" id="fClass"></div>
+          </div>
+          <div class="ctrl-row">
+            <label class="lbl" for="fCmp">Pembanding</label>
+            <div class="cmp-row">
+              <select id="fCmp"><option value="">Tanpa pembanding</option></select>
+              <label class="check" id="diffWrap" aria-disabled="true"><input type="checkbox" id="fDiff" disabled> Hanya yang statusnya berbeda</label>
+            </div>
+          </div>
+        </div>
+        <div class="summary" id="summary" aria-live="polite"></div>
+        <div class="grid" id="grid"></div>
+        <div class="more" id="more"></div>
+      </div>
+    </section>
+
+    <section id="training" hidden>
+      <div class="sec-head">
+        <div>
+          <h2>Perbandingan optimizer</h2>
+          <p>Setiap optimizer melatih CNN yang sama dari bobot awal yang sama (seed 42), 10 epoch, batch 128, validasi 10%. Klik nama optimizer di tabel, grafik, atau legenda untuk memilihnya.</p>
+        </div>
+      </div>
+      <div class="train-grid">
+        <div class="panel span-8">
+          <h3>Ringkasan per optimizer</h3>
+          <p class="note">Diurutkan dari akurasi uji tertinggi. Akurasi dan loss dihitung pada 10.000 citra uji.</p>
+          <div style="overflow-x:auto"><table id="optTable"></table></div>
+        </div>
+        <div class="panel span-4">
+          <h3>Akurasi uji</h3>
+          <p class="note">Garis putus-putus: MLP dengan Adam sebagai pembanding.</p>
+          <div class="bars" id="accBars"></div>
+        </div>
+        <div class="panel span-12">
+          <h3>Kurva validasi per epoch</h3>
+          <p class="note">Optimizer terpilih berwarna biru, sisanya abu-abu.</p>
+          <div class="curves2" id="curves"></div>
+          <div class="okey" id="okey" role="group" aria-label="Pilih optimizer di grafik"></div>
+        </div>
+        <div class="panel span-6">
+          <h3 id="trainTitle">Train vs validasi</h3>
+          <p class="note">Garis putus-putus adalah validasi. Jarak yang melebar menandakan overfitting.</p>
+          <div class="curves" id="tv"></div>
+        </div>
+        <div class="panel span-6">
+          <h3 id="pclsTitle">Akurasi per kelas</h3>
+          <p class="note">Dari 1.000 citra uji per kelas. Klik kelas untuk memfilter galeri.</p>
+          <div class="pcls" id="pcls"></div>
+        </div>
+        <div class="panel span-7">
+          <h3 id="cmTitle">Confusion matrix</h3>
+          <p class="note">Baris kelas asli, kolom kelas prediksi. Klik sel di luar diagonal untuk melihat contohnya.</p>
+          <div class="cm-scroll" id="cm"></div>
+        </div>
+        <div class="panel span-5">
+          <h3>MLP vs CNN</h3>
+          <p class="note">CNN di sini memakai Adam, sama seperti notebook. Baris Fashion-MNIST diambil dari hasil notebook praktikum.</p>
+          <table id="cmpTable"></table>
+        </div>
+      </div>
+      <p class="prov" style="margin-top:16px">Model dilatih di CPU (seed 42) dengan CIFAR-10 versi berkas JPG, jadi angkanya bisa sedikit berbeda dari hasil Colab. Bobot disimpan dalam presisi 16-bit agar ringan; semua angka di halaman ini dihitung ulang dari bobot 16-bit tersebut.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+"use strict";
+const LANG="id";
+const LOCALE=LANG==="en"?"en-US":"id-ID";
+const tx=(o,k)=>o[LANG==="en"?k+"_en":k];
+let D, atlasCtx, CLS;
+const WCACHE = {};            // slug -> weights
+const S = {opt:"adam", cur:null, chMode:"top", sel:null, status:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmp:"", diff:false, cmpAll:false};
+const $ = s=>document.querySelector(s);
+const nf = (v,d=0)=>v.toLocaleString(LOCALE,{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = (v,d=1)=>nf(v*100,d)+"%";
+const css = n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const hex = h=>{h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));};
+const O = slug=>D.opts.find(o=>o.slug===slug);
+const optOf = ()=>O(S.opt);
+
+function f16(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);
+  const h=new Uint16Array(u.buffer),o=new Float32Array(h.length);
+  for(let i=0;i<h.length;i++){const x=h[i],sg=x&0x8000?-1:1,e=(x>>10)&31,f=x&1023;
+    o[i]=e===0?sg*f*Math.pow(2,-24):e===31?(f?NaN:sg*Infinity):sg*(1+f/1024)*Math.pow(2,e-15);}
+  return o;}
+async function loadW(slug){
+  if(WCACHE[slug])return WCACHE[slug];
+  const r=await fetch(`w-${slug}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json(),W={};
+  for(const k in j.weights){const L=j.weights[k];W[k]={w:f16(L.w),b:f16(L.b),shape:L.shape};}
+  W.ref=j.ref;WCACHE[slug]=W;return W;}
+
+/* ---------- forward pass (same math as Keras, channels-last) ---------- */
+function conv(x,H,Wd,C,L){const k=L.shape,O2=k[3],oh=H-2,ow=Wd-2,y=new Float32Array(oh*ow*O2),w=L.w,b=L.b;
+  for(let i=0;i<oh;i++)for(let j=0;j<ow;j++){const o=(i*ow+j)*O2;for(let f=0;f<O2;f++)y[o+f]=b[f];
+    for(let di=0;di<3;di++)for(let dj=0;dj<3;dj++){const xo=((i+di)*Wd+(j+dj))*C,wo=(di*3+dj)*C*O2;
+      for(let c=0;c<C;c++){const v=x[xo+c];if(v===0)continue;const wc=wo+c*O2;for(let f=0;f<O2;f++)y[o+f]+=v*w[wc+f];}}
+    for(let f=0;f<O2;f++)if(y[o+f]<0)y[o+f]=0;}
+  return {d:y,h:oh,w:ow,c:O2};}
+function pool(t){const oh=Math.floor(t.h/2),ow=Math.floor(t.w/2),C=t.c,y=new Float32Array(oh*ow*C);
+  for(let i=0;i<oh;i++)for(let j=0;j<ow;j++)for(let c=0;c<C;c++){let m=-Infinity;
+    for(let a=0;a<2;a++)for(let b=0;b<2;b++){const v=t.d[((2*i+a)*t.w+(2*j+b))*C+c];if(v>m)m=v;}y[(i*ow+j)*C+c]=m;}
+  return {d:y,h:oh,w:ow,c:C};}
+function dense(x,L,relu){const [I,O2]=L.shape,y=new Float32Array(O2);for(let o=0;o<O2;o++)y[o]=L.b[o];
+  for(let i=0;i<I;i++){const v=x[i];if(v===0)continue;const r=i*O2;for(let o=0;o<O2;o++)y[o]+=v*L.w[r+o];}
+  if(relu)for(let o=0;o<O2;o++)if(y[o]<0)y[o]=0;return y;}
+function forward(px,W,full=true){
+  const inp={d:px,h:32,w:32,c:3};
+  const c1=conv(px,32,32,3,W.conv1),p1=pool(c1),c2=conv(p1.d,15,15,32,W.conv2),p2=pool(c2);
+  const h=dense(p2.d,W.dense,true),z=dense(h,W.output,false);
+  const m=Math.max(...z),e=z.map(v=>Math.exp(v-m)),s=e.reduce((a,b)=>a+b,0);
+  const prob=Array.from(e,v=>v/s);
+  return full?{inp,c1,p1,c2,p2,h,prob}:{prob};}
+
+/* ---------- drawing ---------- */
+function ramp(t){const a=hex(css("--map0")),b=hex(css("--map1")),c=hex(css("--map2"));
+  const [p,q,u]=t<.5?[a,b,t*2]:[b,c,(t-.5)*2];return [0,1,2].map(i=>Math.round(p[i]+(q[i]-p[i])*u));}
+function chanOf(t,c){const n=t.h*t.w,o=new Float32Array(n);for(let i=0;i<n;i++)o[i]=t.d[i*t.c+c];return o;}
+function paint(cv,vals,w,h,max,mode){cv.width=w;cv.height=h;const ctx=cv.getContext("2d"),im=ctx.createImageData(w,h);
+  for(let i=0;i<w*h;i++){let rgb;const v=vals[i];
+    if(mode==="gray"){const g=Math.round(v*255);rgb=[g,g,g];}else rgb=ramp(max>0?Math.min(1,v/max):0);
+    im.data.set([...rgb,255],i*4);}ctx.putImageData(im,0,0);}
+function paintDiv(cv,vals,w,h,max){cv.width=w;cv.height=h;const ctx=cv.getContext("2d"),im=ctx.createImageData(w,h);
+  const neg=hex(css("--bad")),pos=hex(css("--accent")),z=hex(css("--surface"));
+  for(let i=0;i<w*h;i++){const t=Math.max(-1,Math.min(1,vals[i]/max)),e=t<0?neg:pos,u=Math.abs(t);
+    im.data.set([0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u)).concat(255),i*4);}ctx.putImageData(im,0,0);}
+function tilePixels(k){const c=k%D.cols,r=Math.floor(k/D.cols),im=atlasCtx.getImageData(c*32,r*32,32,32).data,px=new Float32Array(3072);
+  for(let i=0;i<1024;i++)for(let ch=0;ch<3;ch++)px[i*3+ch]=im[i*4+ch]/255;return px;}
+function drawTile(cv,k){cv.width=32;cv.height=32;const c=k%D.cols,r=Math.floor(k/D.cols);cv.getContext("2d").drawImage(atlasCtx.canvas,c*32,r*32,32,32,0,0,32,32);}
+function drawPx(cv,px){cv.width=32;cv.height=32;const ctx=cv.getContext("2d"),im=ctx.createImageData(32,32);
+  for(let i=0;i<1024;i++)im.data.set([px[i*3]*255,px[i*3+1]*255,px[i*3+2]*255,255],i*4);ctx.putImageData(im,0,0);}
+function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):S.uploads[S.cur.i].px;}
+
+/* ---------- optimizer control ---------- */
+function bestVal(o){const v=o.hist.val_accuracy,m=Math.max(...v);return [m,v.indexOf(m)+1];}
+function buildOptList(){const L=$("#optList");L.innerHTML="";
+  D.opts.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="optbtn";b.dataset.slug=o.slug;
+    b.setAttribute("aria-pressed",o.slug===S.opt?"true":"false");
+    b.setAttribute("aria-label",`${o.name}, akurasi uji ${pct(o.acc)}`);
+    b.innerHTML=`<span>${o.name}</span><small>${pct(o.acc)}</small>`;b.onclick=()=>setOpt(o.slug);L.append(b);});}
+function renderOptInfo(){const o=optOf(),[bv,be]=bestVal(o),gap=o.hist.accuracy.at(-1)-o.hist.val_accuracy.at(-1);
+  const rank=[...D.opts].sort((a,b)=>b.acc-a.acc).findIndex(x=>x.slug===o.slug)+1;
+  $("#optInfo").innerHTML=`<h3>${o.name}</h3><p class="cfg">${tx(o,"cfg")}</p>
+   <dl><dt>Karakteristik</dt><dd>${tx(o,"ch")}</dd><dt>Kapan digunakan</dt><dd>${tx(o,"use")}</dd></dl>
+   <div class="optstats"><div>Akurasi uji<b>${pct(o.acc,2)}</b></div><div>Peringkat<b>${rank} dari ${D.opts.length}</b></div>
+   <div>Val terbaik<b>${pct(bv)} <span style="font-size:13px;color:var(--muted);font-weight:400">epoch ${be}</span></b></div>
+   <div>Selisih train−val<b>${gap>=0?"+":"−"}${nf(Math.abs(gap)*100,1)} poin</b></div><div>Waktu latih<b>${nf(o.time,0)} dtk</b></div></div>`;}
+let optSeq=0;
+async function setOpt(slug){
+  const seq=++optSeq;S.opt=slug;
+  document.querySelectorAll("#optList .optbtn").forEach(b=>b.setAttribute("aria-pressed",b.dataset.slug===slug?"true":"false"));
+  renderOptInfo();renderFacts();renderGallery();renderTraining();renderCompare();
+  const m=$("#optMsg");m.classList.remove("err");
+  if(!WCACHE[slug]){m.textContent=`Memuat bobot ${optOf().name}…`;$("#flowWrap").classList.add("busy");}
+  try{await loadW(slug);}catch(e){if(seq!==optSeq)return;$("#flowWrap").classList.remove("busy");
+    m.classList.add("err");m.textContent=`Bobot ${optOf().name} gagal dimuat. Pilih optimizer itu sekali lagi untuk mencoba ulang.`;return;}
+  if(seq!==optSeq)return;
+  $("#flowWrap").classList.remove("busy");m.textContent="";
+  if(S.cur){S.cur.res=forward(curPx(),WCACHE[slug]);if(S.sel)closeDetail();renderFlow();renderCompare();}
+}
+function renderFacts(){const o=optOf();
+  $("#facts").innerHTML=`<div><dt>Parameter</dt><dd>${nf(D.params)}</dd></div><div><dt>Akurasi uji (${o.name})</dt><dd>${pct(o.acc,2)}</dd></div><div><dt>Data uji</dt><dd>10.000 citra</dd></div>`;}
+
+/* ---------- strip ---------- */
+function buildStrip(){const st=$("#strip");st.innerHTML="";
+  const items=[...D.demo.map(k=>({kind:"g",k})),...S.uploads.map((u,i)=>({kind:"u",i}))];
+  items.forEach(it=>{const b=document.createElement("button");b.type="button";b.className="thumb";
+    const cv=document.createElement("canvas"),sp=document.createElement("span");
+    if(it.kind==="g"){drawTile(cv,it.k);sp.textContent=CLS[D.pool[it.k].t];b.setAttribute("aria-label","Periksa contoh "+CLS[D.pool[it.k].t]);}
+    else{drawPx(cv,S.uploads[it.i].px);sp.textContent="Unggahan "+(it.i+1);b.setAttribute("aria-label","Periksa gambar unggahan "+(it.i+1));}
+    const on=S.cur&&S.cur.kind===it.kind&&(it.kind==="g"?S.cur.k===it.k:S.cur.i===it.i);
+    b.setAttribute("aria-pressed",on?"true":"false");b.append(cv,sp);b.onclick=()=>select(it);st.append(b);});
+  const up=document.createElement("button");up.type="button";up.className="upload";
+  up.innerHTML='<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg>Unggah';
+  up.setAttribute("aria-label","Unggah gambar sendiri");up.onclick=()=>$("#file").click();
+  ["dragenter","dragover"].forEach(e=>up.addEventListener(e,ev=>{ev.preventDefault();up.classList.add("drag");}));
+  ["dragleave","drop"].forEach(e=>up.addEventListener(e,()=>up.classList.remove("drag")));
+  up.addEventListener("drop",ev=>{ev.preventDefault();const f=ev.dataTransfer.files[0];if(f)handleFile(f);});
+  st.append(up);}
+function msg(t,err){const m=$("#stripMsg");m.textContent=t;m.classList.toggle("err",!!err);}
+async function handleFile(f){
+  if(!f.type.startsWith("image/")){msg("Berkas ini bukan gambar. Pilih JPG, PNG, atau WEBP.",true);return;}
+  msg("Membaca gambar…");
+  try{const url=URL.createObjectURL(f),img=new Image();
+    await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=url;});
+    const s=Math.min(img.naturalWidth,img.naturalHeight);if(!s)throw 0;
+    const cv=document.createElement("canvas");cv.width=32;cv.height=32;const ctx=cv.getContext("2d");
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+    ctx.drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,32,32);URL.revokeObjectURL(url);
+    const d=ctx.getImageData(0,0,32,32).data,px=new Float32Array(3072);
+    for(let i=0;i<1024;i++)for(let c=0;c<3;c++)px[i*3+c]=d[i*4+c]/255;
+    S.uploads.push({px,name:f.name});select({kind:"u",i:S.uploads.length-1});
+    msg(`"${f.name}" diperkecil ke 32 × 32 dan diprediksi. Label aslinya tidak diketahui, jadi tidak ada status cocok.`);
+  }catch(e){msg("Gambar tidak bisa dibaca. Coba berkas lain atau simpan ulang sebagai JPG atau PNG.",true);}
+  $("#file").value="";}
+
+/* ---------- flow ---------- */
+let flowState=null;
+function select(it){const W=WCACHE[S.opt];if(!W)return;
+  const truth=it.kind==="g"?D.pool[it.k].t:null;
+  S.cur={...it,truth};S.cur.res=forward(curPx(),W);S.sel=null;$("#detail").hidden=true;buildStrip();renderFlow();renderCompare();}
+function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
+  const m=[];for(let c=0;c<t.c;c++){let s=0;for(let i=c;i<t.d.length;i+=t.c)s+=t.d[i];m.push([s,c]);}
+  return m.sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>x[1]).sort((a,b)=>a-b);}
+function maxOf(t,chs){let m=0;for(const c of chs)for(let i=c;i<t.d.length;i+=t.c)if(t.d[i]>m)m=t.d[i];return m;}
+function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
+  const ch1=pickCh(r.c1),ch2=pickCh(r.c2);
+  const cols=[
+    {key:"inp",t:r.inp,name:"input",sub:"32 × 32 × 3",chs:[0,1,2],gray:true},
+    {key:"c1",t:r.c1,name:"conv1 + ReLU",sub:"30 × 30 × 32",chs:ch1},
+    {key:"p1",t:r.p1,name:"max_pool1",sub:"15 × 15 × 32",chs:ch1},
+    {key:"c2",t:r.c2,name:"conv2 + ReLU",sub:"13 × 13 × 64",chs:ch2},
+    {key:"p2",t:r.p2,name:"max_pool2",sub:"6 × 6 × 64",chs:ch2},
+  ];
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","links");svg.setAttribute("aria-hidden","true");fl.append(svg);
+  const colEls=[];const dark=document.documentElement.dataset.theme==="dark";
+  cols.forEach(col=>{const el=document.createElement("div");el.className="col";
+    el.innerHTML=`<div class="col-h"><b>${col.name}</b><small>${col.sub}</small></div>`;
+    const maps=document.createElement("div");maps.className="maps";const mx=col.gray?1:maxOf(col.t,col.chs);
+    col.chs.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="map"+(col.gray?" in":"");
+      b.dataset.col=col.key;b.dataset.ch=c;const lbl=col.gray?["merah","hijau","biru"][c]:"#"+c;
+      b.setAttribute("aria-label",`${col.name}, channel ${lbl}. Buka detail`);b.setAttribute("aria-pressed","false");
+      const cv=document.createElement("canvas");paint(cv,chanOf(col.t,c),col.t.w,col.t.h,mx,col.gray?"gray":"ramp");b.append(cv);
+      if(!col.gray){const s=document.createElement("span");s.className="idx";s.textContent="#"+c;b.append(s);}
+      b.onclick=()=>openDetail(col,c,mx);
+      b.onmouseenter=b.onfocus=()=>hot(b,true);b.onmouseleave=b.onblur=()=>hot(b,false);maps.append(b);
+      if(col.gray){const t=document.createElement("div");t.className="chan";
+        t.style.color=(dark?["#FF8A7A","#4ADE80","#6EA0FF"]:["#C0392B","#1E8449","#2563EB"])[c];t.textContent=["Merah","Hijau","Biru"][c];maps.append(t);}});
+    el.append(maps);fl.append(el);colEls.push(el);});
+  const de=document.createElement("div");de.className="col dense";
+  de.innerHTML=`<div class="col-h"><b>dense + ReLU</b><small>128 unit</small></div>`;
+  const dm=document.createElement("div");dm.className="maps";const db=document.createElement("button");db.type="button";db.className="map";db.dataset.col="dense";
+  db.setAttribute("aria-label","Dense 128 unit. Buka detail");const dc=document.createElement("canvas");
+  const dmax=Math.max(...r.h);paint(dc,r.h,8,16,dmax,"ramp");db.append(dc);db.onclick=()=>openDense(dmax);
+  db.onmouseenter=db.onfocus=()=>hot(db,true);db.onmouseleave=db.onblur=()=>hot(db,false);
+  dm.append(db);de.append(dm);fl.append(de);colEls.push(de);
+  const oe=document.createElement("div");oe.className="col";
+  oe.innerHTML=`<div class="col-h"><b>output (softmax)</b><small>10 kelas</small></div>`;
+  const om=document.createElement("div");om.className="out";
+  const top=r.prob.indexOf(Math.max(...r.prob));
+  r.prob.forEach((p,i)=>{const row=document.createElement("div");row.className="out-row"+(i===top?" top":"")+(i===S.cur.truth?" truth":"");
+    row.innerHTML=`<span>${CLS[i]}</span><span class="bar"><i style="width:${(p*100).toFixed(1)}%"></i></span><em>${pct(p)}</em>`;om.append(row);});
+  oe.append(om);fl.append(oe);colEls.push(oe);
+  const v=$("#verdict"),on=optOf().name;
+  if(S.cur.truth===null)v.innerHTML=`<span class="tab unk">Label asli tidak diketahui</span><strong>Prediksi: ${CLS[top]}</strong><span style="color:var(--muted)">keyakinan ${pct(r.prob[top])}, optimizer ${on}</span>`;
+  else{const ok=top===S.cur.truth;v.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?"Cocok":"Tidak cocok"}</span><strong>Prediksi: ${CLS[top]}</strong><span style="color:var(--muted)">asli ${CLS[S.cur.truth]}, keyakinan ${pct(r.prob[top])}, optimizer ${on}</span>`;}
+  flowState={colEls};requestAnimationFrame(drawLinks);}
+function drawLinks(){if(!flowState)return;const fl=$("#flow"),svg=fl.querySelector("svg.links");if(!svg)return;const fr=fl.getBoundingClientRect();
+  svg.innerHTML="";const pts=el=>[...el.querySelectorAll(".maps > .map, .out")].map(m=>{const b=m.getBoundingClientRect();return {el:m,l:b.left-fr.left,r:b.right-fr.left,y:b.top-fr.top+b.height/2};});
+  const C=flowState.colEls.map(pts);
+  for(let k=0;k<C.length-1;k++){const A=C[k],B=C[k+1],one=(k===1||k===3);
+    A.forEach((a,ai)=>B.forEach((b,bi)=>{if(one&&ai!==bi)return;
+      const p=document.createElementNS("http://www.w3.org/2000/svg","path"),mx=(a.r+b.l)/2;
+      p.setAttribute("d",`M${a.r} ${a.y}C${mx} ${a.y} ${mx} ${b.y} ${b.l} ${b.y}`);p._a=a.el;p._b=b.el;svg.append(p);}));}}
+function hot(el,on){$("#flow").querySelectorAll("svg.links path").forEach(p=>{if(p._a===el||p._b===el)p.classList.toggle("hot",on);});}
+
+const DESC={
+  inp:c=>`Channel ${["merah","hijau","biru"][c]} dari gambar input, nilai piksel 0 sampai 1. Ketiga channel inilah yang membuat C_in conv1 bernilai 3.`,
+  c1:c=>`Feature map dari kernel #${c} conv1 setelah ReLU. Kernel 3 × 3 × 3 di bawah digeser ke seluruh gambar (stride 1, tanpa padding), jadi ukurannya 32 − 3 + 1 = 30. Bentuk kernel ini berbeda untuk tiap optimizer karena hasil latihannya berbeda.`,
+  p1:c=>`Max pooling 2 × 2 dari feature map conv1 #${c}. Setiap piksel adalah nilai terbesar dari kotak 2 × 2, sehingga 30 × 30 menjadi 15 × 15. Tidak ada parameter.`,
+  c2:c=>`Feature map dari kernel #${c} conv2 setelah ReLU. Kernel ini membaca ke-32 channel max_pool1 sekaligus (3 × 3 × 32 bobot + 1 bias), lalu 15 − 3 + 1 = 13.`,
+  p2:c=>`Max pooling 2 × 2 dari conv2 #${c}: 13 × 13 menjadi 6 × 6 (baris dan kolom terakhir terbuang). Hasil 6 × 6 × 64 di-flatten menjadi 2.304 nilai untuk layer dense.`,
+};
+const closeSvg='<svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.8"><path d="M3 3l10 10M13 3L3 13"/></svg>';
+function openDetail(col,c,mx){S.sel={col:col.key,ch:c};const W=WCACHE[S.opt];
+  document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.col===col.key&&+b.dataset.ch===c?"true":"false"));
+  const vals=chanOf(col.t,c);let mn=Infinity,mxv=-Infinity,s=0;for(const v of vals){mn=Math.min(mn,v);mxv=Math.max(mxv,v);s+=v;}
+  const d=$("#detail");d.hidden=false;
+  const title=col.gray?`input, channel ${["merah","hijau","biru"][c]}`:`${col.name}, channel #${c} (${optOf().name})`;
+  d.innerHTML=`<div class="detail-big"><canvas></canvas></div><div>
+    <div class="d-head"><div><h3>${title}</h3><p>${DESC[col.key](c)}</p></div>
+    <button class="icon-btn" type="button" id="dClose" aria-label="Tutup detail">${closeSvg}</button></div>
+    <div class="stats"><div>Ukuran<b>${col.t.w} × ${col.t.h}</b></div><div>Minimum<b>${nf(mn,3)}</b></div><div>Maksimum<b>${nf(mxv,3)}</b></div><div>Rata-rata<b>${nf(s/vals.length,3)}</b></div></div>
+    <div id="kwrap"></div></div>`;
+  paint(d.querySelector(".detail-big canvas"),vals,col.t.w,col.t.h,col.gray?1:mx,col.gray?"gray":"ramp");
+  const kw=d.querySelector("#kwrap");
+  if(col.key==="c1"||col.key==="c2"){const L=col.key==="c1"?W.conv1:W.conv2,[,,C,O2]=L.shape;let km=0;
+    for(let i=0;i<9*C;i++)km=Math.max(km,Math.abs(L.w[i*O2+c]));
+    kw.innerHTML=`<p style="margin:0 0 4px;font-size:13px">Bobot kernel #${c} (${3*3*C+1} parameter termasuk bias ${nf(L.b[c],3)}). Merah negatif, biru positif.</p><div class="kernels"></div>`;
+    const kk=kw.querySelector(".kernels");
+    for(let ci=0;ci<C;ci++){const v=new Float32Array(9);for(let p=0;p<9;p++)v[p]=L.w[(p*C+ci)*O2+c];
+      const k=document.createElement("div");k.className="kern";const cv=document.createElement("canvas");paintDiv(cv,v,3,3,km);
+      const lab=document.createElement("span");lab.textContent=C===3?["R","G","B"][ci]:"in "+ci;k.append(cv,lab);kk.append(k);}}
+  d.querySelector("#dClose").onclick=closeDetail;}
+function openDense(mx){const r=S.cur.res,d=$("#detail");d.hidden=false;S.sel={col:"dense"};
+  const act=r.h.filter(v=>v>0).length;
+  d.innerHTML=`<div class="detail-big"><canvas style="width:104px;height:208px"></canvas></div><div>
+   <div class="d-head"><div><h3>dense + ReLU, 128 unit (${optOf().name})</h3><p>Setiap unit menerima ke-2.304 nilai hasil flatten (2.304 × 128 + 128 = 295.040 parameter, layer terbesar di CNN ini). Ditampilkan sebagai grid 8 × 16. Dropout 0,3 hanya aktif saat training, jadi tidak terlihat di sini.</p></div>
+   <button class="icon-btn" type="button" id="dClose" aria-label="Tutup detail">${closeSvg}</button></div>
+   <div class="stats"><div>Unit aktif (&gt; 0)<b>${act} dari 128</b></div><div>Maksimum<b>${nf(mx,3)}</b></div></div></div>`;
+  paint(d.querySelector("canvas"),r.h,8,16,mx,"ramp");d.querySelector("#dClose").onclick=closeDetail;}
+function closeDetail(){$("#detail").hidden=true;S.sel=null;document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed","false"));}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#detail").hidden)closeDetail();});
+
+/* ---------- compare all optimizers for current image ---------- */
+async function loadAll(){const b=$("#cmpBtn");b.disabled=true;b.textContent="Memuat bobot…";$("#cmpNote").textContent="Memuat bobot kedelapan optimizer…";
+  const res=await Promise.allSettled(D.opts.map(o=>loadW(o.slug)));const fail=res.filter(r=>r.status==="rejected").length;
+  S.cmpAll=true;b.disabled=false;
+  if(fail){b.textContent="Coba muat ulang";$("#cmpNote").textContent=`${fail} optimizer gagal dimuat. Tekan tombol untuk mencoba lagi.`;}
+  else{b.hidden=true;$("#cmpNote").textContent="Klik salah satu kartu untuk memakai optimizer itu di seluruh dashboard.";}
+  renderCompare();}
+function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur){box.innerHTML="";return;}
+  const px=curPx();box.innerHTML="";
+  D.opts.forEach(o=>{const W=WCACHE[o.slug];const b=document.createElement("button");b.type="button";b.className="crow";
+    b.setAttribute("aria-pressed",o.slug===S.opt?"true":"false");
+    if(!W){b.disabled=true;b.innerHTML=`<div class="r1"><b>${o.name}</b></div><span class="p">Bobot belum termuat</span>`;box.append(b);return;}
+    const p=forward(px,W,false).prob,top=p.indexOf(Math.max(...p));
+    const tab=S.cur.truth===null?`<span class="tab unk">Tanpa label</span>`:`<span class="tab ${top===S.cur.truth?"ok":"bad"}">${top===S.cur.truth?"Cocok":"Tidak cocok"}</span>`;
+    b.innerHTML=`<div class="r1"><b>${o.name}</b>${tab}</div><span class="p">Prediksi <strong>${CLS[top]}</strong>, keyakinan ${pct(p[top])}</span>
+      <span class="conf"><span class="bar"><i style="width:${(p[top]*100).toFixed(1)}%"></i></span></span>`;
+    b.setAttribute("aria-label",`${o.name}: prediksi ${CLS[top]}, keyakinan ${pct(p[top])}. Pakai optimizer ini`);
+    b.onclick=()=>setOpt(o.slug);box.append(b);});}
+
+/* ---------- gallery ---------- */
+function buildFilters(){const fc=$("#fClass");fc.innerHTML="";
+  [-1,...CLS.keys()].forEach(i=>{const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.v=i;
+    b.textContent=i<0?"Semua kelas":CLS[i];b.onclick=()=>{S.cls=i;S.pred=null;S.shown=24;syncFilters();renderGallery();};fc.append(b);});
+  $("#fStatus").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.status=b.dataset.v;S.shown=24;syncFilters();renderGallery();});
+  $("#fSort").onchange=e=>{S.sort=e.target.value;renderGallery();};
+  const fc2=$("#fCmp");D.opts.forEach(o=>{const op=document.createElement("option");op.value=o.slug;op.textContent=o.name;fc2.append(op);});
+  fc2.onchange=e=>{S.cmp=e.target.value;if(!S.cmp){S.diff=false;$("#fDiff").checked=false;}
+    $("#fDiff").disabled=!S.cmp;$("#diffWrap").setAttribute("aria-disabled",S.cmp?"false":"true");S.shown=24;renderGallery();};
+  $("#fDiff").onchange=e=>{S.diff=e.target.checked;S.shown=24;renderGallery();};
+  syncFilters();}
+function syncFilters(){$("#fClass").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.v===S.cls?"true":"false"));
+  $("#fStatus").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.status?"true":"false"));}
+function renderGallery(){const o=optOf(),c2=S.cmp&&S.cmp!==S.opt?O(S.cmp):null;
+  let L=D.pool.map((g,k)=>({...g,k,p:o.pp[k],c:o.pc[k]}))
+    .filter(g=>(S.cls<0||g.t===S.cls)&&(S.status==="all"||(S.status==="ok")===(g.t===g.p))&&(S.pred==null||g.p===S.pred)
+      &&(!c2||!S.diff||((c2.pp[g.k]===g.t)!==(g.p===g.t))));
+  L.sort(S.sort==="hi"?(a,b)=>b.c-a.c:S.sort==="lo"?(a,b)=>a.c-b.c:(a,b)=>a.i-b.i);
+  const cm=o.cm;let tot,ok;
+  if(S.cls<0){tot=10000;ok=cm.reduce((s,r,i)=>s+r[i],0);}else{tot=cm[S.cls].reduce((a,b)=>a+b,0);ok=cm[S.cls][S.cls];}
+  const who=S.cls<0?"Semua kelas":`Kelas <b>${CLS[S.cls]}</b>`;
+  const extra=S.pred!=null?` Hanya yang diprediksi <b>${CLS[S.pred]}</b>. <button class="chip" type="button" id="clrPred">Hapus filter prediksi</button>`:"";
+  const cmpTxt=S.cmp&&!c2?` Pembanding sama dengan optimizer terpilih, jadi tidak ditampilkan.`:c2&&S.diff?` Hanya gambar yang statusnya berbeda antara <b>${o.name}</b> dan <b>${c2.name}</b>.`:"";
+  $("#summary").innerHTML=`Dengan <b>${o.name}</b>, ${who.charAt(0).toLowerCase()+who.slice(1)}: <b>${nf(ok)}</b> cocok dan <b>${nf(tot-ok)}</b> tidak cocok dari ${nf(tot)} citra uji. Menampilkan <b>${Math.min(S.shown,L.length)}</b> dari ${L.length} contoh sesuai filter.${cmpTxt}${extra}`;
+  const cp=$("#clrPred");if(cp)cp.onclick=()=>{S.pred=null;renderGallery();};
+  const g=$("#grid");g.innerHTML="";
+  if(!L.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1">Tidak ada contoh untuk kombinasi filter ini. Ganti status, kelas, atau pembanding.</div>`;$("#more").innerHTML="";return;}
+  L.slice(0,S.shown).forEach(it=>{const ok=it.t===it.p,b=document.createElement("button");b.type="button";b.className="card";
+    let lab=`${ok?"Cocok":"Tidak cocok"}. Asli ${CLS[it.t]}, prediksi ${CLS[it.p]}, keyakinan ${pct(it.c)} dengan ${o.name}`;
+    b.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?"Cocok":"Tidak cocok"}</span>`;
+    const cv=document.createElement("canvas");drawTile(cv,it.k);b.append(cv);
+    b.insertAdjacentHTML("beforeend",`<dl><dt>Asli</dt><dd>${CLS[it.t]}</dd><dt>Prediksi</dt><dd>${CLS[it.p]}</dd></dl>
+      <div class="conf"><span class="bar"><i style="width:${(it.c*100).toFixed(1)}%"></i></span><span>${pct(it.c)}</span></div>`);
+    if(c2){const p2=c2.pp[it.k],ok2=p2===it.t;
+      b.insertAdjacentHTML("beforeend",`<div class="vs"><span>${c2.name}:</span><strong style="color:var(--ink);font-weight:500">${CLS[p2]}</strong><span class="tab ${ok2?"ok":"bad"}">${ok2?"Cocok":"Tidak"}</span></div>`);
+      lab+=`. ${c2.name} memprediksi ${CLS[p2]}`;}
+    b.setAttribute("aria-label",lab+". Periksa alurnya");
+    b.onclick=()=>{select({kind:"g",k:it.k});document.getElementById("alur").scrollIntoView();};g.append(b);});
+  $("#more").innerHTML=L.length>S.shown?`<button class="btn" type="button" id="moreBtn">Tampilkan ${Math.min(24,L.length-S.shown)} contoh lagi</button>`:"";
+  const mb=$("#moreBtn");if(mb)mb.onclick=()=>{S.shown+=24;renderGallery();};}
+
+/* ---------- training / optimizer comparison ---------- */
+function lineChart(series,title,key,w=420,h=210){
+  const all=series.flatMap(s=>s.v),lo=Math.min(...all),hi=Math.max(...all),pad=(hi-lo)*.08||.05,y0=lo-pad,y1=hi+pad;
+  const l=38,b=22,X=i=>l+i*(w-l-10)/9,Y=v=>14+(h-b-14)*(1-(v-y0)/(y1-y0));
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${title}"><text x="${l}" y="10" font-weight="600" style="fill:var(--ink);font-size:11px">${title}</text>`;
+  for(let g=0;g<=3;g++){const v=y0+(y1-y0)*g/3;s+=`<line x1="${l}" x2="${w-10}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${l-4}" y="${Y(v)+3}" text-anchor="end">${v.toFixed(2)}</text>`;}
+  [1,5,10].forEach(e=>s+=`<text x="${X(e-1)}" y="${h-6}" text-anchor="${e===1?"start":e===10?"end":"middle"}">epoch ${e}</text>`);
+  series.filter(x=>!x.sel).concat(series.filter(x=>x.sel)).forEach(x=>{
+    s+=`<polyline fill="none" stroke="${x.color}" stroke-width="${x.sel?2.6:1.3}" ${x.dash?'stroke-dasharray="4 3"':""} opacity="${x.sel||x.solid?1:.75}" points="${x.v.map((v,i)=>X(i)+","+Y(v)).join(" ")}"/>`;
+    if(x.label){const lv=x.v.at(-1);s+=`<text x="${w-12}" y="${Y(lv)-5}" text-anchor="end" style="fill:${x.color};font-size:11px;font-weight:600">${x.label}</text>`;}});
+  return s+"</svg>";}
+function renderTraining(){const o=optOf(),sorted=[...D.opts].sort((a,b)=>b.acc-a.acc);
+  // summary table
+  let t=`<thead><tr><th scope="col">Optimizer</th><th scope="col">Akurasi uji</th><th scope="col">Loss uji</th><th scope="col">Val terbaik</th><th scope="col">Train−val</th><th scope="col">Waktu</th></tr></thead><tbody>`;
+  sorted.forEach(x=>{const [bv,be]=bestVal(x),gap=x.hist.accuracy.at(-1)-x.hist.val_accuracy.at(-1);
+    t+=`<tr class="click${x.slug===S.opt?" sel":""}" data-slug="${x.slug}"><th scope="row"><button class="optrow-btn" type="button" data-slug="${x.slug}" aria-pressed="${x.slug===S.opt}">${x.name}</button></th>
+      <td>${pct(x.acc,2)}</td><td>${nf(x.loss,3)}</td><td>${pct(bv)} <span style="color:var(--muted)">(ep ${be})</span></td><td>${gap>=0?"+":"−"}${nf(Math.abs(gap)*100,1)}</td><td>${nf(x.time,0)} dtk</td></tr>`;});
+  $("#optTable").innerHTML=t+"</tbody>";
+  $("#optTable").querySelectorAll("tr.click").forEach(r=>r.onclick=e=>{setOpt(r.dataset.slug);});
+  // accuracy bars
+  const bx=$("#accBars");bx.innerHTML="";const mx=Math.max(...D.opts.map(x=>x.acc));
+  sorted.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.opt?"true":"false");
+    b.setAttribute("aria-label",`${x.name} akurasi uji ${pct(x.acc)}. Pilih optimizer ini`);
+    b.innerHTML=`<span>${x.name}</span><span class="bar" style="position:relative"><i style="width:${x.acc/mx*100}%"></i><span style="position:absolute;top:-3px;bottom:-3px;left:${D.mlp.acc/mx*100}%;border-left:2px dashed var(--muted)"></span></span><em>${pct(x.acc)}</em>`;
+    b.onclick=()=>setOpt(x.slug);bx.append(b);});
+  bx.insertAdjacentHTML("beforeend",`<p class="note" style="margin:6px 0 0">MLP (Adam): ${pct(D.mlp.acc)}</p>`);
+  // overlay curves
+  const acc=css("--accent"),grey=css("--link");
+  const ser=k=>D.opts.map(x=>({v:x.hist[k],sel:x.slug===S.opt,color:x.slug===S.opt?acc:grey,label:x.slug===S.opt?x.name:""}));
+  $("#curves").innerHTML=lineChart(ser("val_accuracy"),"Akurasi validasi")+lineChart(ser("val_loss"),"Loss validasi");
+  const ok=$("#okey");ok.innerHTML="";
+  D.opts.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.opt?"true":"false");
+    b.innerHTML=`<i></i>${x.name}`;b.onclick=()=>setOpt(x.slug);ok.append(b);});
+  // train vs val for selected
+  $("#trainTitle").textContent=`Train vs validasi: ${o.name}`;
+  const mut=css("--muted");
+  $("#tv").innerHTML=lineChart([{v:o.hist.accuracy,sel:true,color:acc,solid:true},{v:o.hist.val_accuracy,color:acc,dash:true,solid:true}],"Akurasi",280,180)
+    +lineChart([{v:o.hist.loss,sel:true,color:acc,solid:true},{v:o.hist.val_loss,color:acc,dash:true,solid:true}],"Loss",280,180);
+  // per class
+  $("#pclsTitle").textContent=`Akurasi per kelas: ${o.name}`;
+  const pc=$("#pcls");pc.innerHTML="";
+  o.cm.forEach((r,i)=>{const a=r[i]/r.reduce((x,y)=>x+y,0),b=document.createElement("button");b.type="button";
+    b.setAttribute("aria-label",`${CLS[i]} akurasi ${pct(a)}. Tampilkan di galeri`);
+    b.innerHTML=`<span>${CLS[i]}</span><span class="bar"><i style="width:${a*100}%"></i></span><em>${pct(a)}</em>`;
+    b.onclick=()=>{S.cls=i;S.status="all";S.pred=null;S.shown=24;syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};pc.append(b);});
+  // confusion matrix
+  $("#cmTitle").textContent=`Confusion matrix: ${o.name}`;
+  const cmx=Math.max(...o.cm.map((r,i)=>r[i]));let ct=`<table class="cm"><thead><tr><th></th>${CLS.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>`;
+  const a1=hex(acc),z=hex(css("--surface")),bad=hex(css("--bad"));
+  o.cm.forEach((r,i)=>{ct+=`<tr><th scope="row" style="text-align:right">${CLS[i]}</th>`;
+    r.forEach((v,j)=>{const u=i===j?v/cmx:Math.min(1,v/150),e=i===j?a1:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u));
+      const dk=(0.299*c[0]+0.587*c[1]+0.114*c[2])<140,fg=dk?"#fff":"inherit";
+      ct+=`<td style="background:rgb(${c})">${i!==j&&v>0?`<button type="button" data-t="${i}" data-p="${j}" aria-label="${v} citra ${CLS[i]} diprediksi ${CLS[j]}. Tampilkan contoh" style="all:unset;cursor:pointer;display:block;width:100%;height:100%;color:${fg}">${v}</button>`:`<span style="color:${fg}">${v}</span>`}</td>`;});ct+="</tr>";});
+  $("#cm").innerHTML=ct+"</tbody></table>";
+  $("#cm").querySelectorAll("button").forEach(b=>{b.addEventListener("focus",()=>b.style.outline="2px solid var(--accent)");b.addEventListener("blur",()=>b.style.outline="");
+    b.onclick=()=>{S.cls=+b.dataset.t;S.pred=+b.dataset.p;S.status="bad";S.shown=24;syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};});
+  // MLP vs CNN
+  const adam=O("adam"),F=D.fashion;
+  const row=(n,r)=>`<tr><th scope="row">${n}</th><td>${nf(r.params)}</td><td>${pct(r.acc,2)}</td></tr>`;
+  const gap=(a,b)=>`<tr><th scope="row">Selisih</th><td></td><td class="pos">+${nf((b-a)*100,2)} poin</td></tr>`;
+  $("#cmpTable").innerHTML=`<thead><tr><th scope="col">Model</th><th scope="col">Parameter</th><th scope="col">Akurasi uji</th></tr></thead><tbody>
+   <tr class="grp"><td colspan="3">CIFAR-10</td></tr>${row("MLP",D.mlp)}${row("CNN (Adam)",{params:D.params,acc:adam.acc})}${gap(D.mlp.acc,adam.acc)}
+   <tr class="grp"><td colspan="3">Fashion-MNIST</td></tr>${row("MLP",F.MLP)}${row("CNN",F.CNN)}${gap(F.MLP.acc,F.CNN.acc)}</tbody>`;}
+
+/* ---------- theme + nav ---------- */
+function setRamp(){$("#ramp").style.background=`linear-gradient(90deg,${css("--map0")},${css("--map1")},${css("--map2")})`;}
+function setTheme(t){document.documentElement.dataset.theme=t;$("#themeLbl").textContent=t==="dark"?"Tema terang":"Tema gelap";
+  try{localStorage.setItem("cnn-theme",t);}catch(e){}setRamp();
+  if(D){buildStrip();renderFlow();renderTraining();renderGallery();renderCompare();}}
+$("#themeBtn").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+document.querySelectorAll(".flow-bar .seg button").forEach(b=>b.onclick=()=>{S.chMode=b.dataset.ch;
+  document.querySelectorAll(".flow-bar .seg button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));closeDetail();renderFlow();});
+$("#file").addEventListener("change",e=>{const f=e.target.files[0];if(f)handleFile(f);});
+$("#cmpBtn").onclick=loadAll;
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id));}),{rootMargin:"-40% 0px -55% 0px"});
+let rz;window.addEventListener("resize",()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(drawLinks);});
+
+/* ---------- boot ---------- */
+(async()=>{
+  let t="light";try{t=localStorage.getItem("cnn-theme")||t;}catch(e){}
+  document.documentElement.dataset.theme=t;$("#themeLbl").textContent=t==="dark"?"Tema terang":"Tema gelap";setRamp();
+  try{
+    const r=await fetch("data.json");if(!r.ok)throw new Error(r.status);D=await r.json();CLS=D.classes;
+    const img=new Image();await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=D.atlas;});
+    const c=document.createElement("canvas");c.width=img.width;c.height=img.height;atlasCtx=c.getContext("2d",{willReadFrequently:true});atlasCtx.drawImage(img,0,0);
+    await loadW(S.opt);
+  }catch(e){const b=$("#boot");b.classList.add("err");b.textContent="Data model gagal dimuat. Muat ulang halaman. Kalau masih gagal, berkas data tidak ada di samping halaman ini, atau halaman dibuka langsung sebagai berkas lokal, bukan lewat web server.";return;}
+  $("#boot").remove();["alur","hasil","training"].forEach(id=>{$("#"+id).hidden=false;io.observe($("#"+id));});
+  buildOptList();renderOptInfo();renderFacts();buildFilters();
+  select({kind:"g",k:D.demo[9]});renderGallery();renderTraining();
+  window.__ready=true;
+})();
+</script>
+</body>
+</html>
