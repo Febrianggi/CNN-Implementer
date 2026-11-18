@@ -1,6 +1,6 @@
 # trained models and downloaded data (regenerate with src/train.py)
-models/
-data/
+/models/
+/data/
 *.keras
 *.h5
 

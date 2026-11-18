@@ -1,0 +1,36 @@
+{
+ "cifar10": {
+  "title": "CIFAR-10",
+  "shape": [
+   32,
+   32,
+   3
+  ],
+  "mlp": {
+   "params": 820874,
+   "acc": 0.4687,
+   "time": 24.2
+  },
+  "cnn": {
+   "params": 315722,
+   "acc": 0.6786
+  }
+ },
+ "fashion": {
+  "title": "Fashion-MNIST",
+  "shape": [
+   28,
+   28,
+   1
+  ],
+  "mlp": {
+   "params": 235146,
+   "acc": 0.8729,
+   "time": 18.0
+  },
+  "cnn": {
+   "params": 225034,
+   "acc": 0.9103
+  }
+ }
+}
