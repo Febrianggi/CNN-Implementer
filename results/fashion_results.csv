@@ -1,0 +1,10 @@
+dataset,model,optimizer,params,test_accuracy,test_loss,best_val_accuracy,best_val_epoch,train_val_gap_last_epoch,train_seconds
+Fashion-MNIST,MLP,Adam,235146,0.8729,,,,,18.0
+Fashion-MNIST,CNN,RMSprop,225034,0.9104,0.2516,0.9135,10,0.0149,89.0
+Fashion-MNIST,CNN,Adam,225034,0.9103,0.2569,0.9087,10,0.0159,103.7
+Fashion-MNIST,CNN,Nadam,225034,0.9096,0.2542,0.9092,10,0.016,86.3
+Fashion-MNIST,CNN,AdamW,225034,0.9061,0.2587,0.9103,10,0.0143,84.4
+Fashion-MNIST,CNN,SGD momentum,225034,0.8997,0.2864,0.9053,9,0.0155,95.5
+Fashion-MNIST,CNN,SGD,225034,0.8163,0.4971,0.8193,10,-0.0118,85.8
+Fashion-MNIST,CNN,Adagrad,225034,0.7382,0.7517,0.7418,10,-0.0366,87.8
+Fashion-MNIST,CNN,Adadelta,225034,0.5041,1.9424,0.5035,10,-0.0668,95.8

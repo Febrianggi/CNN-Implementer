@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CNN CIFAR-10: penjelajah optimizer</title>
+<title>CNN Explorer: dataset dan optimizer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22%3E%3Crect width=%2220%22 height=%2220%22 rx=%224%22 fill=%22%232563EB%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,9 +308,22 @@ tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
 .lang-btn{text-decoration:none}
 .tab{white-space:nowrap;flex:none}
 .lang-short{display:none;font-weight:600}
+.dslist{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.dsbtn{min-width:170px}
+.rail-ds{display:flex;flex-direction:column;gap:8px;padding:0 4px}
+.rail-ds p{font-size:13px;color:var(--rail-muted);margin:0 8px}
+.rail-ds-btns{display:flex;flex-direction:column;gap:4px}
+.rail-ds-btns button{background:transparent;border:1px solid rgba(255,255,255,.16);color:var(--rail-ink);border-radius:var(--r-tile);padding:9px 12px;min-height:44px;text-align:left;cursor:pointer;font-weight:500}
+.rail-ds-btns button:hover{background:rgba(255,255,255,.07)}
+.rail-ds-btns button[aria-pressed="true"]{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4)}
+#invWrap{margin-top:2px}
+.pcls button{grid-template-columns:100px 1fr 52px}
+.pcls button span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr.grp.sel td{color:var(--accent);font-weight:600}
+.cm thead th{white-space:nowrap;height:84px}
 .span-4{grid-column:span 4}.span-8{grid-column:span 8}
 @media (max-width:1100px){.span-4,.span-8{grid-column:span 12}.optbox{grid-template-columns:1fr}}
-@media (max-width:860px){.lang-btn span{display:none}.lang-short{display:inline}.curves2{grid-template-columns:1fr}.optbtn{min-width:0}}
+@media (max-width:860px){.rail-ds{display:none}.dsbtn{min-width:0;flex:1}.lang-btn span{display:none}.lang-short{display:inline}.curves2{grid-template-columns:1fr}.optbtn{min-width:0}}
 </style>
 </head>
 <body>
@@ -320,13 +333,20 @@ tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
       <div class="brand-mark" aria-hidden="true">
         <svg width="20" height="20" viewBox="0 0 20 20"><rect x="1" y="1" width="8" height="8" rx="1.5" fill="#fff"/><rect x="11" y="1" width="8" height="8" rx="1.5" fill="#fff" opacity=".6"/><rect x="1" y="11" width="8" height="8" rx="1.5" fill="#fff" opacity=".6"/><rect x="11" y="11" width="8" height="8" rx="1.5" fill="#fff" opacity=".3"/></svg>
       </div>
-      <div><b>CNN CIFAR-10</b><span>Analisis Data Citra</span></div>
+      <div><b>CNN Explorer</b><span>Analisis Data Citra</span></div>
     </div>
     <nav class="nav" aria-label="Bagian halaman">
       <a href="#alur" class="on"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="5" width="4" height="8" rx="1"/><rect x="7" y="3" width="4" height="12" rx="1"/><rect x="12.5" y="6.5" width="4" height="5" rx="1"/></svg>Alur jaringan</a>
       <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg>Hasil uji</a>
       <a href="#training"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 15.5h15M3 12l4-4 3 3 5-6"/></svg>Perbandingan optimizer</a>
     </nav>
+    <div class="rail-ds">
+      <p id="lblDsRail">Dataset</p>
+      <div class="rail-ds-btns" role="group" aria-labelledby="lblDsRail">
+        <button type="button" data-ds="cifar10" aria-pressed="true">CIFAR-10</button>
+        <button type="button" data-ds="fashion" aria-pressed="false">Fashion-MNIST</button>
+      </div>
+    </div>
     <div class="rail-foot">
       <button class="theme-btn" id="themeBtn" type="button" aria-label="Ganti tema terang atau gelap">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 10.5A6.5 6.5 0 0 1 7.5 3a6.5 6.5 0 1 0 7.5 7.5Z"/></svg>
@@ -343,15 +363,21 @@ tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
     <section id="alur" hidden>
       <div class="top">
         <div>
-          <h1>Bagaimana CNN membaca gambar 32 × 32</h1>
-          <p>Arsitektur CNN-nya sama, tetapi dilatih dengan delapan optimizer berbeda. Pilih optimizer, lalu lihat bagaimana bobot hasil latihannya membaca gambar yang sama.</p>
+          <h1 id="heroTitle">Bagaimana CNN membaca gambar 32 × 32</h1>
+          <p id="heroLead">Pilih dataset dan optimizer, lalu lihat bagaimana bobot hasil latihannya membaca gambar yang sama.</p>
         </div>
         <dl class="facts" id="facts"></dl>
       </div>
 
       <div class="panel optbox">
         <div>
-          <h2 id="lblOpt">Optimizer</h2>
+          <h2 id="lblDs">Dataset</h2>
+          <div class="dslist" role="group" aria-labelledby="lblDs">
+            <button type="button" class="optbtn dsbtn" data-ds="cifar10" aria-pressed="true"><span>CIFAR-10</span><small>32 × 32 berwarna, 10 objek</small></button>
+            <button type="button" class="optbtn dsbtn" data-ds="fashion" aria-pressed="false"><span>Fashion-MNIST</span><small>28 × 28 grayscale, 10 pakaian</small></button>
+          </div>
+          <p class="optmsg" id="dsMsg" aria-live="polite"></p>
+          <h2 id="lblOpt" style="margin-top:10px">Optimizer</h2>
           <div class="optlist" role="group" aria-labelledby="lblOpt" id="optList"></div>
           <p class="optmsg" id="optMsg" aria-live="polite"></p>
         </div>
@@ -362,6 +388,7 @@ tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
         <div class="strip" id="strip" role="group" aria-label="Pilih gambar untuk diperiksa"></div>
         <input type="file" id="file" accept="image/*" class="sr" tabindex="-1">
         <p class="strip-msg" id="stripMsg" aria-live="polite">Unggah JPG atau PNG, atau tarik gambar ke kotak +. Gambar dipotong persegi di tengah lalu diperkecil ke 32 × 32.</p>
+        <label class="check" id="invWrap" hidden><input type="checkbox" id="fInv" checked> Balik warna gambar unggahan (Fashion-MNIST memakai benda terang di latar hitam)</label>
       </div>
 
       <div class="panel flow-wrap" id="flowWrap" style="margin-top:12px">
@@ -382,7 +409,7 @@ tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
         <div class="c-head">
           <div>
             <h3>Gambar ini menurut kedelapan optimizer</h3>
-            <p class="note" id="cmpNote">Bobot optimizer lain dimuat saat kamu memintanya (sekitar 0,8 MB per optimizer).</p>
+            <p class="note" id="cmpNote">Bobot optimizer lain dimuat saat kamu memintanya (kurang dari 1 MB per optimizer).</p>
           </div>
           <button class="btn" type="button" id="cmpBtn">Bandingkan semua optimizer</button>
         </div>
@@ -472,11 +499,11 @@ tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
         </div>
         <div class="panel span-5">
           <h3>MLP vs CNN</h3>
-          <p class="note">CNN di sini memakai Adam, sama seperti notebook. Baris Fashion-MNIST diambil dari hasil notebook praktikum.</p>
+          <p class="note">Kedua model dilatih dengan Adam. Dataset yang sedang dipilih ditandai biru.</p>
           <table id="cmpTable"></table>
         </div>
       </div>
-      <p class="prov" style="margin-top:16px">Model dilatih di CPU (seed 42) dengan CIFAR-10 versi berkas JPG, jadi angkanya bisa sedikit berbeda dari hasil Colab. Bobot disimpan dalam presisi 16-bit agar ringan; semua angka di halaman ini dihitung ulang dari bobot 16-bit tersebut.</p>
+      <p class="prov" style="margin-top:16px">Model dilatih di CPU (seed 42). CIFAR-10 memakai salinan berkas JPG dan Fashion-MNIST memakai berkas resmi dari repositori Zalando Research, jadi angkanya bisa sedikit berbeda dari run lain. Bobot disimpan dalam presisi 16-bit agar ringan; semua angka di halaman ini dihitung ulang dari bobot 16-bit tersebut.</p>
     </section>
   </main>
 </div>
@@ -486,9 +513,11 @@ tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
 const LANG="id";
 const LOCALE=LANG==="en"?"en-US":"id-ID";
 const tx=(o,k)=>o[LANG==="en"?k+"_en":k];
-let D, atlasCtx, CLS;
-const WCACHE = {};            // slug -> weights
-const S = {opt:"adam", cur:null, chMode:"top", sel:null, status:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmp:"", diff:false, cmpAll:false};
+let D, atlasCtx, CLS, SUMMARY=null;
+const DSC = {};               // dataset key -> {D, atlasCtx}
+const WCACHE = {};            // "<dataset>/<slug>" -> weights
+const wk = (slug,ds=S.ds)=>ds+"/"+slug;
+const S = {ds:"cifar10", inv:true, opt:"adam", cur:null, chMode:"top", sel:null, status:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmp:"", diff:false, cmpAll:false};
 const $ = s=>document.querySelector(s);
 const nf = (v,d=0)=>v.toLocaleString(LOCALE,{minimumFractionDigits:d,maximumFractionDigits:d});
 const pct = (v,d=1)=>nf(v*100,d)+"%";
@@ -502,11 +531,21 @@ function f16(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.l
   for(let i=0;i<h.length;i++){const x=h[i],sg=x&0x8000?-1:1,e=(x>>10)&31,f=x&1023;
     o[i]=e===0?sg*f*Math.pow(2,-24):e===31?(f?NaN:sg*Infinity):sg*(1+f/1024)*Math.pow(2,e-15);}
   return o;}
-async function loadW(slug){
-  if(WCACHE[slug])return WCACHE[slug];
-  const r=await fetch(`w-${slug}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json(),W={};
+async function loadW(slug,ds=S.ds){
+  const key=wk(slug,ds);if(WCACHE[key])return WCACHE[key];
+  const r=await fetch(`data/${ds}/w-${slug}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json(),W={};
   for(const k in j.weights){const L=j.weights[k];W[k]={w:f16(L.w),b:f16(L.b),shape:L.shape};}
-  W.ref=j.ref;WCACHE[slug]=W;return W;}
+  W.ref=j.ref;WCACHE[key]=W;return W;}
+async function loadDS(ds){
+  if(DSC[ds])return DSC[ds];
+  const r=await fetch(`data/${ds}/data.json`);if(!r.ok)throw new Error(r.status);const d=await r.json();
+  const img=new Image();await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=d.atlas;});
+  const c=document.createElement("canvas");c.width=img.width;c.height=img.height;const ctx=c.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0);
+  DSC[ds]={D:d,atlasCtx:ctx};return DSC[ds];}
+/* input geometry of the current dataset: 32 → 30 → 15 → 13 → 6 for CIFAR-10, 28 → 26 → 13 → 11 → 5 for Fashion-MNIST */
+function G(){const H=D.shape[0],C=D.shape[2],c1=H-2,p1=Math.floor(c1/2),c2=p1-2,p2=Math.floor(c2/2);return {H,C,c1,p1,c2,p2,flat:p2*p2*64};}
+const CHN=()=>G().C===3?["merah","hijau","biru"]:["abu-abu"];
+const CHN_CAP=()=>G().C===3?["Merah","Hijau","Biru"]:["Abu-abu"];
 
 /* ---------- forward pass (same math as Keras, channels-last) ---------- */
 function conv(x,H,Wd,C,L){const k=L.shape,O2=k[3],oh=H-2,ow=Wd-2,y=new Float32Array(oh*ow*O2),w=L.w,b=L.b;
@@ -523,8 +562,8 @@ function dense(x,L,relu){const [I,O2]=L.shape,y=new Float32Array(O2);for(let o=0
   for(let i=0;i<I;i++){const v=x[i];if(v===0)continue;const r=i*O2;for(let o=0;o<O2;o++)y[o]+=v*L.w[r+o];}
   if(relu)for(let o=0;o<O2;o++)if(y[o]<0)y[o]=0;return y;}
 function forward(px,W,full=true){
-  const inp={d:px,h:32,w:32,c:3};
-  const c1=conv(px,32,32,3,W.conv1),p1=pool(c1),c2=conv(p1.d,15,15,32,W.conv2),p2=pool(c2);
+  const g=G(),inp={d:px,h:g.H,w:g.H,c:g.C};
+  const c1=conv(px,g.H,g.H,g.C,W.conv1),p1=pool(c1),c2=conv(p1.d,p1.h,p1.w,32,W.conv2),p2=pool(c2);
   const h=dense(p2.d,W.dense,true),z=dense(h,W.output,false);
   const m=Math.max(...z),e=z.map(v=>Math.exp(v-m)),s=e.reduce((a,b)=>a+b,0);
   const prob=Array.from(e,v=>v/s);
@@ -542,12 +581,19 @@ function paintDiv(cv,vals,w,h,max){cv.width=w;cv.height=h;const ctx=cv.getContex
   const neg=hex(css("--bad")),pos=hex(css("--accent")),z=hex(css("--surface"));
   for(let i=0;i<w*h;i++){const t=Math.max(-1,Math.min(1,vals[i]/max)),e=t<0?neg:pos,u=Math.abs(t);
     im.data.set([0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u)).concat(255),i*4);}ctx.putImageData(im,0,0);}
-function tilePixels(k){const c=k%D.cols,r=Math.floor(k/D.cols),im=atlasCtx.getImageData(c*32,r*32,32,32).data,px=new Float32Array(3072);
-  for(let i=0;i<1024;i++)for(let ch=0;ch<3;ch++)px[i*3+ch]=im[i*4+ch]/255;return px;}
-function drawTile(cv,k){cv.width=32;cv.height=32;const c=k%D.cols,r=Math.floor(k/D.cols);cv.getContext("2d").drawImage(atlasCtx.canvas,c*32,r*32,32,32,0,0,32,32);}
-function drawPx(cv,px){cv.width=32;cv.height=32;const ctx=cv.getContext("2d"),im=ctx.createImageData(32,32);
-  for(let i=0;i<1024;i++)im.data.set([px[i*3]*255,px[i*3+1]*255,px[i*3+2]*255,255],i*4);ctx.putImageData(im,0,0);}
-function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):S.uploads[S.cur.i].px;}
+function tilePixels(k){const {H:s,C}=G(),c=k%D.cols,r=Math.floor(k/D.cols),im=atlasCtx.getImageData(c*s,r*s,s,s).data,px=new Float32Array(s*s*C);
+  for(let i=0;i<s*s;i++)for(let ch=0;ch<C;ch++)px[i*C+ch]=im[i*4+ch]/255;return px;}
+function drawTile(cv,k){const s=G().H;cv.width=s;cv.height=s;const c=k%D.cols,r=Math.floor(k/D.cols);cv.getContext("2d").drawImage(atlasCtx.canvas,c*s,r*s,s,s,0,0,s,s);}
+function drawPx(cv,px){const {H:s,C}=G();cv.width=s;cv.height=s;const ctx=cv.getContext("2d"),im=ctx.createImageData(s,s);
+  for(let i=0;i<s*s;i++){const r=px[i*C],g=px[i*C+(C>1?1:0)],b=px[i*C+(C>1?2:0)];im.data.set([r*255,g*255,b*255,255],i*4);}ctx.putImageData(im,0,0);}
+/* an upload keeps its 96 × 96 center crop; the model input is derived from it for the current dataset */
+function uploadPx(u){const {H:s,C}=G(),cv=document.createElement("canvas");cv.width=s;cv.height=s;const ctx=cv.getContext("2d");
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(u.src,0,0,s,s);
+  const d=ctx.getImageData(0,0,s,s).data,px=new Float32Array(s*s*C);
+  for(let i=0;i<s*s;i++){if(C===3){for(let c=0;c<3;c++)px[i*3+c]=d[i*4+c]/255;}
+    else{const y=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;px[i]=S.inv?1-y:y;}}
+  return px;}
+function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):uploadPx(S.uploads[S.cur.i]);}
 
 /* ---------- optimizer control ---------- */
 function bestVal(o){const v=o.hist.val_accuracy,m=Math.max(...v);return [m,v.indexOf(m)+1];}
@@ -569,12 +615,12 @@ async function setOpt(slug){
   document.querySelectorAll("#optList .optbtn").forEach(b=>b.setAttribute("aria-pressed",b.dataset.slug===slug?"true":"false"));
   renderOptInfo();renderFacts();renderGallery();renderTraining();renderCompare();
   const m=$("#optMsg");m.classList.remove("err");
-  if(!WCACHE[slug]){m.textContent=`Memuat bobot ${optOf().name}…`;$("#flowWrap").classList.add("busy");}
+  if(!WCACHE[wk(slug)]){m.textContent=`Memuat bobot ${optOf().name}…`;$("#flowWrap").classList.add("busy");}
   try{await loadW(slug);}catch(e){if(seq!==optSeq)return;$("#flowWrap").classList.remove("busy");
     m.classList.add("err");m.textContent=`Bobot ${optOf().name} gagal dimuat. Pilih optimizer itu sekali lagi untuk mencoba ulang.`;return;}
   if(seq!==optSeq)return;
   $("#flowWrap").classList.remove("busy");m.textContent="";
-  if(S.cur){S.cur.res=forward(curPx(),WCACHE[slug]);if(S.sel)closeDetail();renderFlow();renderCompare();}
+  if(S.cur){S.cur.res=forward(curPx(),WCACHE[wk(slug)]);if(S.sel)closeDetail();renderFlow();renderCompare();}
 }
 function renderFacts(){const o=optOf();
   $("#facts").innerHTML=`<div><dt>Parameter</dt><dd>${nf(D.params)}</dd></div><div><dt>Akurasi uji (${o.name})</dt><dd>${pct(o.acc,2)}</dd></div><div><dt>Data uji</dt><dd>10.000 citra</dd></div>`;}
@@ -585,7 +631,7 @@ function buildStrip(){const st=$("#strip");st.innerHTML="";
   items.forEach(it=>{const b=document.createElement("button");b.type="button";b.className="thumb";
     const cv=document.createElement("canvas"),sp=document.createElement("span");
     if(it.kind==="g"){drawTile(cv,it.k);sp.textContent=CLS[D.pool[it.k].t];b.setAttribute("aria-label","Periksa contoh "+CLS[D.pool[it.k].t]);}
-    else{drawPx(cv,S.uploads[it.i].px);sp.textContent="Unggahan "+(it.i+1);b.setAttribute("aria-label","Periksa gambar unggahan "+(it.i+1));}
+    else{drawPx(cv,uploadPx(S.uploads[it.i]));sp.textContent="Unggahan "+(it.i+1);b.setAttribute("aria-label","Periksa gambar unggahan "+(it.i+1));}
     const on=S.cur&&S.cur.kind===it.kind&&(it.kind==="g"?S.cur.k===it.k:S.cur.i===it.i);
     b.setAttribute("aria-pressed",on?"true":"false");b.append(cv,sp);b.onclick=()=>select(it);st.append(b);});
   const up=document.createElement("button");up.type="button";up.className="upload";
@@ -602,33 +648,32 @@ async function handleFile(f){
   try{const url=URL.createObjectURL(f),img=new Image();
     await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=url;});
     const s=Math.min(img.naturalWidth,img.naturalHeight);if(!s)throw 0;
-    const cv=document.createElement("canvas");cv.width=32;cv.height=32;const ctx=cv.getContext("2d");
+    const cv=document.createElement("canvas");cv.width=96;cv.height=96;const ctx=cv.getContext("2d");
     ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
-    ctx.drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,32,32);URL.revokeObjectURL(url);
-    const d=ctx.getImageData(0,0,32,32).data,px=new Float32Array(3072);
-    for(let i=0;i<1024;i++)for(let c=0;c<3;c++)px[i*3+c]=d[i*4+c]/255;
-    S.uploads.push({px,name:f.name});select({kind:"u",i:S.uploads.length-1});
-    msg(`"${f.name}" diperkecil ke 32 × 32 dan diprediksi. Label aslinya tidak diketahui, jadi tidak ada status cocok.`);
+    ctx.drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,96,96);URL.revokeObjectURL(url);
+    S.uploads.push({src:cv,name:f.name});select({kind:"u",i:S.uploads.length-1});
+    msg(`"${f.name}" diperkecil ke ${G().H} × ${G().H} dan diprediksi. Label aslinya tidak diketahui, jadi tidak ada status cocok.`);
   }catch(e){msg("Gambar tidak bisa dibaca. Coba berkas lain atau simpan ulang sebagai JPG atau PNG.",true);}
   $("#file").value="";}
 
 /* ---------- flow ---------- */
 let flowState=null;
-function select(it){const W=WCACHE[S.opt];if(!W)return;
+function select(it){const W=WCACHE[wk(S.opt)];if(!W)return;
   const truth=it.kind==="g"?D.pool[it.k].t:null;
   S.cur={...it,truth};S.cur.res=forward(curPx(),W);S.sel=null;$("#detail").hidden=true;buildStrip();renderFlow();renderCompare();}
 function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
   const m=[];for(let c=0;c<t.c;c++){let s=0;for(let i=c;i<t.d.length;i+=t.c)s+=t.d[i];m.push([s,c]);}
   return m.sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>x[1]).sort((a,b)=>a-b);}
 function maxOf(t,chs){let m=0;for(const c of chs)for(let i=c;i<t.d.length;i+=t.c)if(t.d[i]>m)m=t.d[i];return m;}
+const dims=t=>`${t.h} × ${t.w} × ${t.c}`;
 function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
   const ch1=pickCh(r.c1),ch2=pickCh(r.c2);
   const cols=[
-    {key:"inp",t:r.inp,name:"input",sub:"32 × 32 × 3",chs:[0,1,2],gray:true},
-    {key:"c1",t:r.c1,name:"conv1 + ReLU",sub:"30 × 30 × 32",chs:ch1},
-    {key:"p1",t:r.p1,name:"max_pool1",sub:"15 × 15 × 32",chs:ch1},
-    {key:"c2",t:r.c2,name:"conv2 + ReLU",sub:"13 × 13 × 64",chs:ch2},
-    {key:"p2",t:r.p2,name:"max_pool2",sub:"6 × 6 × 64",chs:ch2},
+    {key:"inp",t:r.inp,name:"input",sub:dims(r.inp),chs:[...Array(r.inp.c).keys()],gray:true},
+    {key:"c1",t:r.c1,name:"conv1 + ReLU",sub:dims(r.c1),chs:ch1},
+    {key:"p1",t:r.p1,name:"max_pool1",sub:dims(r.p1),chs:ch1},
+    {key:"c2",t:r.c2,name:"conv2 + ReLU",sub:dims(r.c2),chs:ch2},
+    {key:"p2",t:r.p2,name:"max_pool2",sub:dims(r.p2),chs:ch2},
   ];
   const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","links");svg.setAttribute("aria-hidden","true");fl.append(svg);
   const colEls=[];const dark=document.documentElement.dataset.theme==="dark";
@@ -636,14 +681,14 @@ function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerH
     el.innerHTML=`<div class="col-h"><b>${col.name}</b><small>${col.sub}</small></div>`;
     const maps=document.createElement("div");maps.className="maps";const mx=col.gray?1:maxOf(col.t,col.chs);
     col.chs.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="map"+(col.gray?" in":"");
-      b.dataset.col=col.key;b.dataset.ch=c;const lbl=col.gray?["merah","hijau","biru"][c]:"#"+c;
+      b.dataset.col=col.key;b.dataset.ch=c;const lbl=col.gray?CHN()[c]:"#"+c;
       b.setAttribute("aria-label",`${col.name}, channel ${lbl}. Buka detail`);b.setAttribute("aria-pressed","false");
       const cv=document.createElement("canvas");paint(cv,chanOf(col.t,c),col.t.w,col.t.h,mx,col.gray?"gray":"ramp");b.append(cv);
       if(!col.gray){const s=document.createElement("span");s.className="idx";s.textContent="#"+c;b.append(s);}
       b.onclick=()=>openDetail(col,c,mx);
       b.onmouseenter=b.onfocus=()=>hot(b,true);b.onmouseleave=b.onblur=()=>hot(b,false);maps.append(b);
       if(col.gray){const t=document.createElement("div");t.className="chan";
-        t.style.color=(dark?["#FF8A7A","#4ADE80","#6EA0FF"]:["#C0392B","#1E8449","#2563EB"])[c];t.textContent=["Merah","Hijau","Biru"][c];maps.append(t);}});
+        t.style.color=G().C===1?"var(--muted)":(dark?["#FF8A7A","#4ADE80","#6EA0FF"]:["#C0392B","#1E8449","#2563EB"])[c];t.textContent=CHN_CAP()[c];maps.append(t);}});
     el.append(maps);fl.append(el);colEls.push(el);});
   const de=document.createElement("div");de.className="col dense";
   de.innerHTML=`<div class="col-h"><b>dense + ReLU</b><small>128 unit</small></div>`;
@@ -673,18 +718,18 @@ function drawLinks(){if(!flowState)return;const fl=$("#flow"),svg=fl.querySelect
 function hot(el,on){$("#flow").querySelectorAll("svg.links path").forEach(p=>{if(p._a===el||p._b===el)p.classList.toggle("hot",on);});}
 
 const DESC={
-  inp:c=>`Channel ${["merah","hijau","biru"][c]} dari gambar input, nilai piksel 0 sampai 1. Ketiga channel inilah yang membuat C_in conv1 bernilai 3.`,
-  c1:c=>`Feature map dari kernel #${c} conv1 setelah ReLU. Kernel 3 × 3 × 3 di bawah digeser ke seluruh gambar (stride 1, tanpa padding), jadi ukurannya 32 − 3 + 1 = 30. Bentuk kernel ini berbeda untuk tiap optimizer karena hasil latihannya berbeda.`,
-  p1:c=>`Max pooling 2 × 2 dari feature map conv1 #${c}. Setiap piksel adalah nilai terbesar dari kotak 2 × 2, sehingga 30 × 30 menjadi 15 × 15. Tidak ada parameter.`,
-  c2:c=>`Feature map dari kernel #${c} conv2 setelah ReLU. Kernel ini membaca ke-32 channel max_pool1 sekaligus (3 × 3 × 32 bobot + 1 bias), lalu 15 − 3 + 1 = 13.`,
-  p2:c=>`Max pooling 2 × 2 dari conv2 #${c}: 13 × 13 menjadi 6 × 6 (baris dan kolom terakhir terbuang). Hasil 6 × 6 × 64 di-flatten menjadi 2.304 nilai untuk layer dense.`,
+  inp:c=>`Channel ${CHN()[c]} dari gambar input, nilai piksel 0 sampai 1. `+(G().C===3?"Ketiga channel inilah yang membuat C_in conv1 bernilai 3.":"Fashion-MNIST hanya punya satu channel, jadi C_in conv1 bernilai 1."),
+  c1:c=>`Feature map dari kernel #${c} conv1 setelah ReLU. Kernel 3 × 3 × ${G().C} di bawah digeser ke seluruh gambar (stride 1, tanpa padding), jadi ukurannya ${G().H} − 3 + 1 = ${G().c1}. Bentuk kernel ini berbeda untuk tiap optimizer karena hasil latihannya berbeda.`,
+  p1:c=>`Max pooling 2 × 2 dari feature map conv1 #${c}. Setiap piksel adalah nilai terbesar dari kotak 2 × 2, sehingga ${G().c1} × ${G().c1} menjadi ${G().p1} × ${G().p1}. Tidak ada parameter.`,
+  c2:c=>`Feature map dari kernel #${c} conv2 setelah ReLU. Kernel ini membaca ke-32 channel max_pool1 sekaligus (3 × 3 × 32 bobot + 1 bias), lalu ${G().p1} − 3 + 1 = ${G().c2}.`,
+  p2:c=>`Max pooling 2 × 2 dari conv2 #${c}: ${G().c2} × ${G().c2} menjadi ${G().p2} × ${G().p2} (baris dan kolom terakhir terbuang). Hasil ${G().p2} × ${G().p2} × 64 di-flatten menjadi ${nf(G().flat)} nilai untuk layer dense.`,
 };
 const closeSvg='<svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.8"><path d="M3 3l10 10M13 3L3 13"/></svg>';
-function openDetail(col,c,mx){S.sel={col:col.key,ch:c};const W=WCACHE[S.opt];
+function openDetail(col,c,mx){S.sel={col:col.key,ch:c};const W=WCACHE[wk(S.opt)];
   document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.col===col.key&&+b.dataset.ch===c?"true":"false"));
   const vals=chanOf(col.t,c);let mn=Infinity,mxv=-Infinity,s=0;for(const v of vals){mn=Math.min(mn,v);mxv=Math.max(mxv,v);s+=v;}
   const d=$("#detail");d.hidden=false;
-  const title=col.gray?`input, channel ${["merah","hijau","biru"][c]}`:`${col.name}, channel #${c} (${optOf().name})`;
+  const title=col.gray?`input, channel ${CHN()[c]}`:`${col.name}, channel #${c} (${optOf().name})`;
   d.innerHTML=`<div class="detail-big"><canvas></canvas></div><div>
     <div class="d-head"><div><h3>${title}</h3><p>${DESC[col.key](c)}</p></div>
     <button class="icon-btn" type="button" id="dClose" aria-label="Tutup detail">${closeSvg}</button></div>
@@ -698,12 +743,12 @@ function openDetail(col,c,mx){S.sel={col:col.key,ch:c};const W=WCACHE[S.opt];
     const kk=kw.querySelector(".kernels");
     for(let ci=0;ci<C;ci++){const v=new Float32Array(9);for(let p=0;p<9;p++)v[p]=L.w[(p*C+ci)*O2+c];
       const k=document.createElement("div");k.className="kern";const cv=document.createElement("canvas");paintDiv(cv,v,3,3,km);
-      const lab=document.createElement("span");lab.textContent=C===3?["R","G","B"][ci]:"in "+ci;k.append(cv,lab);kk.append(k);}}
+      const lab=document.createElement("span");lab.textContent=C===3?["R","G","B"][ci]:C===1?"gray":"in "+ci;k.append(cv,lab);kk.append(k);}}
   d.querySelector("#dClose").onclick=closeDetail;}
 function openDense(mx){const r=S.cur.res,d=$("#detail");d.hidden=false;S.sel={col:"dense"};
   const act=r.h.filter(v=>v>0).length;
   d.innerHTML=`<div class="detail-big"><canvas style="width:104px;height:208px"></canvas></div><div>
-   <div class="d-head"><div><h3>dense + ReLU, 128 unit (${optOf().name})</h3><p>Setiap unit menerima ke-2.304 nilai hasil flatten (2.304 × 128 + 128 = 295.040 parameter, layer terbesar di CNN ini). Ditampilkan sebagai grid 8 × 16. Dropout 0,3 hanya aktif saat training, jadi tidak terlihat di sini.</p></div>
+   <div class="d-head"><div><h3>dense + ReLU, 128 unit (${optOf().name})</h3><p>Setiap unit menerima ke-${nf(G().flat)} nilai hasil flatten (${nf(G().flat)} × 128 + 128 = ${nf(G().flat*128+128)} parameter, layer terbesar di CNN ini). Ditampilkan sebagai grid 8 × 16. Dropout 0,3 hanya aktif saat training, jadi tidak terlihat di sini.</p></div>
    <button class="icon-btn" type="button" id="dClose" aria-label="Tutup detail">${closeSvg}</button></div>
    <div class="stats"><div>Unit aktif (&gt; 0)<b>${act} dari 128</b></div><div>Maksimum<b>${nf(mx,3)}</b></div></div></div>`;
   paint(d.querySelector("canvas"),r.h,8,16,mx,"ramp");d.querySelector("#dClose").onclick=closeDetail;}
@@ -712,14 +757,14 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#detail").hidde
 
 /* ---------- compare all optimizers for current image ---------- */
 async function loadAll(){const b=$("#cmpBtn");b.disabled=true;b.textContent="Memuat bobot…";$("#cmpNote").textContent="Memuat bobot kedelapan optimizer…";
-  const res=await Promise.allSettled(D.opts.map(o=>loadW(o.slug)));const fail=res.filter(r=>r.status==="rejected").length;
+  const ds=S.ds,res=await Promise.allSettled(D.opts.map(o=>loadW(o.slug,ds)));if(ds!==S.ds){b.disabled=false;return;}const fail=res.filter(r=>r.status==="rejected").length;
   S.cmpAll=true;b.disabled=false;
   if(fail){b.textContent="Coba muat ulang";$("#cmpNote").textContent=`${fail} optimizer gagal dimuat. Tekan tombol untuk mencoba lagi.`;}
   else{b.hidden=true;$("#cmpNote").textContent="Klik salah satu kartu untuk memakai optimizer itu di seluruh dashboard.";}
   renderCompare();}
 function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur){box.innerHTML="";return;}
   const px=curPx();box.innerHTML="";
-  D.opts.forEach(o=>{const W=WCACHE[o.slug];const b=document.createElement("button");b.type="button";b.className="crow";
+  D.opts.forEach(o=>{const W=WCACHE[wk(o.slug)];const b=document.createElement("button");b.type="button";b.className="crow";
     b.setAttribute("aria-pressed",o.slug===S.opt?"true":"false");
     if(!W){b.disabled=true;b.innerHTML=`<div class="r1"><b>${o.name}</b></div><span class="p">Bobot belum termuat</span>`;box.append(b);return;}
     const p=forward(px,W,false).prob,top=p.indexOf(Math.max(...p));
@@ -730,9 +775,10 @@ function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur){box.innerHT
     b.onclick=()=>setOpt(o.slug);box.append(b);});}
 
 /* ---------- gallery ---------- */
-function buildFilters(){const fc=$("#fClass");fc.innerHTML="";
+function buildClassChips(){const fc=$("#fClass");fc.innerHTML="";
   [-1,...CLS.keys()].forEach(i=>{const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.v=i;
-    b.textContent=i<0?"Semua kelas":CLS[i];b.onclick=()=>{S.cls=i;S.pred=null;S.shown=24;syncFilters();renderGallery();};fc.append(b);});
+    b.textContent=i<0?"Semua kelas":CLS[i];b.onclick=()=>{S.cls=i;S.pred=null;S.shown=24;syncFilters();renderGallery();};fc.append(b);});}
+function buildFilters(){buildClassChips();
   $("#fStatus").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.status=b.dataset.v;S.shown=24;syncFilters();renderGallery();});
   $("#fSort").onchange=e=>{S.sort=e.target.value;renderGallery();};
   const fc2=$("#fCmp");D.opts.forEach(o=>{const op=document.createElement("option");op.value=o.slug;op.textContent=o.name;fc2.append(op);});
@@ -776,7 +822,7 @@ function lineChart(series,title,key,w=420,h=210){
   const l=38,b=22,X=i=>l+i*(w-l-10)/9,Y=v=>14+(h-b-14)*(1-(v-y0)/(y1-y0));
   let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${title}"><text x="${l}" y="10" font-weight="600" style="fill:var(--ink);font-size:11px">${title}</text>`;
   for(let g=0;g<=3;g++){const v=y0+(y1-y0)*g/3;s+=`<line x1="${l}" x2="${w-10}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${l-4}" y="${Y(v)+3}" text-anchor="end">${v.toFixed(2)}</text>`;}
-  [1,5,10].forEach(e=>s+=`<text x="${X(e-1)}" y="${h-6}" text-anchor="${e===1?"start":e===10?"end":"middle"}">epoch ${e}</text>`);
+  [1,5,10].forEach(e=>s+=`<text x="${X(e-1)}" y="${h-6}" text-anchor="${e===1?"start":e===10?"end":"middle"}">${e===10?"epoch 10":e}</text>`);
   series.filter(x=>!x.sel).concat(series.filter(x=>x.sel)).forEach(x=>{
     s+=`<polyline fill="none" stroke="${x.color}" stroke-width="${x.sel?2.6:1.3}" ${x.dash?'stroke-dasharray="4 3"':""} opacity="${x.sel||x.solid?1:.75}" points="${x.v.map((v,i)=>X(i)+","+Y(v)).join(" ")}"/>`;
     if(x.label){const lv=x.v.at(-1);s+=`<text x="${w-12}" y="${Y(lv)-5}" text-anchor="end" style="fill:${x.color};font-size:11px;font-weight:600">${x.label}</text>`;}});
@@ -827,12 +873,41 @@ function renderTraining(){const o=optOf(),sorted=[...D.opts].sort((a,b)=>b.acc-a
   $("#cm").querySelectorAll("button").forEach(b=>{b.addEventListener("focus",()=>b.style.outline="2px solid var(--accent)");b.addEventListener("blur",()=>b.style.outline="");
     b.onclick=()=>{S.cls=+b.dataset.t;S.pred=+b.dataset.p;S.status="bad";S.shown=24;syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};});
   // MLP vs CNN
-  const adam=O("adam"),F=D.fashion;
   const row=(n,r)=>`<tr><th scope="row">${n}</th><td>${nf(r.params)}</td><td>${pct(r.acc,2)}</td></tr>`;
-  const gap=(a,b)=>`<tr><th scope="row">Selisih</th><td></td><td class="pos">+${nf((b-a)*100,2)} poin</td></tr>`;
-  $("#cmpTable").innerHTML=`<thead><tr><th scope="col">Model</th><th scope="col">Parameter</th><th scope="col">Akurasi uji</th></tr></thead><tbody>
-   <tr class="grp"><td colspan="3">CIFAR-10</td></tr>${row("MLP",D.mlp)}${row("CNN (Adam)",{params:D.params,acc:adam.acc})}${gap(D.mlp.acc,adam.acc)}
-   <tr class="grp"><td colspan="3">Fashion-MNIST</td></tr>${row("MLP",F.MLP)}${row("CNN",F.CNN)}${gap(F.MLP.acc,F.CNN.acc)}</tbody>`;}
+  const gap=(a,b)=>`<tr><th scope="row">Selisih</th><td></td><td class="pos">${b>=a?"+":"−"}${nf(Math.abs(b-a)*100,2)} poin</td></tr>`;
+  let body="";
+  for(const ds of DSLIST){const s=SUMMARY&&SUMMARY[ds.key];if(!s)continue;
+    body+=`<tr class="grp${ds.key===S.ds?" sel":""}"><td colspan="3">${s.title} (${s.shape.join(" × ")})</td></tr>${row("MLP",s.mlp)}${row("CNN (Adam)",s.cnn)}${gap(s.mlp.acc,s.cnn.acc)}`;}
+  $("#cmpTable").innerHTML=`<thead><tr><th scope="col">Model</th><th scope="col">Parameter</th><th scope="col">Akurasi uji</th></tr></thead><tbody>${body}</tbody>`;}
+
+/* ---------- dataset control ---------- */
+const DSLIST=[{key:"cifar10"},{key:"fashion"}];
+function syncDS(){
+  document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));
+  const g=G();$("#heroTitle").textContent=`Bagaimana CNN membaca gambar ${g.H} × ${g.H}`;
+  $("#heroLead").textContent=`${D.title}: ${nf(D.pool.length)} contoh uji di galeri, ${CLS.length} kelas, input ${g.H} × ${g.H} × ${g.C}. Arsitektur CNN-nya sama untuk kedua dataset, dan masing-masing dilatih dengan delapan optimizer berbeda.`;
+  $("#invWrap").hidden=g.C!==1;
+  $("#stripMsg").classList.remove("err");
+  $("#stripMsg").textContent=`Unggah JPG atau PNG, atau tarik gambar ke kotak +. Gambar dipotong persegi di tengah lalu diperkecil ke ${g.H} × ${g.H}`+(g.C===1?", diubah ke grayscale, dan (jika dicentang) dibalik warnanya.":".");
+}
+let dsSeq=0;
+async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#dsMsg");m.classList.remove("err");
+  const title=ds==="fashion"?"Fashion-MNIST":"CIFAR-10";
+  document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===ds?"true":"false"));
+  m.textContent=`Memuat ${title}…`;$("#flowWrap").classList.add("busy");
+  let c;try{[c]=await Promise.all([loadDS(ds),loadW(S.opt,ds)]);}catch(e){if(seq!==dsSeq)return;$("#flowWrap").classList.remove("busy");
+    m.classList.add("err");m.textContent=`${title} gagal dimuat. Pilih dataset itu sekali lagi untuk mencoba ulang.`;syncDSButtons();return;}
+  if(seq!==dsSeq)return;
+  S.ds=ds;D=c.D;atlasCtx=c.atlasCtx;CLS=D.classes;try{localStorage.setItem("cnn-dataset",ds);}catch(e){}
+  S.cls=-1;S.pred=null;S.shown=24;S.sel=null;$("#detail").hidden=true;
+  $("#flowWrap").classList.remove("busy");m.textContent="";
+  buildClassChips();syncFilters();syncDS();buildOptList();renderOptInfo();renderFacts();
+  const keep=S.cur&&S.cur.kind==="u"?S.cur:{kind:"g",k:D.demo[9]};select(keep);
+  renderGallery();renderTraining();
+  if(S.cmpAll){S.cmpAll=false;loadAll();}else renderCompare();}
+function syncDSButtons(){document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));}
+document.querySelectorAll("[data-ds]").forEach(b=>b.onclick=()=>setDataset(b.dataset.ds));
+$("#fInv").addEventListener("change",e=>{S.inv=e.target.checked;if(S.cur&&S.cur.kind==="u")select(S.cur);else buildStrip();});
 
 /* ---------- theme + nav ---------- */
 function setRamp(){$("#ramp").style.background=`linear-gradient(90deg,${css("--map0")},${css("--map1")},${css("--map2")})`;}
@@ -851,14 +926,12 @@ let rz;window.addEventListener("resize",()=>{cancelAnimationFrame(rz);rz=request
 (async()=>{
   let t="light";try{t=localStorage.getItem("cnn-theme")||t;}catch(e){}
   document.documentElement.dataset.theme=t;$("#themeLbl").textContent=t==="dark"?"Tema terang":"Tema gelap";setRamp();
-  try{
-    const r=await fetch("data.json");if(!r.ok)throw new Error(r.status);D=await r.json();CLS=D.classes;
-    const img=new Image();await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=D.atlas;});
-    const c=document.createElement("canvas");c.width=img.width;c.height=img.height;atlasCtx=c.getContext("2d",{willReadFrequently:true});atlasCtx.drawImage(img,0,0);
-    await loadW(S.opt);
+  try{let d="cifar10";try{d=localStorage.getItem("cnn-dataset")||d;}catch(e){}if(!DSLIST.some(x=>x.key===d))d="cifar10";
+    S.ds=d;const [c]=await Promise.all([loadDS(d),loadW(S.opt,d)]);D=c.D;atlasCtx=c.atlasCtx;CLS=D.classes;
+    try{const r=await fetch("data/summary.json");if(r.ok)SUMMARY=await r.json();}catch(e){}
   }catch(e){const b=$("#boot");b.classList.add("err");b.textContent="Data model gagal dimuat. Muat ulang halaman. Kalau masih gagal, berkas data tidak ada di samping halaman ini, atau halaman dibuka langsung sebagai berkas lokal, bukan lewat web server.";return;}
   $("#boot").remove();["alur","hasil","training"].forEach(id=>{$("#"+id).hidden=false;io.observe($("#"+id));});
-  buildOptList();renderOptInfo();renderFacts();buildFilters();
+  buildOptList();renderOptInfo();renderFacts();buildFilters();syncDS();
   select({kind:"g",k:D.demo[9]});renderGallery();renderTraining();
   window.__ready=true;
 })();

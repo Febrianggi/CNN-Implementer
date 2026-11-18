@@ -1,34 +1,103 @@
-# CNN CIFAR-10 Optimizer Explorer
+# CNN Optimizer Explorer
 
 [English](README.md) | **Bahasa Indonesia**
 
-Dashboard interaktif yang memperlihatkan bagaimana CNN kecil membaca gambar CIFAR-10 berukuran 32 × 32, dan bagaimana pilihan optimizer mengubah apa yang dipelajarinya. Satu arsitektur CNN dilatih delapan kali, sekali untuk tiap optimizer. Kamu bisa berpindah di antara delapan model itu dan melihat feature map, kernel, prediksi, serta hasil uji ikut berubah.
+Halaman web interaktif yang membuka isi sebuah *convolutional neural network* (CNN) kecil dan memperlihatkan apa yang dilakukannya terhadap gambar, layer demi layer. Kamu bisa berpindah antara dua dataset (foto CIFAR-10 dan pakaian Fashion-MNIST) dan delapan optimizer, mengunggah gambar sendiri, dan melihat di mana model menebak dengan benar maupun salah.
 
-Tampilan alur jaringannya terinspirasi dari [CNN Explainer](https://poloclub.github.io/cnn-explainer/). Proyek ini membuat tampilan serupa untuk model dari praktikum mata kuliah Analisis Data Citra.
+**Dashboard langsung: https://febrianggi.github.io/CNN-Implementer/dashboard/index.id.html**
+
+Semuanya berjalan di browser-mu. Tidak ada server, dan gambar yang kamu unggah tidak keluar dari komputermu.
 
 ![Tampilan alur jaringan](docs/screenshots/id/flow.png)
 
-## Fitur
+## Untuk apa ini?
 
-- **Alur jaringan**: input (channel R, G, B), conv1, max_pool1, conv2, max_pool2, dense, dan output softmax, dihubungkan seperti di CNN Explainer. Klik feature map mana pun untuk melihat nilai dan bobot kernelnya.
-- **Kontrol optimizer**: pilih SGD, RMSprop, Adam, AdamW, Adagrad, Nadam, Adadelta, atau SGD dengan momentum. Alur, galeri, dan statistik semuanya mengikuti optimizer yang dipilih.
-- **Unggah gambar sendiri**: JPG atau PNG apa pun dipotong persegi di tengah, diperkecil ke 32 × 32, lalu diklasifikasikan langsung di browser. Tidak ada yang dikirim ke server.
-- **Satu gambar, delapan optimizer**: prediksi semua optimizer untuk gambar yang sedang dilihat, berdampingan.
-- **Galeri hasil uji**: label asli, prediksi, dan keyakinan di setiap kartu, dengan label *Cocok* atau *Tidak cocok* di atas gambar. Bisa difilter berdasarkan status (cocok / tidak cocok) dan kelas asli, serta dibandingkan dengan optimizer kedua untuk mencari gambar yang hasilnya berbeda.
-- **Perbandingan optimizer**: tabel ringkasan, diagram batang akurasi uji, kurva validasi, kurva train vs validasi, akurasi per kelas, dan confusion matrix yang bisa diklik.
-- Versi bahasa Inggris dan Indonesia, tema terang dan gelap, bisa dipakai dengan keyboard, dan berfungsi di ponsel.
+CNN biasanya dijelaskan dengan diagram kotak dan panah. Halaman ini memperlihatkan wujud aslinya: feature map dan kernel dari model yang benar-benar dilatih, dihitung langsung untuk gambar yang kamu pilih. Halaman ini dibuat untuk mahasiswa dan siapa saja yang sedang belajar cara kerja CNN, dan menjawab tiga pertanyaan:
 
-| Satu gambar menurut semua optimizer | Filter cocok dan perbedaan hasil |
+- **Apa yang dilakukan setiap layer terhadap gambar?** Ikuti satu gambar dari channel warnanya sampai probabilitas kelas di akhir.
+- **Apakah optimizer berpengaruh?** Jaringan yang sama dilatih delapan kali, sekali per optimizer, dari bobot awal yang identik. Ganti-ganti optimizer lalu bandingkan.
+- **Apakah dataset berpengaruh?** Arsitektur yang sama dilatih pada gambar pakaian grayscale yang mudah dan foto berwarna yang lebih sulit.
+
+Tata letak tampilan jaringannya terinspirasi dari [CNN Explainer](https://poloclub.github.io/cnn-explainer/).
+
+## Cara memakai dashboard
+
+Halaman ini punya tiga bagian yang bisa dibuka dari sidebar: **Alur jaringan**, **Hasil uji**, dan **Perbandingan optimizer**. Kontrol di bagian atas berlaku untuk ketiganya.
+
+1. **Pilih dataset.** CIFAR-10 (foto berwarna 32 × 32 berisi pesawat, kucing, truk, dan lainnya) atau Fashion-MNIST (gambar grayscale 28 × 28 berisi kemeja, sepatu kets, tas, dan lainnya). Pilihan ini juga ada di sidebar.
+2. **Pilih optimizer.** Kartu di samping tombol menjelaskan cara optimizer itu memperbarui bobot, kapan biasanya dipakai, dan seberapa baik hasilnya.
+3. **Pilih gambar.** Klik salah satu dari sepuluh gambar contoh, atau tekan **+** untuk mengunggah JPG atau PNG sendiri (bisa juga dengan menyeret berkas ke kotaknya). Gambar unggahan dipotong persegi di tengah dan diperkecil sesuai ukuran dataset. Untuk Fashion-MNIST, gambar juga diubah ke grayscale dan secara bawaan dibalik warnanya, karena Fashion-MNIST menampilkan benda terang di latar hitam.
+4. **Baca alur jaringan dari kiri ke kanan.**
+   - **input**: channel warna gambar (merah, hijau, biru untuk CIFAR-10; satu channel abu-abu untuk Fashion-MNIST).
+   - **conv1** dan **conv2**: setiap kotak adalah *feature map*, keluaran dari satu filter 3 × 3 hasil latihan. Area terang adalah tempat filter itu menemukan polanya. Hanya 8 dari 32 atau 64 peta yang ditampilkan; pilih "8 paling aktif" atau "Channel #0 sampai #7".
+   - **max_pool**: mengambil nilai terkuat di setiap blok 2 × 2, sehingga ukurannya jadi setengah.
+   - **dense**: 128 angka yang merangkum gambar.
+   - **output**: probabilitas setiap kelas dari 10 kelas. Label di atas alur menunjukkan apakah prediksi teratas cocok dengan kelas aslinya.
+5. **Klik feature map mana pun** untuk memperbesarnya dan melihat bobot kernel yang menghasilkannya (merah negatif, biru positif).
+6. **Bandingkan semua optimizer pada satu gambar.** Tombol "Bandingkan semua optimizer" menampilkan prediksi dan keyakinan setiap optimizer untuk gambar yang sedang dilihat. Klik salah satu kartu untuk berpindah ke optimizer itu.
+7. **Telusuri hasil uji.** Kumpulan tetap 1.000 citra uji (100 per kelas); setiap kartu menampilkan label asli, prediksi, keyakinan, dan label *Cocok* atau *Tidak cocok*. Filter berdasarkan status dan kelas, misalnya "truck" + "Tidak cocok". Pilih optimizer kedua di *Pembanding* lalu centang *Hanya yang statusnya berbeda* untuk menemukan gambar yang hasilnya berbeda antara dua optimizer. Klik kartu untuk memeriksanya di alur jaringan.
+8. **Bandingkan optimizer.** Tabel ringkasan, diagram batang akurasi uji, kurva validasi kedelapan optimizer, kurva train vs validasi, akurasi per kelas, dan confusion matrix. Klik sel confusion matrix untuk membuka kesalahan-kesalahan itu di galeri.
+
+Sidebar juga punya tombol tema terang/gelap dan tombol bahasa Inggris/Indonesia.
+
+| Satu gambar, delapan optimizer | Mencari perbedaan hasil di data uji |
 |---|---|
-| ![Bandingkan](docs/screenshots/id/compare.png) | ![Galeri](docs/screenshots/id/gallery.png) |
+| ![Bandingkan optimizer](docs/screenshots/id/compare.png) | ![Galeri dengan filter](docs/screenshots/id/gallery.png) |
 
-| Perbandingan optimizer | Detail feature map dan kernel |
+| Fashion-MNIST di alur jaringan | Perbandingan optimizer |
 |---|---|
-| ![Training](docs/screenshots/id/training.png) | ![Detail](docs/screenshots/id/detail.png) |
+| ![Alur Fashion-MNIST](docs/screenshots/id/fashion.png) | ![Perbandingan optimizer](docs/screenshots/id/training.png) |
+
+## Cara kerjanya
+
+Model dilatih sekali di Python, lalu halaman menjalankannya dengan JavaScript:
+
+```
+Python (TensorFlow / Keras)                         Browser (GitHub Pages)
+───────────────────────────                         ──────────────────────
+src/train.py                                        dashboard/index.id.html
+  melatih 1 MLP + 8 CNN per dataset                   memuat data.json untuk dataset terpilih
+        │                                             memuat w-<optimizer>.json saat dibutuhkan
+        ▼                                             menjalankan CNN dengan JavaScript biasa:
+models/<dataset>/*.keras                                conv → ReLU → max pool → conv → ReLU
+        │                                               → max pool → dense → softmax
+        ▼                                             menggambar setiap hasil antara
+src/export_dashboard.py
+  menulis dashboard/data/<dataset>/
+    data.json          citra uji, prediksi, confusion matrix, kurva training
+    w-<optimizer>.json bobot CNN (float 16-bit, di bawah 1 MB per berkas)
+```
+
+- **Tanpa server.** Dashboard ini halaman statis dengan berkas JSON di sampingnya, jadi GitHub Pages bisa langsung menayangkannya.
+- **Browser yang menghitung.** Forward pass ditulis ulang dalam beberapa puluh baris JavaScript. Probabilitasnya sama dengan Keras dengan selisih di bawah 0,000001 untuk bobot yang sama.
+- **Bobot ringan.** Bobot disimpan sebagai float 16-bit. Semua angka di halaman (akurasi, confusion matrix, prediksi galeri) dihitung ulang dari bobot yang sudah dibulatkan itu, jadi halaman dan berkasnya selalu sesuai.
+- **Unggahan tetap lokal.** Gambar unggahan dibaca dengan canvas browser dan tidak dikirim ke mana pun.
+
+## Model
+
+Arsitekturnya sama untuk kedua dataset; yang berubah hanya ukuran input.
+
+| Layer | Output CIFAR-10 | Output Fashion-MNIST | Parameter (CIFAR-10 / Fashion-MNIST) |
+|---|---|---|---|
+| Input | 32 × 32 × 3 | 28 × 28 × 1 | |
+| Conv2D, 32 filter 3 × 3, ReLU | 30 × 30 × 32 | 26 × 26 × 32 | 896 / 320 |
+| MaxPooling 2 × 2 | 15 × 15 × 32 | 13 × 13 × 32 | |
+| Conv2D, 64 filter 3 × 3, ReLU | 13 × 13 × 64 | 11 × 11 × 64 | 18.496 / 18.496 |
+| MaxPooling 2 × 2 | 6 × 6 × 64 | 5 × 5 × 64 | |
+| Flatten | 2.304 | 1.600 | |
+| Dense 128, ReLU, Dropout 0,3 | 128 | 128 | 295.040 / 204.928 |
+| Dense 10, softmax | 10 | 10 | 1.290 / 1.290 |
+| **Total** | | | **315.722 / 225.034** |
+
+Baseline MLP meratakan gambar lalu memakai Dense 256 → Dense 128 → Dense 10.
+
+Pengaturan training untuk setiap run: seed 42 (bobot awal identik), 10 epoch, batch 128, 10% data latih untuk validasi, learning rate bawaan Keras kecuali run tambahan *SGD + momentum* (learning rate 0,05, momentum 0,9, Nesterov).
 
 ## Hasil
 
-CNN yang sama, bobot awal yang sama (seed 42), 10 epoch, batch 128, validasi 10%, learning rate bawaan Keras (kecuali run tambahan SGD + momentum). Akurasi diukur pada 10.000 citra uji CIFAR-10.
+Akurasi pada 10.000 citra uji masing-masing dataset.
+
+### CIFAR-10
 
 | Model | Optimizer | Akurasi uji | Loss uji | Akurasi val terbaik (epoch) | Selisih train−val |
 |---|---|---|---|---|---|
@@ -36,116 +105,116 @@ CNN yang sama, bobot awal yang sama (seed 42), 10 epoch, batch 128, validasi 10%
 | CNN | RMSprop | 68,53% | 0,944 | 66,86% (10) | +7,6 poin |
 | CNN | Adam | 67,86% | 0,927 | 65,44% (10) | +6,0 poin |
 | CNN | AdamW | 67,74% | 0,929 | 66,24% (10) | +4,9 poin |
-| CNN | SGD + momentum (lr 0,05) | 64,10% | 1,186 | 64,64% (10) | +11,0 poin |
+| CNN | SGD + momentum | 64,10% | 1,186 | 64,64% (10) | +11,0 poin |
 | CNN | SGD | 47,48% | 1,457 | 45,92% (10) | −1,0 poin |
 | CNN | Adagrad | 31,93% | 1,940 | 30,02% (10) | −1,8 poin |
 | CNN | Adadelta | 16,07% | 2,288 | 14,74% (10) | −0,6 poin |
 | MLP | Adam | 46,87% | | | |
 
-Yang bisa dibaca dari angka-angka ini:
+### Fashion-MNIST
 
-- Keluarga Adam dan RMSprop berakhir dalam rentang 1,2 poin satu sama lain. Dengan satu seed, selisih sekecil itu belum cukup untuk menyebut salah satunya lebih baik.
-- SGD, Adagrad, dan Adadelta tertinggal jauh karena learning rate bawaannya terlalu kecil untuk 10 epoch. SGD dengan momentum dan learning rate lebih besar menutup sebagian besar ketertinggalan itu, tetapi selisih train−val-nya juga paling besar.
-- CNN mengungguli MLP sekitar 21 poin di CIFAR-10 dengan parameter kurang dari setengahnya (315.722 vs 820.874). Di Fashion-MNIST, perbandingan yang sama hanya berselisih 3,4 poin (91,01% vs 87,61%). Konvolusi jauh lebih membantu pada citra berwarna dengan latar yang beragam.
+| Model | Optimizer | Akurasi uji | Loss uji | Akurasi val terbaik (epoch) | Selisih train−val |
+|---|---|---|---|---|---|
+| CNN | RMSprop | 91,04% | 0,252 | 91,35% (10) | +1,5 poin |
+| CNN | Adam | 91,03% | 0,257 | 90,87% (10) | +1,6 poin |
+| CNN | Nadam | 90,96% | 0,254 | 90,92% (10) | +1,6 poin |
+| CNN | AdamW | 90,61% | 0,259 | 91,03% (10) | +1,4 poin |
+| CNN | SGD + momentum | 89,97% | 0,286 | 90,53% (9) | +1,6 poin |
+| CNN | SGD | 81,63% | 0,497 | 81,93% (10) | −1,2 poin |
+| CNN | Adagrad | 73,82% | 0,752 | 74,18% (10) | −3,7 poin |
+| CNN | Adadelta | 50,41% | 1,942 | 50,35% (10) | −6,7 poin |
+| MLP | Adam | 87,29% | | | |
 
-Angka lengkap ada di [`results/optimizer_results.csv`](results/optimizer_results.csv) dan riwayat per epoch di [`results/training_history.json`](results/training_history.json).
+Yang menonjol:
+
+- **Optimizer adaptif berakhir berdekatan.** Adam, AdamW, Nadam, dan RMSprop berakhir dalam rentang sekitar satu poin di kedua dataset. Dengan satu run per optimizer, selisih sekecil itu bukan bukti bahwa salah satunya lebih baik.
+- **Learning rate bawaan berpengaruh.** SGD, Adagrad, dan Adadelta memakai learning rate bawaan yang kecil dan masih jauh dari konvergen setelah 10 epoch. Efeknya jauh lebih besar di CIFAR-10. Memberi SGD momentum dan learning rate lebih besar menutup sebagian besar ketertinggalannya.
+- **CNN paling membantu pada gambar yang lebih sulit.** Di CIFAR-10, CNN mengungguli MLP 21,0 poin dengan parameter kurang dari setengahnya. Di Fashion-MNIST selisihnya hanya 3,7 poin, karena siluet pakaian di tengah latar hitam sudah mudah bagi MLP.
+
+Angka lengkap ada di [`results/`](results/).
 
 ## Data
 
-| Dataset | Link | Dipakai untuk |
+| Dataset | Link | Dipakai di sini |
 |---|---|---|
-| CIFAR-10 (resmi) | https://www.cs.toronto.edu/~kriz/cifar.html | Dataset sumber: 60.000 citra berwarna 32 × 32, 10 kelas (50.000 latih, 10.000 uji) |
-| CIFAR-10 dalam bentuk berkas gambar | https://github.com/YoongiKim/CIFAR-10-images | Salinan yang dipakai untuk melatih model di repositori ini |
-| Fashion-MNIST | https://github.com/zalandoresearch/fashion-mnist | Angka pembanding MLP vs CNN dari notebook praktikum |
+| CIFAR-10 | https://www.cs.toronto.edu/~kriz/cifar.html | 60.000 citra berwarna, 32 × 32, 10 kelas (50.000 latih, 10.000 uji) |
+| CIFAR-10 dalam bentuk berkas gambar | https://github.com/YoongiKim/CIFAR-10-images | Salinan yang dipakai melatih model CIFAR-10 di dashboard |
+| Fashion-MNIST | https://github.com/zalandoresearch/fashion-mnist | 70.000 citra grayscale, 28 × 28, 10 kelas (60.000 latih, 10.000 uji) |
 
-Model di `dashboard/` dilatih dengan salinan CIFAR-10 berbentuk berkas JPG, bukan batch biner resmi. Kompresi JPG sedikit mengubah nilai piksel, jadi melatih ulang dengan data resmi (`--source keras`) akan memberi angka yang sedikit berbeda.
+Model CIFAR-10 di dashboard dilatih dengan salinan berkas JPG, yang pikselnya sedikit berbeda dari versi biner resmi karena kompresi JPG. Melatih dengan data resmi akan memberi angka yang sedikit berbeda.
 
-Sitasi CIFAR-10: Alex Krizhevsky, *Learning Multiple Layers of Features from Tiny Images*, 2009.
-
-## Model
-
-```
-Input (32, 32, 3)
-Conv2D 32 filter 3×3, ReLU       ->  30 × 30 × 32      896 parameter
-MaxPooling2D 2×2                 ->  15 × 15 × 32
-Conv2D 64 filter 3×3, ReLU       ->  13 × 13 × 64   18.496 parameter
-MaxPooling2D 2×2                 ->   6 ×  6 × 64
-Flatten                          ->  2.304
-Dense 128, ReLU                  ->  128           295.040 parameter
-Dropout 0,3
-Dense 10, softmax                ->  10              1.290 parameter
-Total                                              315.722 parameter
-```
+Sitasi:
+- Alex Krizhevsky. *Learning Multiple Layers of Features from Tiny Images*. 2009.
+- Han Xiao, Kashif Rasul, Roland Vollgraf. *Fashion-MNIST: a Novel Image Dataset for Benchmarking Machine Learning Algorithms*. arXiv:1708.07747, 2017.
 
 ## Struktur repositori
 
 ```
 .
+├── index.html                  mengarahkan pengunjung GitHub Pages ke dashboard
 ├── dashboard/
-│   ├── index.html          dashboard bahasa Inggris (bawaan)
-│   ├── index.id.html       dashboard bahasa Indonesia
-│   ├── data.json           atlas citra uji, prediksi, confusion matrix, riwayat training
-│   └── w-<optimizer>.json  bobot CNN per optimizer (float16, base64)
+│   ├── index.html              dashboard (bahasa Inggris)
+│   ├── index.id.html           dashboard (bahasa Indonesia)
+│   └── data/
+│       ├── summary.json        angka MLP vs CNN untuk kedua dataset
+│       ├── cifar10/            data.json + w-<optimizer>.json
+│       └── fashion/            data.json + w-<optimizer>.json
 ├── src/
-│   ├── train.py            melatih MLP dan CNN dengan kedelapan optimizer
-│   └── export_dashboard.py mengekspor model hasil latihan ke dashboard/
+│   ├── train.py                melatih MLP dan 8 CNN untuk satu dataset
+│   └── export_dashboard.py     mengubah model hasil latihan menjadi dashboard/data/<dataset>/
 ├── notebooks/
-│   └── cifar10_cnn_optimizers.ipynb  kode training lengkap dengan penjelasan (bahasa Inggris, terjemahan Indonesia bisa dibuka)
-├── results/                tabel hasil dan riwayat training
-├── docs/screenshots/       screenshot untuk README
-├── index.html              mengarahkan ke dashboard/ (untuk GitHub Pages)
+│   └── cnn_optimizers.ipynb    training yang sama, langkah demi langkah dengan penjelasan
+├── results/                    tabel hasil dan riwayat training
+├── docs/screenshots/           gambar untuk README ini
 └── requirements.txt
 ```
 
-## Menjalankan dashboard
+## Menjalankan sendiri
 
-Dashboard ini halaman statis, tetapi memuat `data.json` dan berkas bobot lewat `fetch`, jadi harus dibuka lewat HTTP. Membuka `index.html` langsung dari disk akan menampilkan pesan gagal memuat.
+### Membuka dashboard di komputermu
+
+Halaman ini memuat datanya dengan `fetch`, yang diblokir browser untuk berkas yang dibuka langsung dari disk. Jalankan web server kecil:
 
 ```bash
 cd dashboard
 python -m http.server 8000
-# buka http://localhost:8000/index.id.html   (Indonesia)
-# buka http://localhost:8000                 (Inggris)
 ```
 
-### Publikasi dengan GitHub Pages
+Lalu buka http://localhost:8000/index.id.html (Indonesia) atau http://localhost:8000 (Inggris).
 
-1. Push folder ini ke repositori GitHub.
-2. Buka **Settings → Pages**, atur **Source** ke *Deploy from a branch*, pilih `main` dan `/ (root)`.
-3. Situsnya ada di `https://<username>.github.io/<repositori>/`. Berkas `index.html` di root akan mengarahkan ke dashboard.
+### Menayangkan salinanmu sendiri dengan GitHub Pages
 
-## Notebook
+1. Fork atau push repositori ini ke GitHub.
+2. Buka **Settings → Pages**, atur **Source** ke *Deploy from a branch*, lalu pilih branch `main` dan folder `/ (root)`.
+3. Sekitar satu menit kemudian situsnya aktif di `https://<username>.github.io/<nama-repositori>/`. Berkas `index.html` di root meneruskan pengunjung ke dashboard.
 
-[`notebooks/cifar10_cnn_optimizers.ipynb`](notebooks/cifar10_cnn_optimizers.ipynb) menjalankan seluruh analisis dengan penjelasan di setiap langkah: memuat dan mengeksplorasi CIFAR-10, MLP dan CNN, cek manual jumlah parameter, evaluasi dengan confusion matrix, pembanding Fashion-MNIST, eksperimen delapan optimizer, dan menyimpan model untuk dashboard.
-
-Penjelasan utamanya dalam bahasa Inggris. Setiap penjelasan punya terjemahan bahasa Indonesia di bagian **Bahasa Indonesia** yang bisa dibuka-tutup, dan ini berfungsi di GitHub maupun Google Colab.
-
-Untuk menjalankannya di Colab: **File → Open notebook → GitHub**, tempel URL repositori ini, lalu pilih notebook-nya. Pilih runtime GPU (*Runtime → Change runtime type → T4 GPU*); run penuh butuh sekitar 10 menit. Ubah `QUICK_RUN = True` di sel kode pertama untuk cek cepat sekitar satu menit.
-
-## Melatih ulang model
+### Melatih ulang model
 
 ```bash
 pip install -r requirements.txt
 
-# Opsi A: CIFAR-10 resmi lewat keras.datasets (mengunduh sekitar 170 MB)
-python src/train.py
-python src/export_dashboard.py
+python src/train.py --dataset cifar10        # sekitar 15 menit di CPU laptop
+python src/export_dashboard.py --dataset cifar10
 
-# Opsi B: salinan berkas gambar yang dipakai untuk dashboard ini
-git clone --depth 1 https://github.com/YoongiKim/CIFAR-10-images data/CIFAR-10-images
-python src/train.py --source jpg --jpg-dir data/CIFAR-10-images
-python src/export_dashboard.py --source jpg --jpg-dir data/CIFAR-10-images
+python src/train.py --dataset fashion        # sekitar 12 menit di CPU laptop
+python src/export_dashboard.py --dataset fashion
 ```
 
-Melatih kesembilan run butuh sekitar 15 menit di CPU laptop dan beberapa menit di GPU Colab. Pakai `--epochs 1 --limit 2000` untuk cek cepat bahwa semuanya berjalan. Berkas `.keras` hasil latihan disimpan di `models/`, yang diabaikan oleh git.
+Kedua skrip mengunduh data lewat `keras.datasets` secara bawaan. Untuk memakai salinan lokal, tambahkan `--source files --data-dir <folder>` (salinan berkas gambar CIFAR-10, atau empat berkas `.gz` dari repositori Fashion-MNIST). Tambahkan `--epochs 1 --limit 2000` untuk uji cepat. Model hasil latihan disimpan di `models/`, yang diabaikan git.
+
+### Mengikuti lewat notebook
+
+[`notebooks/cnn_optimizers.ipynb`](notebooks/cnn_optimizers.ipynb) menjalankan analisis yang sama langkah demi langkah, dengan penjelasan di setiap langkah: eksplorasi data, membangun model, cek manual jumlah parameter, evaluasi CNN, dan eksperimen optimizer. Atur `DATASET = "cifar10"` atau `"fashion"` di sel kode pertama. Penjelasan utamanya bahasa Inggris, masing-masing dengan terjemahan bahasa Indonesia yang bisa dibuka.
+
+Untuk membukanya di Google Colab: **File → Open notebook → GitHub**, tempel URL repositori ini, lalu pilih notebook-nya. Pakai runtime GPU (*Runtime → Change runtime type → T4 GPU*); satu run penuh butuh sekitar 10 menit per dataset.
 
 Versi yang dipakai: Python 3.13, TensorFlow 2.21, Keras 3.15, NumPy 2.5, Pillow 12.3.
 
-## Catatan
+## Keterbatasan
 
-- Hasil berasal dari satu kali training per optimizer dengan satu seed. Selisih kecil antar optimizer tidak bermakna secara statistik.
-- Bobot disimpan dalam float16 agar tiap berkas di bawah 1 MB. Semua angka di dashboard dihitung ulang dari bobot yang sudah dibulatkan itu, dan forward pass di browser cocok dengan Keras dengan selisih probabilitas di bawah 1e-6.
-- Notebook menyimpan model dengan format yang sama seperti yang dibaca `src/export_dashboard.py`, jadi hasil run di Colab juga bisa diekspor ke dashboard.
+- Setiap optimizer dilatih satu kali dengan satu seed. Selisih sekitar satu poin antar optimizer masih dalam rentang variasi antar run.
+- Semua run berhenti di epoch 10. Optimizer yang lebih baik masih terus membaik di epoch terakhir, jadi training lebih lama akan menaikkan semua angka.
+- Gambar unggahanmu dinilai oleh model yang hanya mengenal 10 kelas dari dataset terpilih pada resolusi sangat rendah. Foto anjing yang tidak memenuhi bingkai sering salah dibaca.
 
 ## Pembuat
 

@@ -1,16 +1,17 @@
 """
 Export trained models into the static files the dashboard reads.
 
-Reads   models/mlp.keras, models/cnn-<optimizer>.keras and their .history.json files
-Writes  dashboard/data.json           test-image atlas, predictions, confusion matrices, histories
-        dashboard/w-<optimizer>.json  CNN weights in float16, base64-encoded
+Reads   models/<dataset>/mlp.history.json and models/<dataset>/cnn-<optimizer>.keras (+ .history.json)
+Writes  dashboard/data/<dataset>/data.json           gallery images, predictions, confusion matrices, histories
+        dashboard/data/<dataset>/w-<optimizer>.json  CNN weights in float16, base64-encoded
+        dashboard/data/summary.json                  MLP vs CNN numbers for every exported dataset
 
-Weights are rounded to float16 to keep each file under 1 MB. All numbers in data.json
-are recomputed from the rounded weights, so the browser and this script agree exactly.
+Weights are rounded to float16 to keep each file under 1 MB. All numbers in data.json are
+recomputed from the rounded weights, so the browser and this script agree exactly.
 
 Usage:
-  python src/export_dashboard.py                 # official CIFAR-10 via keras.datasets
-  python src/export_dashboard.py --source jpg --jpg-dir path/to/CIFAR-10-images
+  python src/export_dashboard.py --dataset cifar10
+  python src/export_dashboard.py --dataset fashion --source files --data-dir data/fashion
 """
 import argparse
 import base64
@@ -27,9 +28,9 @@ import keras  # noqa: E402
 from PIL import Image  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from train import CLASSES, OPTIMIZERS, ROOT, load_data, slug  # noqa: E402
+from train import DATASETS, OPTIMIZERS, ROOT, load_data, slug  # noqa: E402
 
-# Text shown in the optimizer card. Indonesian rows follow the course slide.
+# Text shown in the optimizer card. The Indonesian rows follow the course slide.
 META = {
     "SGD": {
         "cfg": "learning rate 0,01 (bawaan), tanpa momentum", "cfg_en": "learning rate 0.01 (default), no momentum",
@@ -67,10 +68,6 @@ META = {
         "use_en": "A comparison to see whether SGD can catch up when given momentum"},
 }
 
-# Fashion-MNIST reference numbers from the course notebook run (MLP vs CNN, Adam, 10 epochs).
-FASHION = {"MLP": {"params": 235146, "acc": 0.8761, "time": 34.5},
-           "CNN": {"params": 225034, "acc": 0.9101, "time": 40.0}}
-
 
 def b64(a, dtype):
     return base64.b64encode(np.ascontiguousarray(a, dtype=dtype).tobytes()).decode()
@@ -78,34 +75,38 @@ def b64(a, dtype):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--source", choices=["keras", "jpg"], default="keras")
-    ap.add_argument("--jpg-dir", default="data/CIFAR-10-images")
+    ap.add_argument("--dataset", choices=list(DATASETS), default="cifar10")
+    ap.add_argument("--source", choices=["keras", "files"], default="keras")
+    ap.add_argument("--data-dir", help="folder for --source files")
     ap.add_argument("--per-class", type=int, default=100, help="test images per class in the gallery")
     args = ap.parse_args()
 
-    models_dir, out = ROOT / "models", ROOT / "dashboard"
-    out.mkdir(exist_ok=True)
-    _, _, xte, yte = load_data(args.source, args.jpg_dir)
+    info = DATASETS[args.dataset]
+    models_dir = ROOT / "models" / args.dataset
+    out = ROOT / "dashboard" / "data" / args.dataset
+    out.mkdir(parents=True, exist_ok=True)
+    _, _, xte, yte = load_data(args.dataset, args.source, args.data_dir)
     xf = (xte / 255.0).astype("float32")
 
-    # Fixed gallery pool: the same images for every optimizer.
+    # Fixed gallery pool: the same test images for every optimizer.
     rng = np.random.default_rng(42)
     pool = np.concatenate([np.sort(rng.choice(np.where(yte == c)[0], args.per_class, replace=False))
                            for c in range(10)])
-    cols = 40
+    size, cols = info["shape"][0], 40
     rows = int(np.ceil(len(pool) / cols))
-    atlas = np.zeros((rows * 32, cols * 32, 3), np.uint8)
+    atlas = np.zeros((rows * size, cols * size, 3), np.uint8)
     for k, i in enumerate(pool):
         r, c = divmod(k, cols)
-        atlas[r * 32:(r + 1) * 32, c * 32:(c + 1) * 32] = xte[i]
+        atlas[r * size:(r + 1) * size, c * size:(c + 1) * size] = xte[i]  # grayscale broadcasts to RGB
     buf = io.BytesIO()
     Image.fromarray(atlas).save(buf, "PNG", optimize=True)
 
-    opts, pool_ok = [], np.zeros(len(pool))
+    opts, pool_ok, params = [], np.zeros(len(pool)), 0
     for name in OPTIMIZERS:
         file = f"cnn-{slug(name)}"
         model = keras.models.load_model(models_dir / f"{file}.keras")
-        info = json.load(open(models_dir / f"{file}.history.json"))
+        hist = json.load(open(models_dir / f"{file}.history.json"))
+        params = model.count_params()
         weights = {}
         for layer in ["conv1", "conv2", "dense", "output"]:
             w, b = model.get_layer(layer).get_weights()
@@ -126,27 +127,30 @@ def main():
                   open(out / f"w-{slug(name)}.json", "w"), separators=(",", ":"))
         opts.append({"name": name, "slug": slug(name), **META[name],
                      "acc": round(float((pred == yte).mean()), 4), "loss": round(loss, 4),
-                     "time": info["time"], "hist": info["hist"], "cm": cm.tolist(),
+                     "time": hist["time"], "hist": hist["hist"], "cm": cm.tolist(),
                      "pp": pp.argmax(1).tolist(), "pc": [round(float(x), 3) for x in pp.max(1)]})
         print(f"{name:13s} test accuracy {opts[-1]['acc']:.4f}")
 
+    # Strip images: per class, an image most optimizers get right, preferring Adam's most confident one.
     adam = next(o for o in opts if o["name"] == "Adam")
     demo = []
     for c in range(10):
         ks = [k for k in range(len(pool)) if yte[pool[k]] == c]
         demo.append(max(ks, key=lambda k: (pool_ok[k], adam["pc"][k] if adam["pp"][k] == c else 0)))
 
-    mlp_model = keras.models.load_model(models_dir / "mlp.keras")
-    mlp_info = json.load(open(models_dir / "mlp.history.json"))
-    mlp_acc = float(mlp_model.evaluate(xf, yte, verbose=0)[1])
-
-    data = {"classes": CLASSES, "atlas": "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode(),
-            "cols": cols, "pool": [{"i": int(i), "t": int(yte[i])} for i in pool], "demo": demo,
-            "opts": opts, "params": model.count_params(),
-            "mlp": {"params": mlp_model.count_params(), "acc": round(mlp_acc, 4), "time": mlp_info["time"]},
-            "fashion": FASHION}
+    mlp = json.load(open(models_dir / "mlp.history.json"))
+    data = {"key": args.dataset, "title": info["title"], "shape": list(info["shape"]), "classes": info["classes"],
+            "atlas": "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode(), "cols": cols,
+            "pool": [{"i": int(i), "t": int(yte[i])} for i in pool], "demo": demo, "opts": opts, "params": params,
+            "mlp": {"params": mlp["params"], "acc": mlp["test_accuracy"], "time": mlp["time"]}}
     json.dump(data, open(out / "data.json", "w"), separators=(",", ":"))
-    print("wrote dashboard/data.json and dashboard/w-*.json")
+
+    summary_path = ROOT / "dashboard" / "data" / "summary.json"
+    summary = json.load(open(summary_path)) if summary_path.exists() else {}
+    summary[args.dataset] = {"title": info["title"], "shape": list(info["shape"]),
+                             "mlp": data["mlp"], "cnn": {"params": params, "acc": adam["acc"]}}
+    json.dump(dict(sorted(summary.items())), open(summary_path, "w"), indent=1)
+    print(f"wrote {out} and {summary_path}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,16 @@
+# trained models and downloaded data (regenerate with src/train.py)
+models/
+data/
+*.keras
+*.h5
+
+# Python and Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
