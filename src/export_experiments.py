@@ -122,8 +122,17 @@ def write_run(out_dir, key, pred, conf, cm, acc, f1, per, history):
     (out_dir / f"{key}.json").write_text(encoding="utf-8", newline="\n", data=json.dumps(data, separators=(",", ":")))
 
 
+def dashboard_file(run, runs):
+    """Whether the dashboard reads this run's predictions file. It shows one EfficientNet run per
+    optimizer (the lowest finished seed), so the other EfficientNet seeds stay in experiments/runs and
+    in the run index, but get no dashboard file."""
+    if run["model"] != "effnet":
+        return True
+    return run["seed"] == min(r["seed"] for r in runs if (r["study"], r["model"], r["opt"]) == (run["study"], run["model"], run["opt"]))
+
+
 def controlled(ds, yte, out_dir):
-    runs = []
+    runs, files = [], {}
     for meta in sorted((EXP / "runs").glob(f"*/{ds}/*/seed-*/run.json")):
         info = json.loads(meta.read_text(encoding="utf-8"))
         if info["phase"] == "warmup" or info.get("smoke") or info["status"] != "evaluated":
@@ -147,7 +156,7 @@ def controlled(ds, yte, out_dir):
             cm = confusion(yte, pred)
             assert abs(acc - m["test_accuracy"]) < 1e-6 and abs(f1 - m["test_macro_f1"]) < 1e-6 and cm.tolist() == m["confusion"]
             key = f"{info['study']}__{info['model']}-{opt}__s{info['seed']}"
-            write_run(out_dir, key, pred, prob[np.arange(10000), pred], cm, acc, f1, per, history)
+            files[key] = (pred, prob[np.arange(10000), pred], cm, acc, f1, per, history)
             r = info["recipe"]
             runs.append({"key": key, "study": info["study"], "model": info["model"], "opt": opt,
                          "seed": info["seed"], "status": "complete", "acc": round(acc, 6), "f1": round(f1, 6),
@@ -159,6 +168,10 @@ def controlled(ds, yte, out_dir):
                          "selection": f"fixed epoch {best}" if tag else "best validation macro-F1",
                          "warmup_epochs": info.get("warmup_epochs"), "train_seconds": info["train_seconds"],
                          "browser": False})
+    for r in runs:
+        r["file"] = dashboard_file(r, runs)
+        if r["file"]:
+            write_run(out_dir, r["key"], *files[r["key"]])
     return runs
 
 
@@ -203,7 +216,7 @@ def main():
         D["pool_ids"] = [int(to_off[p["i"]]) for p in D["pool"]]
         assert all(yte[i] == p["t"] for i, p in zip(D["pool_ids"], D["pool"]))
         runs = historical(ds, args, D, yte, out_dir) + controlled(ds, yte, out_dir)
-        keep = {r["key"] for r in runs}
+        keep = {r["key"] for r in runs if r.get("file", True)}
         for f in out_dir.glob("*.json"):
             if f.stem not in keep:
                 f.unlink()

@@ -118,9 +118,12 @@ def main():
                 key = f"{info['study']}__{info['model']}-{opt}__s{info['seed']}"
                 r = by_key.get(key)
                 if check(r is not None, f"{key}: not in experiments.json"):
-                    j = json.loads((ROOT / "dashboard" / "data" / ds / "runs" / f"{key}.json").read_text(encoding="utf-8"))
-                    check(np.array_equal(u8(j["preds"]), pred) and j["cm"] == cm.tolist(), f"{key}: dashboard predictions")
                     check(abs(r["acc"] - acc) < 1e-6 and abs(r["f1"] - f1) < 1e-6, f"{key}: dashboard metrics")
+                    f = ROOT / "dashboard" / "data" / ds / "runs" / f"{key}.json"
+                    # EfficientNet seeds the dashboard does not show have no predictions file
+                    if check(f.exists() == r.get("file", True), f"{key}: dashboard file present only when the dashboard uses it") and f.exists():
+                        j = json.loads(f.read_text(encoding="utf-8"))
+                        check(np.array_equal(u8(j["preds"]), pred) and j["cm"] == cm.tolist(), f"{key}: dashboard predictions")
                 n_checked += 1
         # historical runs in the dashboard
         D = json.loads((ROOT / "dashboard" / "data" / ds / "data.json").read_text(encoding="utf-8"))
