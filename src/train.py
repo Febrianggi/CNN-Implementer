@@ -2,20 +2,20 @@
 Train the models used by the dashboard, for CIFAR-10 or Fashion-MNIST.
 
 What it trains (same setup for every run: seed 42, 10 epochs, batch 128, 10% validation split):
-  * one MLP baseline with Adam
-  * the same CNN eight times, once per optimizer:
-    SGD, RMSprop, Adam, AdamW, Adagrad, Nadam, Adadelta, and SGD with Nesterov momentum
+  two architectures, an MLP and a CNN, each trained eight times, once per optimizer:
+  SGD, RMSprop, Adam, AdamW, Adagrad, Nadam, Adadelta, and SGD with Nesterov momentum
 
 Outputs (per dataset):
-  models/<dataset>/<run>.keras         trained model
-  models/<dataset>/<run>.history.json  per-epoch history, test accuracy, training time
-  results/<dataset>_results.csv        test accuracy and loss for every run
+  models/<dataset>/<model>-<optimizer>.keras         trained model (weights only, no optimizer state)
+  models/<dataset>/<model>-<optimizer>.history.json  per-epoch history, test accuracy, training time
+  results/<dataset>_results.csv                      test accuracy and loss for every run
 
 Usage:
   python src/train.py --dataset cifar10                    # downloads through keras.datasets
   python src/train.py --dataset fashion
   python src/train.py --dataset cifar10 --source files --data-dir data/CIFAR-10-images
   python src/train.py --dataset fashion --source files --data-dir data/fashion
+  python src/train.py --dataset cifar10 --models mlp                # only the MLP runs
   python src/train.py --dataset cifar10 --epochs 1 --limit 2000   # quick smoke test
 """
 import argparse
@@ -133,6 +133,13 @@ def build_mlp(input_shape):
     ], name="mlp")
 
 
+def save_weights_only(trained, fresh, path):
+    """Save the trained weights in an uncompiled copy, so the file carries no optimizer state
+    (an Adam checkpoint would otherwise be about three times larger)."""
+    fresh.set_weights(trained.get_weights())
+    fresh.save(path)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dataset", choices=list(DATASETS), default="cifar10")
@@ -140,7 +147,8 @@ def main():
     ap.add_argument("--data-dir", help="folder for --source files")
     ap.add_argument("--epochs", type=int, default=10)
     ap.add_argument("--limit", type=int, default=0, help="use only the first N training images (smoke test)")
-    ap.add_argument("--only", nargs="*", help="train only these runs, e.g. --only MLP Adam")
+    ap.add_argument("--models", nargs="*", choices=["mlp", "cnn"], default=["mlp", "cnn"])
+    ap.add_argument("--only", nargs="*", help="train only these optimizers, e.g. --only Adam SGD")
     args = ap.parse_args()
 
     shape = DATASETS[args.dataset]["shape"]
@@ -161,32 +169,31 @@ def main():
     xte_f = (xte / 255.0).astype("float32")
     print(f"{args.dataset}: train {xtr.shape}, test {xte_f.shape}, source={args.source}")
 
-    runs = {"MLP": (build_mlp, OPTIMIZERS["Adam"])}
-    runs.update({name: (build_cnn, opt) for name, opt in OPTIMIZERS.items()})
-    if args.only:
-        runs = {k: v for k, v in runs.items() if k in args.only}
-
+    builders = {"mlp": build_mlp, "cnn": build_cnn}
     rows = []
-    for name, (builder, make_opt) in runs.items():
-        keras.utils.set_random_seed(42)
-        model = builder(shape)
-        model.compile(optimizer=make_opt(), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-        t0 = time.time()
-        hist = model.fit(xtr, ytr, epochs=args.epochs, batch_size=128, validation_split=0.1, verbose=2)
-        seconds = time.time() - t0
-        test_loss, test_acc = model.evaluate(xte_f, yte, verbose=0)
+    for model_key in args.models:
+        for name, make_opt in OPTIMIZERS.items():
+            if args.only and name not in args.only:
+                continue
+            keras.utils.set_random_seed(42)
+            model = builders[model_key](shape)
+            model.compile(optimizer=make_opt(), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+            t0 = time.time()
+            hist = model.fit(xtr, ytr, epochs=args.epochs, batch_size=128, validation_split=0.1, verbose=2)
+            seconds = time.time() - t0
+            test_loss, test_acc = model.evaluate(xte_f, yte, verbose=0)
 
-        file = "mlp" if name == "MLP" else f"cnn-{slug(name)}"
-        model.save(models_dir / f"{file}.keras")
-        json.dump({"name": name, "params": model.count_params(), "time": round(seconds, 1),
-                   "test_accuracy": round(float(test_acc), 4), "test_loss": round(float(test_loss), 4),
-                   "hist": {k: [round(float(v), 4) for v in vs] for k, vs in hist.history.items()}},
-                  open(models_dir / f"{file}.history.json", "w"), indent=1)
-        rows.append({"dataset": DATASETS[args.dataset]["title"], "model": "MLP" if name == "MLP" else "CNN",
-                     "optimizer": "Adam" if name == "MLP" else name, "params": model.count_params(),
-                     "test_accuracy": round(float(test_acc), 4), "test_loss": round(float(test_loss), 4),
-                     "train_seconds": round(seconds, 1)})
-        print(f"{name:13s} test accuracy {test_acc:.4f}  ({seconds:.0f} s)", flush=True)
+            file = f"{model_key}-{slug(name)}"
+            save_weights_only(model, builders[model_key](shape), models_dir / f"{file}.keras")
+            json.dump({"model": model_key, "name": name, "params": model.count_params(), "time": round(seconds, 1),
+                       "test_accuracy": round(float(test_acc), 4), "test_loss": round(float(test_loss), 4),
+                       "hist": {k: [round(float(v), 4) for v in vs] for k, vs in hist.history.items()}},
+                      open(models_dir / f"{file}.history.json", "w"), indent=1)
+            rows.append({"dataset": DATASETS[args.dataset]["title"], "model": model_key.upper(),
+                         "optimizer": name, "params": model.count_params(),
+                         "test_accuracy": round(float(test_acc), 4), "test_loss": round(float(test_loss), 4),
+                         "train_seconds": round(seconds, 1)})
+            print(f"{model_key.upper()} {name:13s} test accuracy {test_acc:.4f}  ({seconds:.0f} s)", flush=True)
 
     out = results_dir / f"{args.dataset}_results.csv"
     with open(out, "w", newline="") as f:

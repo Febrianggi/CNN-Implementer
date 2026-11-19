@@ -6,14 +6,31 @@
    32,
    3
   ],
-  "mlp": {
-   "params": 820874,
-   "acc": 0.4687,
-   "time": 24.2
-  },
   "cnn": {
    "params": 315722,
-   "acc": 0.6786
+   "acc": {
+    "sgd": 0.4748,
+    "rmsprop": 0.6853,
+    "adam": 0.6786,
+    "adamw": 0.6774,
+    "adagrad": 0.3193,
+    "nadam": 0.6888,
+    "adadelta": 0.1607,
+    "sgd-momentum": 0.641
+   }
+  },
+  "mlp": {
+   "params": 820874,
+   "acc": {
+    "sgd": 0.4347,
+    "rmsprop": 0.4308,
+    "adam": 0.4687,
+    "adamw": 0.482,
+    "adagrad": 0.3858,
+    "nadam": 0.4817,
+    "adadelta": 0.3069,
+    "sgd-momentum": 0.4399
+   }
   }
  },
  "fashion": {
@@ -23,14 +40,31 @@
    28,
    1
   ],
-  "mlp": {
-   "params": 235146,
-   "acc": 0.8729,
-   "time": 18.0
-  },
   "cnn": {
    "params": 225034,
-   "acc": 0.9103
+   "acc": {
+    "sgd": 0.8163,
+    "rmsprop": 0.9104,
+    "adam": 0.9103,
+    "adamw": 0.9061,
+    "adagrad": 0.7382,
+    "nadam": 0.9096,
+    "adadelta": 0.5041,
+    "sgd-momentum": 0.8997
+   }
+  },
+  "mlp": {
+   "params": 235146,
+   "acc": {
+    "sgd": 0.8428,
+    "rmsprop": 0.8743,
+    "adam": 0.8729,
+    "adamw": 0.8662,
+    "adagrad": 0.8003,
+    "nadam": 0.8772,
+    "adadelta": 0.6655,
+    "sgd-momentum": 0.8746
+   }
   }
  }
 }

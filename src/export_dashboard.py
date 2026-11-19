@@ -1,10 +1,10 @@
 """
 Export trained models into the static files the dashboard reads.
 
-Reads   models/<dataset>/mlp.history.json and models/<dataset>/cnn-<optimizer>.keras (+ .history.json)
-Writes  dashboard/data/<dataset>/data.json           gallery images, predictions, confusion matrices, histories
-        dashboard/data/<dataset>/w-<optimizer>.json  CNN weights in float16, base64-encoded
-        dashboard/data/summary.json                  MLP vs CNN numbers for every exported dataset
+Reads   models/<dataset>/<model>-<optimizer>.keras and .history.json, for model in {mlp, cnn}
+Writes  dashboard/data/<dataset>/data.json                   gallery images, predictions, confusion matrices, histories
+        dashboard/data/<dataset>/w-<model>-<optimizer>.json  weights in float16, base64-encoded
+        dashboard/data/summary.json                          MLP vs CNN accuracy for every exported dataset
 
 Weights are rounded to float16 to keep each file under 1 MB. All numbers in data.json are
 recomputed from the rounded weights, so the browser and this script agree exactly.
@@ -101,54 +101,62 @@ def main():
     buf = io.BytesIO()
     Image.fromarray(atlas).save(buf, "PNG", optimize=True)
 
-    opts, pool_ok, params = [], np.zeros(len(pool)), 0
-    for name in OPTIMIZERS:
-        file = f"cnn-{slug(name)}"
-        model = keras.models.load_model(models_dir / f"{file}.keras")
-        hist = json.load(open(models_dir / f"{file}.history.json"))
-        params = model.count_params()
-        weights = {}
-        for layer in ["conv1", "conv2", "dense", "output"]:
-            w, b = model.get_layer(layer).get_weights()
-            w16, b16 = w.astype("float16"), b.astype("float16")
-            model.get_layer(layer).set_weights([w16.astype("float32"), b16.astype("float32")])
-            weights[layer] = {"w": b64(w16, "<f2"), "b": b64(b16, "<f2"), "shape": list(w.shape)}
+    models, pool_ok = {}, np.zeros(len(pool))
+    for model_key in ["cnn", "mlp"]:
+        opts, params = [], 0
+        for name in OPTIMIZERS:
+            file = f"{model_key}-{slug(name)}"
+            model = keras.models.load_model(models_dir / f"{file}.keras")
+            hist = json.load(open(models_dir / f"{file}.history.json"))
+            params = model.count_params()
+            # Every layer with weights, in order: conv layers for the CNN, dense layers for both.
+            weights = []
+            for layer in model.layers:
+                if not layer.weights:
+                    continue
+                w, b = layer.get_weights()
+                w16, b16 = w.astype("float16"), b.astype("float16")
+                layer.set_weights([w16.astype("float32"), b16.astype("float32")])
+                weights.append({"kind": "conv" if w.ndim == 4 else "dense", "w": b64(w16, "<f2"),
+                                "b": b64(b16, "<f2"), "shape": list(w.shape)})
 
-        prob = model.predict(xf, verbose=0)
-        pred = prob.argmax(1)
-        cm = np.zeros((10, 10), int)
-        for t, p in zip(yte, pred):
-            cm[t, p] += 1
-        loss = float(-np.mean(np.log(np.clip(prob[np.arange(len(yte)), yte], 1e-7, 1))))
-        pp = prob[pool]
-        pool_ok += pp.argmax(1) == yte[pool]
+            prob = model.predict(xf, verbose=0)
+            pred = prob.argmax(1)
+            cm = np.zeros((10, 10), int)
+            for t, p in zip(yte, pred):
+                cm[t, p] += 1
+            loss = float(-np.mean(np.log(np.clip(prob[np.arange(len(yte)), yte], 1e-7, 1))))
+            pp = prob[pool]
+            if model_key == "cnn":
+                pool_ok += pp.argmax(1) == yte[pool]
 
-        json.dump({"weights": weights, "ref": pp[:4].round(6).tolist()},
-                  open(out / f"w-{slug(name)}.json", "w"), separators=(",", ":"))
-        opts.append({"name": name, "slug": slug(name), **META[name],
-                     "acc": round(float((pred == yte).mean()), 4), "loss": round(loss, 4),
-                     "time": hist["time"], "hist": hist["hist"], "cm": cm.tolist(),
-                     "pp": pp.argmax(1).tolist(), "pc": [round(float(x), 3) for x in pp.max(1)]})
-        print(f"{name:13s} test accuracy {opts[-1]['acc']:.4f}")
+            json.dump({"layers": weights, "ref": pp[:4].round(6).tolist()},
+                      open(out / f"w-{file}.json", "w"), separators=(",", ":"))
+            opts.append({"name": name, "slug": slug(name),
+                         "acc": round(float((pred == yte).mean()), 4), "loss": round(loss, 4),
+                         "time": hist["time"], "hist": hist["hist"], "cm": cm.tolist(),
+                         "pp": pp.argmax(1).tolist(), "pc": [round(float(x), 3) for x in pp.max(1)]})
+            print(f"{model_key.upper()} {name:13s} test accuracy {opts[-1]['acc']:.4f}")
+        models[model_key] = {"params": params, "opts": opts}
 
-    # Strip images: per class, an image most optimizers get right, preferring Adam's most confident one.
-    adam = next(o for o in opts if o["name"] == "Adam")
+    # Strip images: per class, an image most CNNs get right, preferring the Adam CNN's most confident one.
+    adam = next(o for o in models["cnn"]["opts"] if o["name"] == "Adam")
     demo = []
     for c in range(10):
         ks = [k for k in range(len(pool)) if yte[pool[k]] == c]
         demo.append(max(ks, key=lambda k: (pool_ok[k], adam["pc"][k] if adam["pp"][k] == c else 0)))
 
-    mlp = json.load(open(models_dir / "mlp.history.json"))
     data = {"key": args.dataset, "title": info["title"], "shape": list(info["shape"]), "classes": info["classes"],
             "atlas": "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode(), "cols": cols,
-            "pool": [{"i": int(i), "t": int(yte[i])} for i in pool], "demo": demo, "opts": opts, "params": params,
-            "mlp": {"params": mlp["params"], "acc": mlp["test_accuracy"], "time": mlp["time"]}}
+            "pool": [{"i": int(i), "t": int(yte[i])} for i in pool], "demo": demo,
+            "meta": {slug(n): META[n] for n in OPTIMIZERS}, "models": models}
     json.dump(data, open(out / "data.json", "w"), separators=(",", ":"))
 
     summary_path = ROOT / "dashboard" / "data" / "summary.json"
     summary = json.load(open(summary_path)) if summary_path.exists() else {}
     summary[args.dataset] = {"title": info["title"], "shape": list(info["shape"]),
-                             "mlp": data["mlp"], "cnn": {"params": params, "acc": adam["acc"]}}
+                             **{m: {"params": v["params"], "acc": {o["slug"]: o["acc"] for o in v["opts"]}}
+                                for m, v in models.items()}}
     json.dump(dict(sorted(summary.items())), open(summary_path, "w"), indent=1)
     print(f"wrote {out} and {summary_path}")
 

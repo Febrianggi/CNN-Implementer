@@ -1,8 +1,5 @@
-# trained models and downloaded data (regenerate with src/train.py)
-/models/
+# downloaded datasets (src/train.py fetches them again)
 /data/
-*.keras
-*.h5
 
 # Python and Jupyter
 __pycache__/

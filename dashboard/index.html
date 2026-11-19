@@ -321,9 +321,31 @@ tr.sel:hover th,tr.sel:hover td{background:var(--accent-soft)}
 .pcls button span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tr.grp.sel td{color:var(--accent);font-weight:600}
 .cm thead th{white-space:nowrap;height:84px}
+.brand{position:relative}
+.brand-text{min-width:0}
+[hidden]{display:none!important}
+.rail-toggle .chev{transition:transform .2s;transform-origin:11.5px 9px}
+.app{transition:grid-template-columns .2s ease}
+@media (min-width:861px){
+.app.rail-collapsed{grid-template-columns:76px minmax(0,1fr)}
+.rail-collapsed .rail{padding:20px 12px;align-items:center}
+.rail-collapsed .brand{flex-direction:column;padding:0;gap:10px}
+.rail-collapsed .brand-text,.rail-collapsed .rail-ds,.rail-collapsed .rail-foot p{display:none}
+.rail-collapsed .rail-toggle .chev{transform:scaleX(-1)}
+.rail-collapsed .nav a{justify-content:center;padding:10px}
+.rail-collapsed .nav a,.rail-collapsed .theme-btn{width:52px}
+.rail-collapsed .theme-btn{justify-content:center;padding:10px 0}
+.rail-collapsed .lbl,.rail-collapsed #themeLbl,.rail-collapsed #railLbl,.rail-collapsed .lang-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rail-collapsed .lang-btn{flex-direction:column;gap:2px;font-size:11px}
+.rail-collapsed .lang-short{display:inline}
+.rail-collapsed .rail-foot{align-items:center}
+}
+.flow.mlp{grid-template-columns:repeat(5,auto);min-width:860px}
+tr.sel th{color:var(--accent)}
 .span-4{grid-column:span 4}.span-8{grid-column:span 8}
 @media (max-width:1100px){.span-4,.span-8{grid-column:span 12}.optbox{grid-template-columns:1fr}}
-@media (max-width:860px){.rail-ds{display:none}.dsbtn{min-width:0;flex:1}.lang-btn span{display:none}.lang-short{display:inline}.curves2{grid-template-columns:1fr}.optbtn{min-width:0}}
+@media (prefers-reduced-motion:reduce){.app,.rail-toggle .chev{transition:none}}
+@media (max-width:860px){.rail-ds,.rail-toggle{display:none}.dsbtn{min-width:0;flex:1}.lang-btn span{display:none}.lang-short{display:inline}.curves2{grid-template-columns:1fr}.optbtn{min-width:0}}
 </style>
 </head>
 <body>
@@ -333,12 +355,12 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
       <div class="brand-mark" aria-hidden="true">
         <svg width="20" height="20" viewBox="0 0 20 20"><rect x="1" y="1" width="8" height="8" rx="1.5" fill="#fff"/><rect x="11" y="1" width="8" height="8" rx="1.5" fill="#fff" opacity=".6"/><rect x="1" y="11" width="8" height="8" rx="1.5" fill="#fff" opacity=".6"/><rect x="11" y="11" width="8" height="8" rx="1.5" fill="#fff" opacity=".3"/></svg>
       </div>
-      <div><b>CNN Explorer</b><span>Image Data Analysis</span></div>
+      <div class="brand-text"><b>CNN Explorer</b><span>Image Data Analysis</span></div>
     </div>
-    <nav class="nav" aria-label="Page sections">
-      <a href="#alur" class="on"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="5" width="4" height="8" rx="1"/><rect x="7" y="3" width="4" height="12" rx="1"/><rect x="12.5" y="6.5" width="4" height="5" rx="1"/></svg>Network flow</a>
-      <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg>Test results</a>
-      <a href="#training"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 15.5h15M3 12l4-4 3 3 5-6"/></svg>Optimizer comparison</a>
+    <nav class="nav" id="railNav" aria-label="Page sections">
+      <a href="#alur" class="on"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="5" width="4" height="8" rx="1"/><rect x="7" y="3" width="4" height="12" rx="1"/><rect x="12.5" y="6.5" width="4" height="5" rx="1"/></svg><span class="lbl">Network flow</span></a>
+      <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg><span class="lbl">Test results</span></a>
+      <a href="#training"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 15.5h15M3 12l4-4 3 3 5-6"/></svg><span class="lbl">Optimizer comparison</span></a>
     </nav>
     <div class="rail-ds">
       <p id="lblDsRail">Dataset</p>
@@ -348,6 +370,10 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
       </div>
     </div>
     <div class="rail-foot">
+      <button class="theme-btn rail-toggle" id="railBtn" type="button" aria-expanded="true" aria-controls="railNav" title="Collapse sidebar">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="2.5" width="14" height="13" rx="2"/><path d="M7 2.5v13"/><path class="chev" d="M12.5 7l-2 2 2 2"/></svg>
+        <span id="railLbl">Collapse sidebar</span>
+      </button>
       <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 10.5A6.5 6.5 0 0 1 7.5 3a6.5 6.5 0 1 0 7.5 7.5Z"/></svg>
         <span id="themeLbl">Dark theme</span>
@@ -377,6 +403,12 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
             <button type="button" class="optbtn dsbtn" data-ds="fashion" aria-pressed="false"><span>Fashion-MNIST</span><small>28 × 28 grayscale, 10 clothing items</small></button>
           </div>
           <p class="optmsg" id="dsMsg" aria-live="polite"></p>
+          <h2 id="lblModel" style="margin-top:10px">Model</h2>
+          <div class="dslist" role="group" aria-labelledby="lblModel">
+            <button type="button" class="optbtn dsbtn" data-model="cnn" aria-pressed="true"><span>CNN</span><small>2 convolution blocks + dense</small></button>
+            <button type="button" class="optbtn dsbtn" data-model="mlp" aria-pressed="false"><span>MLP</span><small>3 dense layers, no convolution</small></button>
+          </div>
+          <p class="optmsg" id="mdMsg" aria-live="polite"></p>
           <h2 id="lblOpt" style="margin-top:10px">Optimizer</h2>
           <div class="optlist" role="group" aria-labelledby="lblOpt" id="optList"></div>
           <p class="optmsg" id="optMsg" aria-live="polite"></p>
@@ -394,7 +426,7 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
       <div class="panel flow-wrap" id="flowWrap" style="margin-top:12px">
         <div class="flow-bar">
           <div class="verdict-line" id="verdict" aria-live="polite"></div>
-          <div class="seg" role="group" aria-label="Channels shown">
+          <div class="seg" id="chSeg" role="group" aria-label="Channels shown">
             <button type="button" data-ch="top" aria-pressed="true">8 most active</button>
             <button type="button" data-ch="first" aria-pressed="false">Channels #0 to #7</button>
           </div>
@@ -409,7 +441,7 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
         <div class="c-head">
           <div>
             <h3>This image according to all eight optimizers</h3>
-            <p class="note" id="cmpNote">Weights for the other optimizers load when you ask for them (under 1 MB each).</p>
+            <p class="note" id="cmpNote">Weights for the other optimizers load when you ask for them (about 0.5 to 2 MB each).</p>
           </div>
           <button class="btn" type="button" id="cmpBtn">Compare all optimizers</button>
         </div>
@@ -462,7 +494,7 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
       <div class="sec-head">
         <div>
           <h2>Optimizer comparison</h2>
-          <p>Each optimizer trained the same CNN from the same initial weights (seed 42) for 10 epochs, batch size 128, with a 10% validation split. Click an optimizer name in the table, chart, or legend to select it.</p>
+          <p>Each optimizer trained the selected model (MLP or CNN) from the same initial weights (seed 42) for 10 epochs, batch size 128, with a 10% validation split. Click an optimizer name in the table, chart, or legend to select it.</p>
         </div>
       </div>
       <div class="train-grid">
@@ -472,8 +504,8 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
           <div style="overflow-x:auto"><table id="optTable"></table></div>
         </div>
         <div class="panel span-4">
-          <h3>Test accuracy</h3>
-          <p class="note">Dashed line: MLP trained with Adam, for reference.</p>
+          <h3 id="accTitle">Test accuracy</h3>
+          <p class="note" id="accNote"></p>
           <div class="bars" id="accBars"></div>
         </div>
         <div class="panel span-12">
@@ -499,7 +531,7 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
         </div>
         <div class="panel span-5">
           <h3>MLP vs CNN</h3>
-          <p class="note">Both models were trained with Adam. The selected dataset is marked in blue.</p>
+          <p class="note" id="mvcNote"></p>
           <table id="cmpTable"></table>
         </div>
       </div>
@@ -515,15 +547,17 @@ const LOCALE=LANG==="en"?"en-US":"id-ID";
 const tx=(o,k)=>o[LANG==="en"?k+"_en":k];
 let D, atlasCtx, CLS, SUMMARY=null;
 const DSC = {};               // dataset key -> {D, atlasCtx}
-const WCACHE = {};            // "<dataset>/<slug>" -> weights
-const wk = (slug,ds=S.ds)=>ds+"/"+slug;
-const S = {ds:"cifar10", inv:true, opt:"adam", cur:null, chMode:"top", sel:null, status:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmp:"", diff:false, cmpAll:false};
+const WCACHE = {};            // "<dataset>/<model>-<slug>" -> weights
+const wk = (slug,ds=S.ds,model=S.model)=>ds+"/"+model+"-"+slug;
+const S = {ds:"cifar10", model:"cnn", inv:true, opt:"adam", cur:null, chMode:"top", sel:null, status:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmp:"", diff:false, cmpAll:false};
 const $ = s=>document.querySelector(s);
 const nf = (v,d=0)=>v.toLocaleString(LOCALE,{minimumFractionDigits:d,maximumFractionDigits:d});
 const pct = (v,d=1)=>nf(v*100,d)+"%";
 const css = n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const hex = h=>{h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));};
-const O = slug=>D.opts.find(o=>o.slug===slug);
+const OPTS = ()=>D.models[S.model].opts;
+const MODEL = ()=>S.model.toUpperCase();
+const O = slug=>{const o=OPTS().find(o=>o.slug===slug);return o&&{...D.meta[slug],...o};};
 const optOf = ()=>O(S.opt);
 
 function f16(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);
@@ -531,10 +565,11 @@ function f16(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.l
   for(let i=0;i<h.length;i++){const x=h[i],sg=x&0x8000?-1:1,e=(x>>10)&31,f=x&1023;
     o[i]=e===0?sg*f*Math.pow(2,-24):e===31?(f?NaN:sg*Infinity):sg*(1+f/1024)*Math.pow(2,e-15);}
   return o;}
-async function loadW(slug,ds=S.ds){
-  const key=wk(slug,ds);if(WCACHE[key])return WCACHE[key];
-  const r=await fetch(`data/${ds}/w-${slug}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json(),W={};
-  for(const k in j.weights){const L=j.weights[k];W[k]={w:f16(L.w),b:f16(L.b),shape:L.shape};}
+async function loadW(slug,ds=S.ds,model=S.model){
+  const key=wk(slug,ds,model);if(WCACHE[key])return WCACHE[key];
+  const r=await fetch(`data/${ds}/w-${model}-${slug}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json();
+  const L=j.layers.map(l=>({kind:l.kind,w:f16(l.w),b:f16(l.b),shape:l.shape}));
+  const W=model==="cnn"?{model,conv1:L[0],conv2:L[1],dense:L[2],output:L[3]}:{model,h1:L[0],h2:L[1],output:L[2]};
   W.ref=j.ref;WCACHE[key]=W;return W;}
 async function loadDS(ds){
   if(DSC[ds])return DSC[ds];
@@ -562,12 +597,14 @@ function dense(x,L,relu){const [I,O2]=L.shape,y=new Float32Array(O2);for(let o=0
   for(let i=0;i<I;i++){const v=x[i];if(v===0)continue;const r=i*O2;for(let o=0;o<O2;o++)y[o]+=v*L.w[r+o];}
   if(relu)for(let o=0;o<O2;o++)if(y[o]<0)y[o]=0;return y;}
 function forward(px,W,full=true){
-  const g=G(),inp={d:px,h:g.H,w:g.H,c:g.C};
-  const c1=conv(px,g.H,g.H,g.C,W.conv1),p1=pool(c1),c2=conv(p1.d,p1.h,p1.w,32,W.conv2),p2=pool(c2);
-  const h=dense(p2.d,W.dense,true),z=dense(h,W.output,false);
+  const g=G(),inp={d:px,h:g.H,w:g.H,c:g.C};let z,out;
+  if(W.model==="mlp"){   // Flatten keeps the channels-last order, so the pixel array is already the flattened vector
+    const h1=dense(px,W.h1,true),h2=dense(h1,W.h2,true);z=dense(h2,W.output,false);out={model:"mlp",inp,flat:px,h1,h2};}
+  else{const c1=conv(px,g.H,g.H,g.C,W.conv1),p1=pool(c1),c2=conv(p1.d,p1.h,p1.w,32,W.conv2),p2=pool(c2);
+    const h=dense(p2.d,W.dense,true);z=dense(h,W.output,false);out={model:"cnn",inp,c1,p1,c2,p2,h};}
   const m=Math.max(...z),e=z.map(v=>Math.exp(v-m)),s=e.reduce((a,b)=>a+b,0);
   const prob=Array.from(e,v=>v/s);
-  return full?{inp,c1,p1,c2,p2,h,prob}:{prob};}
+  return full?{...out,prob}:{prob};}
 
 /* ---------- drawing ---------- */
 function ramp(t){const a=hex(css("--map0")),b=hex(css("--map1")),c=hex(css("--map2"));
@@ -598,15 +635,15 @@ function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):uploadPx(S.uploads[
 /* ---------- optimizer control ---------- */
 function bestVal(o){const v=o.hist.val_accuracy,m=Math.max(...v);return [m,v.indexOf(m)+1];}
 function buildOptList(){const L=$("#optList");L.innerHTML="";
-  D.opts.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="optbtn";b.dataset.slug=o.slug;
+  OPTS().forEach(o=>{const b=document.createElement("button");b.type="button";b.className="optbtn";b.dataset.slug=o.slug;
     b.setAttribute("aria-pressed",o.slug===S.opt?"true":"false");
     b.setAttribute("aria-label",`${o.name}, test accuracy ${pct(o.acc)}`);
     b.innerHTML=`<span>${o.name}</span><small>${pct(o.acc)}</small>`;b.onclick=()=>setOpt(o.slug);L.append(b);});}
 function renderOptInfo(){const o=optOf(),[bv,be]=bestVal(o),gap=o.hist.accuracy.at(-1)-o.hist.val_accuracy.at(-1);
-  const rank=[...D.opts].sort((a,b)=>b.acc-a.acc).findIndex(x=>x.slug===o.slug)+1;
+  const rank=[...OPTS()].sort((a,b)=>b.acc-a.acc).findIndex(x=>x.slug===o.slug)+1;
   $("#optInfo").innerHTML=`<h3>${o.name}</h3><p class="cfg">${tx(o,"cfg")}</p>
    <dl><dt>Characteristics</dt><dd>${tx(o,"ch")}</dd><dt>When to use</dt><dd>${tx(o,"use")}</dd></dl>
-   <div class="optstats"><div>Test accuracy<b>${pct(o.acc,2)}</b></div><div>Rank<b>${rank} of ${D.opts.length}</b></div>
+   <div class="optstats"><div>Test accuracy<b>${pct(o.acc,2)}</b></div><div>Rank<b>${rank} of ${OPTS().length}</b></div>
    <div>Best val<b>${pct(bv)} <span style="font-size:13px;color:var(--muted);font-weight:400">epoch ${be}</span></b></div>
    <div>Train−val gap<b>${gap>=0?"+":"−"}${nf(Math.abs(gap)*100,1)} pts</b></div><div>Training time<b>${nf(o.time,0)} s</b></div></div>`;}
 let optSeq=0;
@@ -623,7 +660,7 @@ async function setOpt(slug){
   if(S.cur){S.cur.res=forward(curPx(),WCACHE[wk(slug)]);if(S.sel)closeDetail();renderFlow();renderCompare();}
 }
 function renderFacts(){const o=optOf();
-  $("#facts").innerHTML=`<div><dt>Parameters</dt><dd>${nf(D.params)}</dd></div><div><dt>Test accuracy (${o.name})</dt><dd>${pct(o.acc,2)}</dd></div><div><dt>Test data</dt><dd>10,000 images</dd></div>`;}
+  $("#facts").innerHTML=`<div><dt>Parameters ${MODEL()}</dt><dd>${nf(D.models[S.model].params)}</dd></div><div><dt>Test accuracy (${MODEL()} + ${o.name})</dt><dd>${pct(o.acc,2)}</dd></div><div><dt>Test data</dt><dd>10,000 images</dd></div>`;}
 
 /* ---------- strip ---------- */
 function buildStrip(){const st=$("#strip");st.innerHTML="";
@@ -667,14 +704,13 @@ function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
 function maxOf(t,chs){let m=0;for(const c of chs)for(let i=c;i<t.d.length;i+=t.c)if(t.d[i]>m)m=t.d[i];return m;}
 const dims=t=>`${t.h} × ${t.w} × ${t.c}`;
 function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
-  const ch1=pickCh(r.c1),ch2=pickCh(r.c2);
-  const cols=[
-    {key:"inp",t:r.inp,name:"input",sub:dims(r.inp),chs:[...Array(r.inp.c).keys()],gray:true},
+  const cnn=r.model==="cnn";$("#chSeg").hidden=!cnn;fl.classList.toggle("mlp",!cnn);
+  const cols=[{key:"inp",t:r.inp,name:"input",sub:dims(r.inp),chs:[...Array(r.inp.c).keys()],gray:true}];
+  if(cnn){const ch1=pickCh(r.c1),ch2=pickCh(r.c2);cols.push(
     {key:"c1",t:r.c1,name:"conv1 + ReLU",sub:dims(r.c1),chs:ch1},
     {key:"p1",t:r.p1,name:"max_pool1",sub:dims(r.p1),chs:ch1},
     {key:"c2",t:r.c2,name:"conv2 + ReLU",sub:dims(r.c2),chs:ch2},
-    {key:"p2",t:r.p2,name:"max_pool2",sub:dims(r.p2),chs:ch2},
-  ];
+    {key:"p2",t:r.p2,name:"max_pool2",sub:dims(r.p2),chs:ch2});}
   const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","links");svg.setAttribute("aria-hidden","true");fl.append(svg);
   const colEls=[];const dark=document.documentElement.dataset.theme==="dark";
   cols.forEach(col=>{const el=document.createElement("div");el.className="col";
@@ -690,13 +726,17 @@ function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerH
       if(col.gray){const t=document.createElement("div");t.className="chan";
         t.style.color=G().C===1?"var(--muted)":(dark?["#FF8A7A","#4ADE80","#6EA0FF"]:["#C0392B","#1E8449","#2563EB"])[c];t.textContent=CHN_CAP()[c];maps.append(t);}});
     el.append(maps);fl.append(el);colEls.push(el);});
-  const de=document.createElement("div");de.className="col dense";
+  if(cnn){const de=document.createElement("div");de.className="col dense";
   de.innerHTML=`<div class="col-h"><b>dense + ReLU</b><small>128 units</small></div>`;
   const dm=document.createElement("div");dm.className="maps";const db=document.createElement("button");db.type="button";db.className="map";db.dataset.col="dense";
   db.setAttribute("aria-label","Dense, 128 units. Open details");const dc=document.createElement("canvas");
   const dmax=Math.max(...r.h);paint(dc,r.h,8,16,dmax,"ramp");db.append(dc);db.onclick=()=>openDense(dmax);
   db.onmouseenter=db.onfocus=()=>hot(db,true);db.onmouseleave=db.onblur=()=>hot(db,false);
-  dm.append(db);de.append(dm);fl.append(de);colEls.push(de);
+  dm.append(db);de.append(dm);fl.append(de);colEls.push(de);}
+  else{const n=r.flat.length,H=G().H;
+    colEls.push(vecCol(fl,"flat","flatten",`${nf(n)} values`,r.flat,H,n/H,"Flatten. Open details"));
+    colEls.push(vecCol(fl,"h1","dense1 + ReLU","256 units",r.h1,16,16,"Dense1, 256 units. Open details"));
+    colEls.push(vecCol(fl,"h2","dense2 + ReLU","128 units",r.h2,8,16,"Dense2, 128 units. Open details"));}
   const oe=document.createElement("div");oe.className="col";
   oe.innerHTML=`<div class="col-h"><b>output (softmax)</b><small>10 classes</small></div>`;
   const om=document.createElement("div");om.className="out";
@@ -704,14 +744,22 @@ function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerH
   r.prob.forEach((p,i)=>{const row=document.createElement("div");row.className="out-row"+(i===top?" top":"")+(i===S.cur.truth?" truth":"");
     row.innerHTML=`<span>${CLS[i]}</span><span class="bar"><i style="width:${(p*100).toFixed(1)}%"></i></span><em>${pct(p)}</em>`;om.append(row);});
   oe.append(om);fl.append(oe);colEls.push(oe);
-  const v=$("#verdict"),on=optOf().name;
-  if(S.cur.truth===null)v.innerHTML=`<span class="tab unk">True label unknown</span><strong>Prediction: ${CLS[top]}</strong><span style="color:var(--muted)">confidence ${pct(r.prob[top])}, optimizer ${on}</span>`;
-  else{const ok=top===S.cur.truth;v.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?"Match":"No match"}</span><strong>Prediction: ${CLS[top]}</strong><span style="color:var(--muted)">true ${CLS[S.cur.truth]}, confidence ${pct(r.prob[top])}, optimizer ${on}</span>`;}
-  flowState={colEls};requestAnimationFrame(drawLinks);}
+  const v=$("#verdict"),on=MODEL()+" + "+optOf().name;
+  if(S.cur.truth===null)v.innerHTML=`<span class="tab unk">True label unknown</span><strong>Prediction: ${CLS[top]}</strong><span style="color:var(--muted)">confidence ${pct(r.prob[top])}, ${on}</span>`;
+  else{const ok=top===S.cur.truth;v.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?"Match":"No match"}</span><strong>Prediction: ${CLS[top]}</strong><span style="color:var(--muted)">true ${CLS[S.cur.truth]}, confidence ${pct(r.prob[top])}, ${on}</span>`;}
+  flowState={colEls,cnn};requestAnimationFrame(drawLinks);}
+/* one column holding a single vector (MLP layers, flatten), drawn as a small grid */
+function vecCol(fl,key,name,sub,vals,gw,gh,label){const el=document.createElement("div");el.className="col dense";
+  el.innerHTML=`<div class="col-h"><b>${name}</b><small>${sub}</small></div>`;
+  const m=document.createElement("div");m.className="maps";const b=document.createElement("button");b.type="button";b.className="map";b.dataset.col=key;
+  b.setAttribute("aria-label",label);const cv=document.createElement("canvas");let mx=0;for(const v of vals)if(v>mx)mx=v;
+  paint(cv,vals,gw,gh,mx,key==="flat"?"gray":"ramp");cv.style.width="52px";cv.style.height=Math.round(52*gh/gw)+"px";b.append(cv);
+  b.onclick=()=>openVec(key,mx);b.onmouseenter=b.onfocus=()=>hot(b,true);b.onmouseleave=b.onblur=()=>hot(b,false);
+  m.append(b);el.append(m);fl.append(el);return el;}
 function drawLinks(){if(!flowState)return;const fl=$("#flow"),svg=fl.querySelector("svg.links");if(!svg)return;const fr=fl.getBoundingClientRect();
   svg.innerHTML="";const pts=el=>[...el.querySelectorAll(".maps > .map, .out")].map(m=>{const b=m.getBoundingClientRect();return {el:m,l:b.left-fr.left,r:b.right-fr.left,y:b.top-fr.top+b.height/2};});
   const C=flowState.colEls.map(pts);
-  for(let k=0;k<C.length-1;k++){const A=C[k],B=C[k+1],one=(k===1||k===3);
+  for(let k=0;k<C.length-1;k++){const A=C[k],B=C[k+1],one=flowState.cnn&&(k===1||k===3);
     A.forEach((a,ai)=>B.forEach((b,bi)=>{if(one&&ai!==bi)return;
       const p=document.createElementNS("http://www.w3.org/2000/svg","path"),mx=(a.r+b.l)/2;
       p.setAttribute("d",`M${a.r} ${a.y}C${mx} ${a.y} ${mx} ${b.y} ${b.l} ${b.y}`);p._a=a.el;p._b=b.el;svg.append(p);}));}}
@@ -752,19 +800,40 @@ function openDense(mx){const r=S.cur.res,d=$("#detail");d.hidden=false;S.sel={co
    <button class="icon-btn" type="button" id="dClose" aria-label="Close details">${closeSvg}</button></div>
    <div class="stats"><div>Active units (&gt; 0)<b>${act} of 128</b></div><div>Maximum<b>${nf(mx,3)}</b></div></div></div>`;
   paint(d.querySelector("canvas"),r.h,8,16,mx,"ramp");d.querySelector("#dClose").onclick=closeDetail;}
+function openVec(key,mx){const r=S.cur.res,W=WCACHE[wk(S.opt)],d=$("#detail");d.hidden=false;S.sel={col:key};
+  document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.col===key?"true":"false"));
+  const g=G(),n=r.flat.length,vals=key==="flat"?r.flat:key==="h1"?r.h1:r.h2,[gw,gh]=key==="flat"?[g.H,n/g.H]:key==="h1"?[16,16]:[8,16];
+  const act=vals.filter(v=>v>0).length,run=MODEL()+" + "+optOf().name;
+  const T={flat:[`flatten, ${nf(n)} values`,`The ${g.H} × ${g.H} × ${g.C} image is flattened into one vector of ${nf(n)} numbers. From here on, pixel position no longer matters: neighbouring pixels are treated the same as pixels far apart. This is the main difference between an MLP and a CNN.`],
+    h1:[`dense1 + ReLU, 256 units (${run})`,`Each unit receives all ${nf(n)} input values (${nf(n)} × 256 + 256 = ${nf(n*256+256)} parameters, the largest layer in this MLP). Shown as a 16 × 16 grid.`],
+    h2:[`dense2 + ReLU, 128 units (${run})`,`Each unit receives the 256 values from dense1 (256 × 128 + 128 = 32,896 parameters). Shown as an 8 × 16 grid.`]}[key];
+  const big=Math.round(208*gh/gw)>320?[Math.round(320*gw/gh),320]:[208,Math.round(208*gh/gw)];
+  d.innerHTML=`<div class="detail-big"><canvas style="width:${big[0]}px;height:${big[1]}px"></canvas></div><div>
+   <div class="d-head"><div><h3>${T[0]}</h3><p>${T[1]}</p></div>
+   <button class="icon-btn" type="button" id="dClose" aria-label="Close details">${closeSvg}</button></div>
+   <div class="stats">${key==="flat"?"":`<div>Active units (&gt; 0)<b>${act} of ${vals.length}</b></div>`}<div>Maximum<b>${nf(mx,3)}</b></div></div><div id="kwrap"></div></div>`;
+  paint(d.querySelector("canvas"),vals,gw,gh,mx,key==="flat"?"gray":"ramp");
+  if(key==="h1"){let u=0;for(let i=1;i<vals.length;i++)if(vals[i]>vals[u])u=i;
+    const kw=d.querySelector("#kwrap"),C=g.C,H=g.H;let km=0;for(let i=0;i<n;i++)km=Math.max(km,Math.abs(W.h1.w[i*256+u]));
+    kw.innerHTML=`<p style="margin:0 0 6px;font-size:13px">Incoming weights of unit #${u}, the most active unit for this image, arranged back into the image shape. Red is negative, blue is positive: this is the pattern the unit "looks for" across the whole image at once.</p><div class="kernels"></div>`;
+    const kk=kw.querySelector(".kernels");
+    for(let c=0;c<C;c++){const v=new Float32Array(H*H);for(let p=0;p<H*H;p++)v[p]=W.h1.w[(p*C+c)*256+u];
+      const k=document.createElement("div");k.className="kern";const cv=document.createElement("canvas");paintDiv(cv,v,H,H,km);cv.style.width="96px";cv.style.height="96px";
+      const lab=document.createElement("span");lab.textContent=CHN()[c];k.append(cv,lab);kk.append(k);}}
+  d.querySelector("#dClose").onclick=closeDetail;}
 function closeDetail(){$("#detail").hidden=true;S.sel=null;document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed","false"));}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#detail").hidden)closeDetail();});
 
 /* ---------- compare all optimizers for current image ---------- */
 async function loadAll(){const b=$("#cmpBtn");b.disabled=true;b.textContent="Loading weights…";$("#cmpNote").textContent="Loading weights for all eight optimizers…";
-  const ds=S.ds,res=await Promise.allSettled(D.opts.map(o=>loadW(o.slug,ds)));if(ds!==S.ds){b.disabled=false;return;}const fail=res.filter(r=>r.status==="rejected").length;
+  const ds=S.ds,md=S.model,res=await Promise.allSettled(OPTS().map(o=>loadW(o.slug,ds,md)));if(ds!==S.ds||md!==S.model){b.disabled=false;return;}const fail=res.filter(r=>r.status==="rejected").length;
   S.cmpAll=true;b.disabled=false;
   if(fail){b.textContent="Retry loading";$("#cmpNote").textContent=`${fail} optimizer(s) failed to load. Press the button to try again.`;}
   else{b.hidden=true;$("#cmpNote").textContent="Click a card to use that optimizer across the whole dashboard.";}
   renderCompare();}
 function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur){box.innerHTML="";return;}
   const px=curPx();box.innerHTML="";
-  D.opts.forEach(o=>{const W=WCACHE[wk(o.slug)];const b=document.createElement("button");b.type="button";b.className="crow";
+  OPTS().forEach(o=>{const W=WCACHE[wk(o.slug)];const b=document.createElement("button");b.type="button";b.className="crow";
     b.setAttribute("aria-pressed",o.slug===S.opt?"true":"false");
     if(!W){b.disabled=true;b.innerHTML=`<div class="r1"><b>${o.name}</b></div><span class="p">Weights not loaded yet</span>`;box.append(b);return;}
     const p=forward(px,W,false).prob,top=p.indexOf(Math.max(...p));
@@ -781,7 +850,7 @@ function buildClassChips(){const fc=$("#fClass");fc.innerHTML="";
 function buildFilters(){buildClassChips();
   $("#fStatus").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.status=b.dataset.v;S.shown=24;syncFilters();renderGallery();});
   $("#fSort").onchange=e=>{S.sort=e.target.value;renderGallery();};
-  const fc2=$("#fCmp");D.opts.forEach(o=>{const op=document.createElement("option");op.value=o.slug;op.textContent=o.name;fc2.append(op);});
+  const fc2=$("#fCmp");OPTS().forEach(o=>{const op=document.createElement("option");op.value=o.slug;op.textContent=o.name;fc2.append(op);});
   fc2.onchange=e=>{S.cmp=e.target.value;if(!S.cmp){S.diff=false;$("#fDiff").checked=false;}
     $("#fDiff").disabled=!S.cmp;$("#diffWrap").setAttribute("aria-disabled",S.cmp?"false":"true");S.shown=24;renderGallery();};
   $("#fDiff").onchange=e=>{S.diff=e.target.checked;S.shown=24;renderGallery();};
@@ -798,7 +867,7 @@ function renderGallery(){const o=optOf(),c2=S.cmp&&S.cmp!==S.opt?O(S.cmp):null;
   const who=S.cls<0?"All classes":`Class <b>${CLS[S.cls]}</b>`;
   const extra=S.pred!=null?` Only images predicted as <b>${CLS[S.pred]}</b>. <button class="chip" type="button" id="clrPred">Clear prediction filter</button>`:"";
   const cmpTxt=S.cmp&&!c2?` The comparison optimizer is the selected one, so it is not shown.`:c2&&S.diff?` Only images whose status differs between <b>${o.name}</b> and <b>${c2.name}</b>.`:"";
-  $("#summary").innerHTML=`With <b>${o.name}</b>, ${who.charAt(0).toLowerCase()+who.slice(1)}: <b>${nf(ok)}</b> correct and <b>${nf(tot-ok)}</b> incorrect out of ${nf(tot)} test images. Showing <b>${Math.min(S.shown,L.length)}</b> of ${L.length} examples for this filter.${cmpTxt}${extra}`;
+  $("#summary").innerHTML=`With <b>${MODEL()} + ${o.name}</b>, ${who.charAt(0).toLowerCase()+who.slice(1)}: <b>${nf(ok)}</b> correct and <b>${nf(tot-ok)}</b> incorrect out of ${nf(tot)} test images. Showing <b>${Math.min(S.shown,L.length)}</b> of ${L.length} examples for this filter.${cmpTxt}${extra}`;
   const cp=$("#clrPred");if(cp)cp.onclick=()=>{S.pred=null;renderGallery();};
   const g=$("#grid");g.innerHTML="";
   if(!L.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1">No examples match this combination of filters. Change the status, class, or comparison.</div>`;$("#more").innerHTML="";return;}
@@ -827,7 +896,7 @@ function lineChart(series,title,key,w=420,h=210){
     s+=`<polyline fill="none" stroke="${x.color}" stroke-width="${x.sel?2.6:1.3}" ${x.dash?'stroke-dasharray="4 3"':""} opacity="${x.sel||x.solid?1:.75}" points="${x.v.map((v,i)=>X(i)+","+Y(v)).join(" ")}"/>`;
     if(x.label){const lv=x.v.at(-1);s+=`<text x="${w-12}" y="${Y(lv)-5}" text-anchor="end" style="fill:${x.color};font-size:11px;font-weight:600">${x.label}</text>`;}});
   return s+"</svg>";}
-function renderTraining(){const o=optOf(),sorted=[...D.opts].sort((a,b)=>b.acc-a.acc);
+function renderTraining(){const o=optOf(),sorted=[...OPTS()].sort((a,b)=>b.acc-a.acc);
   // summary table
   let t=`<thead><tr><th scope="col">Optimizer</th><th scope="col">Test accuracy</th><th scope="col">Test loss</th><th scope="col">Best val</th><th scope="col">Train−val</th><th scope="col">Time</th></tr></thead><tbody>`;
   sorted.forEach(x=>{const [bv,be]=bestVal(x),gap=x.hist.accuracy.at(-1)-x.hist.val_accuracy.at(-1);
@@ -836,33 +905,36 @@ function renderTraining(){const o=optOf(),sorted=[...D.opts].sort((a,b)=>b.acc-a
   $("#optTable").innerHTML=t+"</tbody>";
   $("#optTable").querySelectorAll("tr.click").forEach(r=>r.onclick=e=>{setOpt(r.dataset.slug);});
   // accuracy bars
-  const bx=$("#accBars");bx.innerHTML="";const mx=Math.max(...D.opts.map(x=>x.acc));
+  const other=S.model==="cnn"?"mlp":"cnn",oth=s=>D.models[other].opts.find(x=>x.slug===s).acc;
+  $("#accNote").textContent=`Dashed line: ${other.toUpperCase()} with the same optimizer.`;
+  $("#accTitle").textContent=`Test accuracy, ${MODEL()}`;
+  const bx=$("#accBars");bx.innerHTML="";const mx=Math.max(...OPTS().map(x=>x.acc),...D.models[other].opts.map(x=>x.acc));
   sorted.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.opt?"true":"false");
     b.setAttribute("aria-label",`${x.name} test accuracy ${pct(x.acc)}. Select this optimizer`);
-    b.innerHTML=`<span>${x.name}</span><span class="bar" style="position:relative"><i style="width:${x.acc/mx*100}%"></i><span style="position:absolute;top:-3px;bottom:-3px;left:${D.mlp.acc/mx*100}%;border-left:2px dashed var(--muted)"></span></span><em>${pct(x.acc)}</em>`;
+    b.innerHTML=`<span>${x.name}</span><span class="bar" style="position:relative"><i style="width:${x.acc/mx*100}%"></i><span style="position:absolute;top:-3px;bottom:-3px;left:${Math.min(100,oth(x.slug)/mx*100)}%;border-left:2px dashed var(--muted)"></span></span><em>${pct(x.acc)}</em>`;
     b.onclick=()=>setOpt(x.slug);bx.append(b);});
-  bx.insertAdjacentHTML("beforeend",`<p class="note" style="margin:6px 0 0">MLP (Adam): ${pct(D.mlp.acc)}</p>`);
+
   // overlay curves
   const acc=css("--accent"),grey=css("--link");
-  const ser=k=>D.opts.map(x=>({v:x.hist[k],sel:x.slug===S.opt,color:x.slug===S.opt?acc:grey,label:x.slug===S.opt?x.name:""}));
+  const ser=k=>OPTS().map(x=>({v:x.hist[k],sel:x.slug===S.opt,color:x.slug===S.opt?acc:grey,label:x.slug===S.opt?x.name:""}));
   $("#curves").innerHTML=lineChart(ser("val_accuracy"),"Validation accuracy")+lineChart(ser("val_loss"),"Validation loss");
   const ok=$("#okey");ok.innerHTML="";
-  D.opts.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.opt?"true":"false");
+  OPTS().forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.opt?"true":"false");
     b.innerHTML=`<i></i>${x.name}`;b.onclick=()=>setOpt(x.slug);ok.append(b);});
   // train vs val for selected
-  $("#trainTitle").textContent=`Train vs validation: ${o.name}`;
+  $("#trainTitle").textContent=`Train vs validation: ${MODEL()} + ${o.name}`;
   const mut=css("--muted");
   $("#tv").innerHTML=lineChart([{v:o.hist.accuracy,sel:true,color:acc,solid:true},{v:o.hist.val_accuracy,color:acc,dash:true,solid:true}],"Accuracy",280,180)
     +lineChart([{v:o.hist.loss,sel:true,color:acc,solid:true},{v:o.hist.val_loss,color:acc,dash:true,solid:true}],"Loss",280,180);
   // per class
-  $("#pclsTitle").textContent=`Per-class accuracy: ${o.name}`;
+  $("#pclsTitle").textContent=`Per-class accuracy: ${MODEL()} + ${o.name}`;
   const pc=$("#pcls");pc.innerHTML="";
   o.cm.forEach((r,i)=>{const a=r[i]/r.reduce((x,y)=>x+y,0),b=document.createElement("button");b.type="button";
     b.setAttribute("aria-label",`${CLS[i]} accuracy ${pct(a)}. Show in gallery`);
     b.innerHTML=`<span>${CLS[i]}</span><span class="bar"><i style="width:${a*100}%"></i></span><em>${pct(a)}</em>`;
     b.onclick=()=>{S.cls=i;S.status="all";S.pred=null;S.shown=24;syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};pc.append(b);});
   // confusion matrix
-  $("#cmTitle").textContent=`Confusion matrix: ${o.name}`;
+  $("#cmTitle").textContent=`Confusion matrix: ${MODEL()} + ${o.name}`;
   const cmx=Math.max(...o.cm.map((r,i)=>r[i]));let ct=`<table class="cm"><thead><tr><th></th>${CLS.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>`;
   const a1=hex(acc),z=hex(css("--surface")),bad=hex(css("--bad"));
   o.cm.forEach((r,i)=>{ct+=`<tr><th scope="row" style="text-align:right">${CLS[i]}</th>`;
@@ -873,19 +945,20 @@ function renderTraining(){const o=optOf(),sorted=[...D.opts].sort((a,b)=>b.acc-a
   $("#cm").querySelectorAll("button").forEach(b=>{b.addEventListener("focus",()=>b.style.outline="2px solid var(--accent)");b.addEventListener("blur",()=>b.style.outline="");
     b.onclick=()=>{S.cls=+b.dataset.t;S.pred=+b.dataset.p;S.status="bad";S.shown=24;syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};});
   // MLP vs CNN
-  const row=(n,r)=>`<tr><th scope="row">${n}</th><td>${nf(r.params)}</td><td>${pct(r.acc,2)}</td></tr>`;
-  const gap=(a,b)=>`<tr><th scope="row">Difference</th><td></td><td class="pos">${b>=a?"+":"−"}${nf(Math.abs(b-a)*100,2)} pts</td></tr>`;
+  const sl=S.opt;$("#mvcNote").textContent=`Both trained with ${o.name}, the selected optimizer. The selected dataset is marked in blue.`;
+  const row=(n,p,a)=>`<tr${n===MODEL()?' class="sel"':""}><th scope="row">${n}</th><td>${nf(p)}</td><td>${pct(a,2)}</td></tr>`;
+  const gap=(a,b)=>`<tr><th scope="row">CNN − MLP</th><td></td><td class="${b>=a?"pos":""}">${b>=a?"+":"−"}${nf(Math.abs(b-a)*100,2)} pts</td></tr>`;
   let body="";
-  for(const ds of DSLIST){const s=SUMMARY&&SUMMARY[ds.key];if(!s)continue;
-    body+=`<tr class="grp${ds.key===S.ds?" sel":""}"><td colspan="3">${s.title} (${s.shape.join(" × ")})</td></tr>${row("MLP",s.mlp)}${row("CNN (Adam)",s.cnn)}${gap(s.mlp.acc,s.cnn.acc)}`;}
+  for(const ds of DSLIST){const s=SUMMARY&&SUMMARY[ds.key];if(!s||!s.mlp||!s.mlp.acc)continue;
+    body+=`<tr class="grp${ds.key===S.ds?" sel":""}"><td colspan="3">${s.title} (${s.shape.join(" × ")})</td></tr>${row("MLP",s.mlp.params,s.mlp.acc[sl])}${row("CNN",s.cnn.params,s.cnn.acc[sl])}${gap(s.mlp.acc[sl],s.cnn.acc[sl])}`;}
   $("#cmpTable").innerHTML=`<thead><tr><th scope="col">Model</th><th scope="col">Parameters</th><th scope="col">Test accuracy</th></tr></thead><tbody>${body}</tbody>`;}
 
 /* ---------- dataset control ---------- */
 const DSLIST=[{key:"cifar10"},{key:"fashion"}];
 function syncDS(){
   document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));
-  const g=G();$("#heroTitle").textContent=`How a CNN reads a ${g.H} × ${g.H} image`;
-  $("#heroLead").textContent=`${D.title}: ${nf(D.pool.length)} test images in the gallery, ${CLS.length} classes, input ${g.H} × ${g.H} × ${g.C}. The CNN architecture is the same for both datasets, and each was trained with eight different optimizers.`;
+  const g=G();$("#heroTitle").textContent=`How ${S.model==="mlp"?"an":"a"} ${MODEL()} reads a ${g.H} × ${g.H} image`;
+  $("#heroLead").textContent=`${D.title}: ${nf(D.pool.length)} test images in the gallery, ${CLS.length} classes, input ${g.H} × ${g.H} × ${g.C}. The MLP and the CNN were each trained with eight optimizers from the same starting weights.`;
   $("#invWrap").hidden=g.C!==1;
   $("#stripMsg").classList.remove("err");
   $("#stripMsg").textContent=`Upload a JPG or PNG, or drag an image onto the + box. It is center-cropped to a square and resized to ${g.H} × ${g.H}`+(g.C===1?", converted to grayscale, and (if checked) color-inverted.":".");
@@ -909,6 +982,29 @@ function syncDSButtons(){document.querySelectorAll("[data-ds]").forEach(b=>b.set
 document.querySelectorAll("[data-ds]").forEach(b=>b.onclick=()=>setDataset(b.dataset.ds));
 $("#fInv").addEventListener("change",e=>{S.inv=e.target.checked;if(S.cur&&S.cur.kind==="u")select(S.cur);else buildStrip();});
 
+/* ---------- model control ---------- */
+function syncModelButtons(m=S.model){document.querySelectorAll("[data-model]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.model===m?"true":"false"));}
+let mdSeq=0;
+async function setModel(m){if(m===S.model)return;const seq=++mdSeq,el=$("#mdMsg");el.classList.remove("err");
+  syncModelButtons(m);el.textContent=`Loading ${m.toUpperCase()}…`;$("#flowWrap").classList.add("busy");
+  try{await loadW(S.opt,S.ds,m);}catch(e){if(seq!==mdSeq)return;$("#flowWrap").classList.remove("busy");el.classList.add("err");
+    el.textContent=`Could not load the ${m.toUpperCase()} weights. Select that model again to retry.`;syncModelButtons();return;}
+  if(seq!==mdSeq)return;
+  S.model=m;try{localStorage.setItem("cnn-model",m);}catch(e){}
+  $("#flowWrap").classList.remove("busy");el.textContent="";S.sel=null;$("#detail").hidden=true;
+  syncDS();buildOptList();renderOptInfo();renderFacts();if(S.cur)select(S.cur);renderGallery();renderTraining();
+  if(S.cmpAll){S.cmpAll=false;loadAll();}else renderCompare();}
+document.querySelectorAll("[data-model]").forEach(b=>b.onclick=()=>setModel(b.dataset.model));
+
+/* ---------- sidebar toggle (desktop) ---------- */
+function setRail(collapsed){document.querySelector(".app").classList.toggle("rail-collapsed",collapsed);
+  const b=$("#railBtn");b.setAttribute("aria-expanded",collapsed?"false":"true");
+  const t=collapsed?"Expand sidebar":"Collapse sidebar";$("#railLbl").textContent=t;b.title=t;
+  try{localStorage.setItem("cnn-rail",collapsed?"1":"0");}catch(e){}
+  setTimeout(drawLinks,60);}
+$("#railBtn").onclick=()=>setRail(!document.querySelector(".app").classList.contains("rail-collapsed"));
+try{if(localStorage.getItem("cnn-rail")==="1")setRail(true);}catch(e){}
+
 /* ---------- theme + nav ---------- */
 function setRamp(){$("#ramp").style.background=`linear-gradient(90deg,${css("--map0")},${css("--map1")},${css("--map2")})`;}
 function setTheme(t){document.documentElement.dataset.theme=t;$("#themeLbl").textContent=t==="dark"?"Light theme":"Dark theme";
@@ -927,11 +1023,12 @@ let rz;window.addEventListener("resize",()=>{cancelAnimationFrame(rz);rz=request
   let t="light";try{t=localStorage.getItem("cnn-theme")||t;}catch(e){}
   document.documentElement.dataset.theme=t;$("#themeLbl").textContent=t==="dark"?"Light theme":"Dark theme";setRamp();
   try{let d="cifar10";try{d=localStorage.getItem("cnn-dataset")||d;}catch(e){}if(!DSLIST.some(x=>x.key===d))d="cifar10";
+    try{const mm=localStorage.getItem("cnn-model");if(mm==="mlp"||mm==="cnn")S.model=mm;}catch(e){}
     S.ds=d;const [c]=await Promise.all([loadDS(d),loadW(S.opt,d)]);D=c.D;atlasCtx=c.atlasCtx;CLS=D.classes;
     try{const r=await fetch("data/summary.json");if(r.ok)SUMMARY=await r.json();}catch(e){}
   }catch(e){const b=$("#boot");b.classList.add("err");b.textContent="Model data could not be loaded. Reload the page. If it still fails, the data files are missing next to this page, or the page was opened as a local file instead of through a web server.";return;}
   $("#boot").remove();["alur","hasil","training"].forEach(id=>{$("#"+id).hidden=false;io.observe($("#"+id));});
-  buildOptList();renderOptInfo();renderFacts();buildFilters();syncDS();
+  buildOptList();renderOptInfo();renderFacts();buildFilters();syncDS();syncModelButtons();
   select({kind:"g",k:D.demo[9]});renderGallery();renderTraining();
   window.__ready=true;
 })();
