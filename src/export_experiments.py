@@ -55,7 +55,7 @@ def jpeg_mapping(data_dir, jpeg_dir):
     """Official test index for each image of the JPEG copy (class folders, sorted file names)."""
     path = EXP / "splits" / "cifar10_jpeg_to_official.json"
     if path.exists():
-        return np.array(json.loads(path.read_text())["official_index"])
+        return np.array(json.loads(path.read_text(encoding="utf-8"))["official_index"])
     from PIL import Image
     _, _, xte, yte = load_official("cifar10", "files" if data_dir else "keras", data_dir)
     x = xte.reshape(len(xte), -1).astype(np.float32)
@@ -66,7 +66,7 @@ def jpeg_mapping(data_dir, jpeg_dir):
             im = np.asarray(Image.open(f).convert("RGB"), np.float32).ravel()
             out.append(int(cand[np.abs(x[cand] - im).mean(1).argmin()]))
     assert len(set(out)) == len(out) == 10000, "JPEG to official mapping is not one-to-one"
-    path.write_text(json.dumps({"note": "position k = k-th image of github.com/YoongiKim/CIFAR-10-images test/ "
+    path.write_text(encoding="utf-8", newline="\n", data=json.dumps({"note": "position k = k-th image of github.com/YoongiKim/CIFAR-10-images test/ "
                                         "(class folders in label order, files sorted); value = official test index",
                                 "official_index": out}))
     return np.array(out)
@@ -119,23 +119,23 @@ def write_run(out_dir, key, pred, conf, cm, acc, f1, per, history):
     data = {"key": key, "preds": b64u8(pred), "conf": b64u8(np.round(np.asarray(conf) * 255)),
             "acc": round(acc, 6), "f1": round(f1, 6), "per_class_f1": [round(float(v), 4) for v in per],
             "cm": cm.tolist(), "history": history}
-    (out_dir / f"{key}.json").write_text(json.dumps(data, separators=(",", ":")))
+    (out_dir / f"{key}.json").write_text(encoding="utf-8", newline="\n", data=json.dumps(data, separators=(",", ":")))
 
 
 def controlled(ds, yte, out_dir):
     runs = []
     for meta in sorted((EXP / "runs").glob(f"*/{ds}/*/seed-*/run.json")):
-        info = json.loads(meta.read_text())
+        info = json.loads(meta.read_text(encoding="utf-8"))
         if info["phase"] == "warmup" or info.get("smoke") or info["status"] != "evaluated":
             continue
-        hist = json.loads((meta.parent / "history.json").read_text())
+        hist = json.loads((meta.parent / "history.json").read_text(encoding="utf-8"))
         variants = [("", info["optimizer"], hist, info.get("best_epoch"))]
         if info.get("snapshot_epoch"):
             se = info["snapshot_epoch"]
             variants.append((f"epoch{se}", f"{info['optimizer']}-e{se}", hist[:se], se))
         for tag, opt, history, best in variants:
             z = np.load(meta.parent / tag / "test_predictions.npz")
-            m = json.loads((meta.parent / tag / "metrics.json").read_text())
+            m = json.loads((meta.parent / tag / "metrics.json").read_text(encoding="utf-8"))
             assert np.array_equal(z["ids"], np.arange(10000)) and np.array_equal(z["y_true"], yte)
             pred = z["y_pred"].astype(np.int64)
             prob = z["prob"].astype(np.float32)
@@ -196,7 +196,7 @@ def main():
     for ds in args.dataset:
         out_dir = ROOT / "dashboard" / "data" / ds / "runs"
         out_dir.mkdir(parents=True, exist_ok=True)
-        D = json.loads((ROOT / "dashboard" / "data" / ds / "data.json").read_text())
+        D = json.loads((ROOT / "dashboard" / "data" / ds / "data.json").read_text(encoding="utf-8"))
         ddir = args.cifar_dir if ds == "cifar10" else args.fashion_dir
         _, _, _, yte = load_official(ds, "files" if ddir else "keras", ddir)
         to_off = jpeg_mapping(args.cifar_dir, args.jpeg_dir) if ds == "cifar10" else np.arange(10000)
@@ -209,7 +209,7 @@ def main():
                 f.unlink()
         warm = {}
         for meta in sorted((EXP / "runs").glob(f"*/{ds}/effnet-warmup/seed-*/run.json")):
-            w = json.loads(meta.read_text())
+            w = json.loads(meta.read_text(encoding="utf-8"))
             if not w.get("smoke") and w["status"] == "trained":
                 warm[f"{w['study']}:{w['seed']}"] = {"sha256": w["warmup_weights_sha256"][:16],
                                                      "input_range": w.get("backbone_input_range")}
@@ -230,10 +230,10 @@ def main():
             "warmups": warm,
             "runs": runs, "planned": planned(runs),
         }
-        (ROOT / "dashboard" / "data" / ds / "experiments.json").write_text(json.dumps(index, separators=(",", ":")))
+        (ROOT / "dashboard" / "data" / ds / "experiments.json").write_text(encoding="utf-8", newline="\n", data=json.dumps(index, separators=(",", ":")))
         summarize(ds, [r for r in runs], rows)
         print(f"{ds}: {len(runs)} runs exported, {len(index['planned'])} planned runs without artifacts")
-    with open(ROOT / "results" / "controlled_summary.csv", "w", newline="") as f:
+    with open(ROOT / "results" / "controlled_summary.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator="\n")
         w.writeheader()
         w.writerows(rows)

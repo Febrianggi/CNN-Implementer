@@ -200,13 +200,13 @@ def make_split(dataset, xtr, ytr):
 def get_split(dataset, xtr, ytr):
     path = EXP / "splits" / f"{dataset}.json"
     if path.exists():
-        split = json.loads(path.read_text())
+        split = json.loads(path.read_text(encoding="utf-8"))
         if split["train_fingerprint"] != fingerprint(xtr, ytr):
             raise SystemExit(f"{path} was made from different training data; refusing to continue.")
     else:
         split = make_split(dataset, xtr, ytr)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(split))
+        path.write_text(encoding="utf-8", newline="\n", data=json.dumps(split))
     val = np.array(split["val"])
     train = np.setdiff1d(np.arange(len(ytr)), val)
     assert _sha_list(train) == split["sha256"]["train"] and _sha_list(val) == split["sha256"]["val"]
@@ -361,7 +361,7 @@ class Progress(keras.callbacks.Callback):
                 row[k] = round(float(logs[k]), 5)
         self.rows.append(row)
         self.t0 = time.time()
-        (self.run_dir / "history.json").write_text(json.dumps(self.rows, indent=0))
+        (self.run_dir / "history.json").write_text(encoding="utf-8", newline="\n", data=json.dumps(self.rows, indent=0))
         print(f"  epoch {row['epoch']:>2} [{self.phase}] loss {row['loss']:.4f} acc {row['accuracy']:.4f} "
               f"val_acc {row.get('val_accuracy', 0):.4f} val_f1 {row.get('val_macro_f1', 0):.4f} "
               f"({row['seconds']:.0f}s)", flush=True)
@@ -379,7 +379,7 @@ def claim(path, identity, force=False):
     """Create a fresh run folder. Finished runs are skipped; an unfinished one is kept aside."""
     meta = path / "run.json"
     if meta.exists():
-        status = json.loads(meta.read_text()).get("status")
+        status = json.loads(meta.read_text(encoding="utf-8")).get("status")
         if status in ("trained", "evaluated") and not force:
             print(f"skip {path.relative_to(ROOT)} ({status})")
             return None
@@ -389,13 +389,13 @@ def claim(path, identity, force=False):
         print(f"kept previous attempt as {aside.name}")
     path.mkdir(parents=True)
     info = dict(identity, status="running", started=now())
-    meta.write_text(json.dumps(info, indent=1))
+    meta.write_text(encoding="utf-8", newline="\n", data=json.dumps(info, indent=1))
     return info
 
 
 def finish(path, info, **extra):
     info.update(extra, status="trained", finished=now())
-    (path / "run.json").write_text(json.dumps(info, indent=1))
+    (path / "run.json").write_text(encoding="utf-8", newline="\n", data=json.dumps(info, indent=1))
 
 
 # ----------------------------------------------------------------------------- runs
@@ -425,7 +425,7 @@ def run_small(kind, ds, study, seed, data, ctx, root, force):
     t0 = time.time()
     model.fit(x, ytr, validation_data=(v, yv), epochs=SMALL["max_epochs"], batch_size=SMALL["batch_size"],
               shuffle=True, callbacks=cbs, verbose=0)
-    hist = json.loads((path / "history.json").read_text())
+    hist = json.loads((path / "history.json").read_text(encoding="utf-8"))
     f1s = [r["val_macro_f1"] for r in hist]
     finish(path, info, params=model.count_params(), train_seconds=round(time.time() - t0, 1),
            epochs_run=len(hist), best_epoch=int(np.argmax(f1s)) + 1, best_val_macro_f1=round(max(f1s), 5),
@@ -468,10 +468,10 @@ def run_effnet(ds, study, seed, data, ctx, root, force, weights, branches):
         finish(wpath, winfo, params=model.count_params(), trainable_params=int(sum(np.prod(w.shape) for w in model.trainable_weights)),
                train_seconds=round(time.time() - t0, 1), epochs_run=EFFNET["warm_epochs"],
                warmup_weights_sha256=weights_sha(model), warmup_file_sha256=file_sha(wpath / "warmup.weights.h5"))
-    winfo = json.loads((wpath / "run.json").read_text())
+    winfo = json.loads((wpath / "run.json").read_text(encoding="utf-8"))
     if winfo.get("status") not in ("trained", "evaluated"):
         raise SystemExit(f"warm-up {wpath} did not finish")
-    warm_hist = json.loads((wpath / "history.json").read_text())
+    warm_hist = json.loads((wpath / "history.json").read_text(encoding="utf-8"))
 
     for opt in branches:
         path = run_dir(root, study, ds, "effnet", opt, seed)
@@ -501,7 +501,7 @@ def run_effnet(ds, study, seed, data, ctx, root, force, weights, branches):
                              keras.callbacks.EarlyStopping(monitor="val_macro_f1", mode="max", patience=EFFNET["patience"]),
                              Progress(path, "finetune", EFFNET["warm_epochs"], warm_hist)])
         bn_after = hashlib.sha256(b"".join(np.asarray(w).tobytes() for w in bn)).hexdigest()
-        hist = json.loads((path / "history.json").read_text())
+        hist = json.loads((path / "history.json").read_text(encoding="utf-8"))
         fine = [r for r in hist if r["phase"] == "finetune"]
         f1s = [r["val_macro_f1"] for r in fine]
         finish(path, info, params=model.count_params(),
@@ -552,7 +552,7 @@ def cmd_evaluate(args):
     root = Path(args.out) if args.out else EXP / "runs"
     base = root / args.study / args.dataset
     for meta in sorted(base.glob("*/seed-*/run.json")):
-        info = json.loads(meta.read_text())
+        info = json.loads(meta.read_text(encoding="utf-8"))
         if info["phase"] == "warmup" or info["status"] not in ("trained", "evaluated"):
             continue
         if info["status"] == "evaluated" and not args.force:
@@ -577,29 +577,29 @@ def cmd_evaluate(args):
             m = {"test_accuracy": round(float((pred == yte).mean()), 6), "test_macro_f1": round(f1, 6),
                  "per_class_f1": [round(float(v), 5) for v in per], "confusion": confusion(yte, pred).tolist(),
                  "n_test": int(len(yte)), "checkpoint": wfile, "evaluated": now()}
-            (out / "metrics.json").write_text(json.dumps(m, indent=1))
+            (out / "metrics.json").write_text(encoding="utf-8", newline="\n", data=json.dumps(m, indent=1))
             print(f"{path.relative_to(root)} {tag or 'best'}: acc {m['test_accuracy']:.4f} macro-F1 {f1:.4f}")
         info["status"] = "evaluated"
-        meta.write_text(json.dumps(info, indent=1))
+        meta.write_text(encoding="utf-8", newline="\n", data=json.dumps(info, indent=1))
 
 
 def cmd_report(args):
     root = Path(args.out) if args.out else EXP / "runs"
     rows = []
     for meta in sorted(root.glob("*/*/*/seed-*/run.json")):
-        info = json.loads(meta.read_text())
+        info = json.loads(meta.read_text(encoding="utf-8"))
         if info["phase"] == "warmup" or info["status"] != "evaluated" or info.get("smoke"):
             continue
         for tag in ["", f"epoch{info.get('snapshot_epoch')}" if info.get("snapshot_epoch") else None]:
             if tag is None:
                 continue
-            m = json.loads((meta.parent / tag / "metrics.json").read_text())
+            m = json.loads((meta.parent / tag / "metrics.json").read_text(encoding="utf-8"))
             rows.append({"study": info["study"], "dataset": info["dataset"], "model": info["model"],
                          "optimizer": info["optimizer"], "checkpoint": tag or "best-val-macro-f1",
                          "seed": info["seed"], "n_train": info["n_train"],
                          "input_size": info["recipe"].get("input_size", DATASETS[info["dataset"]]["shape"][0]),
                          # global epoch numbers (EfficientNet: 2 warm-up epochs, then fine-tuning)
-                         "epochs_total": len(json.loads((meta.parent / "history.json").read_text())) if not tag else info["snapshot_epoch"],
+                         "epochs_total": len(json.loads((meta.parent / "history.json").read_text(encoding="utf-8"))) if not tag else info["snapshot_epoch"],
                          "best_epoch": info.get("best_epoch") if not tag else info.get("snapshot_epoch"),
                          "best_val_macro_f1": info.get("best_val_macro_f1"),
                          "test_accuracy": m["test_accuracy"], "test_macro_f1": m["test_macro_f1"],
@@ -608,7 +608,7 @@ def cmd_report(args):
         print("no evaluated runs")
         return
     out = ROOT / "results" / "controlled_runs.csv"
-    with open(out, "w", newline="") as f:
+    with open(out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator="\n")
         w.writeheader()
         w.writerows(rows)

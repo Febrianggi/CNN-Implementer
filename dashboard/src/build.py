@@ -170,14 +170,14 @@ P = [
 
 
 def build():
-    ID = ((HERE / "head.html").read_text() + "<style>" + (HERE / "base.css").read_text() + "</style>\n"
-          + (HERE / "body.html").read_text() + "\n<script>\n" + (HERE / "app.js").read_text() + "</script>\n</body>\n</html>\n")
+    ID = ((HERE / "head.html").read_text(encoding="utf-8") + "<style>" + (HERE / "base.css").read_text(encoding="utf-8") + "</style>\n"
+          + (HERE / "body.html").read_text(encoding="utf-8") + "\n<script>\n" + (HERE / "app.js").read_text(encoding="utf-8") + "</script>\n</body>\n</html>\n")
     ID = ID.replace("/*L:ID*/", "").replace("/*L:END*/", "") if False else ID
     missing = [old for old, new in P if old not in ID]
     assert not missing, "not found:\n" + "\n".join(m[:90] for m in missing)
     # strings of the run-based sections live in one object; swap it whole for the English one
     start, end = ID.index("/*L:ID*/"), ID.index("/*L:END*/") + len("/*L:END*/")
-    en_obj = (HERE / "strings_en.js").read_text().strip()
+    en_obj = (HERE / "strings_en.js").read_text(encoding="utf-8").strip()
     keys = lambda js: re.findall(r"^\s*([A-Za-z]\w*):", js, flags=re.M)
     assert keys(ID[start:end]) == keys(en_obj), "strings_en.js keys differ from the L object in app.js"
     EN = ID[:start] + en_obj + ID[end:]
@@ -190,8 +190,8 @@ def build():
     left = sorted({m.group(0) for m in re.finditer(words, EN, flags=re.I)})
     print("Indonesian-looking words left on the EN page:", left)
     assert "\u2014" not in EN and "\u2014" not in ID, "em dash in page text"
-    (OUT / "index.html").write_text(EN)
-    (OUT / "index.id.html").write_text(ID)
+    (OUT / "index.html").write_text(encoding="utf-8", newline="\n", data=EN)
+    (OUT / "index.id.html").write_text(encoding="utf-8", newline="\n", data=ID)
     print("built", OUT / "index.html", len(EN), "and", OUT / "index.id.html", len(ID))
 
 

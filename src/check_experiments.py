@@ -47,7 +47,7 @@ def main():
     for ds in DATASETS:
         ddir = args.cifar_dir if ds == "cifar10" else args.fashion_dir
         xtr, ytr, xte, yte = load_official(ds, "files" if ddir else "keras", ddir)
-        split = json.loads((EXP / "splits" / f"{ds}.json").read_text())
+        split = json.loads((EXP / "splits" / f"{ds}.json").read_text(encoding="utf-8"))
         val = np.array(split["val"])
         train = np.setdiff1d(np.arange(len(ytr)), val)
         check(split["train_fingerprint"] == fingerprint(xtr, ytr), f"{ds}: split made from other data")
@@ -64,7 +64,7 @@ def main():
 
         runs = []
         for meta in sorted((EXP / "runs").glob(f"*/{ds}/*/seed-*/run.json")):
-            info = json.loads(meta.read_text())
+            info = json.loads(meta.read_text(encoding="utf-8"))
             if info.get("smoke") or info["status"] not in ("trained", "evaluated"):
                 continue
             runs.append((meta.parent, info))
@@ -100,7 +100,7 @@ def main():
                   f"BatchNorm frozen: {all(i.get('batchnorm_stats_unchanged') for _, i in fine)}")
 
         # metrics recomputed from saved predictions, and the dashboard copy of them
-        index = json.loads((ROOT / "dashboard" / "data" / ds / "experiments.json").read_text())
+        index = json.loads((ROOT / "dashboard" / "data" / ds / "experiments.json").read_text(encoding="utf-8"))
         by_key = {r["key"]: r for r in index["runs"]}
         n_checked = 0
         for path, info in runs:
@@ -108,7 +108,7 @@ def main():
                 continue
             for tag, opt in [("", info["optimizer"])] + ([(f"epoch{info['snapshot_epoch']}", f"{info['optimizer']}-e{info['snapshot_epoch']}")] if info.get("snapshot_epoch") else []):
                 z = np.load(path / tag / "test_predictions.npz")
-                m = json.loads((path / tag / "metrics.json").read_text())
+                m = json.loads((path / tag / "metrics.json").read_text(encoding="utf-8"))
                 ids, pred = z["ids"], z["y_pred"].astype(int)
                 check(len(np.unique(ids)) == 10000 and np.array_equal(z["y_true"], yte[ids]), f"{path}/{tag}: ids or labels")
                 acc, (f1, _) = float((pred == yte[ids]).mean()), macro_f1(yte[ids], pred)
@@ -118,18 +118,18 @@ def main():
                 key = f"{info['study']}__{info['model']}-{opt}__s{info['seed']}"
                 r = by_key.get(key)
                 if check(r is not None, f"{key}: not in experiments.json"):
-                    j = json.loads((ROOT / "dashboard" / "data" / ds / "runs" / f"{key}.json").read_text())
+                    j = json.loads((ROOT / "dashboard" / "data" / ds / "runs" / f"{key}.json").read_text(encoding="utf-8"))
                     check(np.array_equal(u8(j["preds"]), pred) and j["cm"] == cm.tolist(), f"{key}: dashboard predictions")
                     check(abs(r["acc"] - acc) < 1e-6 and abs(r["f1"] - f1) < 1e-6, f"{key}: dashboard metrics")
                 n_checked += 1
         # historical runs in the dashboard
-        D = json.loads((ROOT / "dashboard" / "data" / ds / "data.json").read_text())
+        D = json.loads((ROOT / "dashboard" / "data" / ds / "data.json").read_text(encoding="utf-8"))
         pool = np.array(index["pool_ids"])
         check(len(set(pool.tolist())) == 1000 and all(yte[i] == p["t"] for i, p in zip(pool, D["pool"])), f"{ds}: gallery pool ids")
         check(np.array_equal(u8(index["labels"]), yte), f"{ds}: labels in experiments.json")
         for mk in ("cnn", "mlp"):
             for o in D["models"][mk]["opts"]:
-                j = json.loads((ROOT / "dashboard" / "data" / ds / "runs" / f"historical__{mk}-{o['slug']}__s42.json").read_text())
+                j = json.loads((ROOT / "dashboard" / "data" / ds / "runs" / f"historical__{mk}-{o['slug']}__s42.json").read_text(encoding="utf-8"))
                 p = u8(j["preds"])
                 check(p[pool].tolist() == o["pp"] and j["cm"] == o["cm"] and abs((p == yte).mean() - o["acc"]) < 6e-5,
                       f"{ds} historical {mk} {o['slug']}: differs from data.json")

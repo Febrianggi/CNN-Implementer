@@ -33,6 +33,7 @@ const L={
   branchT:s=>`EfficientNet fine-tuning branches, seed ${s}: validation accuracy`, branchN:"Epochs 1 to 2 are the shared warm-up (Adam 0.001, frozen backbone) from the same checkpoint. Lines stop at different epochs because of early stopping.",
   trainNote:"Training accuracy is measured during the epoch with dropout and augmentation on; validation is measured at the end of the epoch. The dashed vertical line marks the chosen checkpoint.",
   pclsT:lab=>`Accuracy per class: ${lab}`, cmT:lab=>`Confusion matrix: ${lab}`,
+  effElsewhere:"EfficientNet results at 96 px are under the Small subset tab", effShort:"see the Small subset tab",
   pickRun:"Choose a configuration in the table to see its curves.", noneDone:"No run has finished for this experiment yet. The table below lists the planned runs.", loading:"Loading…",
   histT:m=>`Historical optimizer sweep: ${m}, 10 epochs, seed 42`,
   aWhere:"Model A", bWhere:"Model B",

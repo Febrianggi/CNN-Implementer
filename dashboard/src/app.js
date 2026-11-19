@@ -303,6 +303,7 @@ function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur){box.innerHT
   branchT:s=>`Cabang fine-tuning EfficientNet, seed ${s}: akurasi validasi`, branchN:"Epoch 1 sampai 2 adalah warm-up bersama (Adam 0,001, backbone beku) dari checkpoint yang sama. Garis berhenti di epoch yang berbeda karena early stopping.",
   trainNote:"Akurasi train dihitung selama epoch dengan dropout dan augmentasi aktif; validasi dihitung di akhir epoch. Garis putus-putus vertikal = checkpoint terpilih.",
   pclsT:lab=>`Akurasi per kelas: ${lab}`, cmT:lab=>`Confusion matrix: ${lab}`,
+  effElsewhere:"Hasil EfficientNet 96 px ada di tab Subset kecil", effShort:"lihat tab Subset kecil",
   pickRun:"Pilih konfigurasi di tabel untuk melihat kurvanya.", noneDone:"Belum ada run yang selesai untuk eksperimen ini. Tabel di bawah menunjukkan run yang direncanakan.", loading:"Memuat…",
   histT:m=>`Sapuan optimizer historis: ${m}, 10 epoch, seed 42`,
   aWhere:"Model A", bWhere:"Model B",
@@ -446,7 +447,7 @@ function renderCfg(){const X=EX();if(!X)return;const met=S.metric==="acc"?"acc":
     let h=`<div class="dots" role="img" aria-label="${L.chartLab(L.stShort[S.study],S.metric==="acc"?L.metAcc:L.metF1)}">`;
     C.forEach(c=>{const sel=c.runs.some(r=>r.key===S.detail),v=c.runs.map(r=>r[met]);
       h+=`<div class="drow${sel?" sel":""}" aria-hidden="true"><span class="dl">${MNAME[c.model]} · ${optPart(c)}</span><span class="dt">`
-        +(v.length?`<i style="width:${P(mean(v))}%"></i>`+v.map(x=>`<b style="left:${P(x)}%"></b>`).join(""):`<span class="nr">${L.nr}</span>`)
+        +(v.length?`<i style="width:${P(mean(v))}%"></i>`+v.map(x=>`<b style="left:${P(x)}%"></b>`).join(""):`<span class="nr">${L.nr}${c.model==="effnet"&&S.study==="full"&&EX().runs.some(r=>r.study==="budget"&&r.model==="effnet")?" · "+L.effShort:""}</span>`)
         +`</span><span class="dn">${v.length?fmt(mean(v))+` <small>n = ${v.length}</small>`:""}</span></div>`;});
     h+=`<div class="drow axis" aria-hidden="true"><span class="dl"></span><span class="dt">${[0,1,2,3,4].map(g=>{const v=lo+(hi-lo)*g/4;return `<em style="left:${g*25}%">${met==="acc"?nf(v*100,0)+"%":v.toFixed(2)}</em>`;}).join("")}</span><span class="dn"></span></div>`;
     box.innerHTML=h+"</div>";}
@@ -454,7 +455,7 @@ function renderCfg(){const X=EX();if(!X)return;const met=S.metric==="acc"?"acc":
   let t=`<thead><tr>${L.cfgHead.map((h,i)=>`<th scope="col"${i?"":' style="text-align:left"'}>${h}</th>`).join("")}</tr></thead><tbody>`;
   C.forEach(c=>{const R=c.runs,total=R.length+c.planned.length,sel=R.some(r=>r.key===S.detail);
     const first=R[0]||c.planned[0];
-    if(!R.length){t+=`<tr><th scope="row">${MNAME[c.model]} · ${optPart(c)}</th><td colspan="7" style="text-align:left;color:var(--muted)">${L.nr} (0 / ${total} seed)</td></tr>`;return;}
+    if(!R.length){t+=`<tr><th scope="row">${MNAME[c.model]} · ${optPart(c)}</th><td colspan="7" style="text-align:left;color:var(--muted)">${L.nr} (0 / ${total} seed)${c.model==="effnet"&&S.study==="full"&&EX().runs.some(r=>r.study==="budget"&&r.model==="effnet")?". "+L.effElsewhere:""}</td></tr>`;return;}
     const a=R.map(r=>r.acc),f=R.map(r=>r.f1),mv=R.map(r=>r[met]);
     const pairs=R.filter(r=>bs[r.seed]!=null).map(r=>(r[met]-bs[r.seed])*100),md=pairs.length?mean(pairs):0;
     const dtxt=c.k==="cnn-adam-e10"?"0":pairs.length?L.delta((md>=0?"+":"−")+nf(Math.abs(md),2),nf(sd(pairs),2),pairs.length):L.deltaNone;
@@ -570,7 +571,10 @@ function renderHist(){const o=hOpt(),sorted=[...HOPTS()].sort((a,b)=>b.acc-a.acc
   $("#cmpTable").innerHTML=`<thead><tr><th scope="col">Model</th><th scope="col">Parameter</th><th scope="col">Akurasi uji</th></tr></thead><tbody>${body}</tbody>`;}
 function renderTraining(){if(!EX())return;
   if(!EX().byKey[S.detail]){const C=configs(S.study),c=C.find(c=>c.runs.length&&c.model==="effnet")||C.find(c=>c.runs.length&&c.k==="cnn-adam")||C.find(c=>c.runs.length);S.detail=c?c.runs[0].key:"";}
-  renderCfg();renderHist();renderDetail();}
+  renderCfg();renderHist();if(detailSeen)renderDetail();}
+/* curves and per-run files load only once the comparison section is near the screen */
+let detailSeen=false;
+new IntersectionObserver((es,ob)=>{if(es.some(e=>e.isIntersecting)&&!detailSeen){detailSeen=true;ob.disconnect();if(EX())renderDetail();}},{rootMargin:"400px 0px"}).observe(document.getElementById("training"));
 
 /* ---------- dataset control ---------- */
 const DSLIST=[{key:"cifar10"},{key:"fashion"}];
@@ -665,7 +669,9 @@ let rz;new ResizeObserver(()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame
   // run index: small, loaded after the flow is on screen; predictions and curves load per run on demand
   $("#summary").textContent=L.loadingRuns;
   try{await loadExp(S.ds);}catch(e){$("#summary").innerHTML=`<span style="color:var(--bad)">${L.expErr}</span>`;$("#cfgNote").textContent=L.expErr;window.__ready=true;return;}
-  if(!EX().runs.some(r=>r.study===S.study))S.study=EX().runs.some(r=>r.study==="budget")?"budget":S.study;
+  // open on the experiment that has EfficientNet results (the full 224 px recipe has not been run yet)
+  const effIn=st=>EX().runs.some(r=>r.study===st&&r.model==="effnet");
+  if(!effIn(S.study)&&effIn("budget"))S.study="budget";
   syncRunPickers();renderGallery();renderTraining();
   window.__ready=true;
 })();
