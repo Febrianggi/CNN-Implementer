@@ -28,13 +28,13 @@ Everything starts at the top of the page: choose a **dataset** (CIFAR-10 or Fash
 The page has four sections, reachable from the sidebar. The header keeps two buttons in place: the menu button on the left opens and closes the sidebar, and **Dark mode** on the right switches the theme.
 
 1. **Accuracy.** The ranking lists all 19 trained models of the dataset (8 MLP, 8 CNN, 3 EfficientNetV2B0) on one scale. Click a row to select that model. The note under the ranking says how each model was trained, because EfficientNetV2B0 was fine-tuned on a 3,000-image subset at 96 × 96 while MLP and CNN used the full training set.
-2. **Network flow** (MLP and CNN) runs the selected model in your browser. Pick one of the ten example thumbnails, or press **+** to upload a JPG or PNG. Read the flow from left to right: the input channels, then conv1 and conv2 feature maps with max pooling for the CNN (or flatten and two dense layers for the MLP), then the class probabilities. Click any square to enlarge it and see the weights behind it. "Compare all optimizers" shows each optimizer's prediction for the current image. EfficientNetV2B0 is too large to run in the browser, so this section points to its predictions instead.
+2. **Network flow** runs the selected model in your browser. Pick one of the ten example thumbnails, press **+** to upload a JPG or PNG, or drop an image anywhere on the page. For MLP and CNN, read the flow from left to right: the input channels, then conv1 and conv2 feature maps with max pooling for the CNN (or flatten and two dense layers for the MLP), then the class probabilities. Click any square to enlarge it and see the weights behind it. "Compare all optimizers" shows each optimizer's prediction for the current image. For EfficientNetV2B0 the section shows the predicted class and all 10 probabilities, without feature maps: the model is exported to ONNX and runs with ONNX Runtime Web, and its file (about 12 MB) is downloaded the first time you use it.
 3. **Test results** shows the selected model's predictions on a fixed set of 1,000 test images (100 per class). Filter by match status and true class, and optionally compare with a second model to filter by *Both right*, *Only selected right*, *Only comparison right*, or *Both wrong*. The counts in the summary line always use all 10,000 test images.
 4. **Model details** shows the selected model's training curves, per-class accuracy, and confusion matrix, then a summary of every optimizer of that model with its overall rank, the validation curves of those optimizers, and a table comparing MLP, CNN, and EfficientNetV2B0 on both datasets with the selected optimizer. Click a class or an off-diagonal cell to open those images in the gallery.
 
 On a wide screen the sidebar is open by default and the content widens when you close it. On a phone it opens as a drawer; close it with ×, Escape, a tap outside it, or by choosing a section. An English/Indonesian switch sits at the bottom of the sidebar.
 
-| Accuracy of every trained model | EfficientNetV2B0 selected |
+| Accuracy of every trained model | EfficientNetV2B0 prediction in the browser |
 |---|---|
 | ![Accuracy and ranking](docs/screenshots/en/accuracy.png) | ![EfficientNetV2B0 selected](docs/screenshots/en/effnet.png) |
 
@@ -63,11 +63,13 @@ src/experiments.py     controlled experiments:                 10,000 prediction
 src/export_experiments.py
   → dashboard/data/<dataset>/experiments.json, runs/*.json
 src/check_experiments.py  re-checks splits, warm-up identity, and every metric
+src/export_effnet_onnx.py  EfficientNet checkpoints → dashboard/data/<dataset>/effnet-*.onnx
+  (classifies uploads in the browser; checked against all 10,000 saved test predictions)
 ```
 
 - **No server.** The dashboard is a static page with JSON files beside it, so GitHub Pages can host it as is.
 - **The browser does the CNN math.** The forward pass is re-implemented in about 40 lines of JavaScript. Its probabilities match Keras to within 0.000001 on the same weights.
-- **Light at first load.** The page loads one dataset file, one CNN weight file, and a small run index. Predictions and curves for a run are fetched only when you open it; EfficientNet weights are never sent to the browser.
+- **Light at first load.** The page loads one dataset file, one CNN weight file, and a small run index. Predictions and curves for a run are fetched only when you open it. EfficientNet weights (about 12 MB per optimizer, 16-bit, computed in float32) are downloaded only when you classify an image with EfficientNet; its predicted class matches the Python evaluation on 99.93% to 100% of the test images, depending on the dataset and optimizer (`dashboard/data/effnet_onnx.json`).
 - **Which artifact made which number.** Historical sweep numbers are recomputed from the 16-bit weights the browser runs. Controlled runs are evaluated in Python from their 32-bit checkpoints, and the page shows those saved predictions.
 - **Uploads stay local.** An uploaded image is read with the browser's canvas API and never sent anywhere.
 
@@ -263,7 +265,8 @@ Citations:
 │   ├── export_dashboard.py     historical models → dashboard/data/<dataset>/
 │   ├── experiments.py          controlled experiments: run, evaluate, report
 │   ├── export_experiments.py   every run → experiments.json and runs/*.json for the dashboard
-│   └── check_experiments.py    independent checks of splits, warm-ups, metrics and exported files
+│   ├── check_experiments.py    independent checks of splits, warm-ups, metrics and exported files
+│   └── export_effnet_onnx.py   EfficientNet checkpoints → ONNX for in-browser prediction
 ├── notebooks/
 │   ├── cnn_optimizers.ipynb    the historical training, step by step with explanations
 │   └── model_comparison.ipynb  MLP vs CNN vs EfficientNetV2B0, the controlled experiments on Colab
@@ -331,6 +334,7 @@ python src/experiments.py evaluate --dataset cifar10 --study full
 python src/experiments.py report
 python src/export_experiments.py --jpeg-dir data/CIFAR-10-images
 python src/check_experiments.py
+python src/export_effnet_onnx.py   # needs the checkpoints and: pip install tf2onnx onnx onnxruntime
 ```
 
 - Data comes from `keras.datasets` unless you pass `--source files --data-dir <folder>` with the official `cifar-10-batches-py` folder or the four Fashion-MNIST `.gz` files (`export_experiments.py` and `check_experiments.py` take `--cifar-dir` and `--fashion-dir`). `export_experiments.py` also needs the CIFAR-10 JPG copy (`git clone https://github.com/YoongiKim/CIFAR-10-images data/CIFAR-10-images`) to recompute the historical predictions.

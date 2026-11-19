@@ -108,7 +108,6 @@ P = [
 ('<small>32 × 32 berwarna</small>', '<small>32 × 32 color</small>'),
 ('<h2>Peringkat akurasi uji</h2>', '<h2>Test accuracy ranking</h2>'),
 ('aria-label="Peringkat akurasi uji"', 'aria-label="Test accuracy ranking"'),
-('>Lihat prediksinya di hasil uji<', '>See its predictions in the test results<'),
 ('>Bandingkan dengan<', '>Compare with<'),
 ('id="lblStatus">Status<', 'id="lblStatus">Status<'),
 ('id="lblAgree">Kedua model<', 'id="lblAgree">Both models<'),

@@ -153,7 +153,7 @@ async function handleFile(f){
 
 /* ---------- flow ---------- */
 let flowState=null;
-function select(it){if(S.model==="effnet")return;const W=WCACHE[wk(S.opt)];if(!W)return;
+function select(it){if(S.model==="effnet"){S.cur={...it,truth:it.kind==="g"?D.pool[it.k].t:null};S.sel=null;buildStrip();runEff();return;}const W=WCACHE[wk(S.opt)];if(!W)return;
   const truth=it.kind==="g"?D.pool[it.k].t:null;
   S.cur={...it,truth};S.cur.res=forward(curPx(),W);S.sel=null;$("#detail").hidden=true;buildStrip();renderFlow();renderCompare();}
 function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
@@ -320,8 +320,52 @@ function renderRank(){const box=$("#rank"),{sorted}=ENTC[S.ds],mx=sorted[0].acc;
     const b=btn(e.model===S.model&&!sel?"same":"",sel,`<span class="n">${e.rank}</span><span class="who"><b>${MNAME[e.model]}</b>${e.name}</span><span class="bar"><i style="width:${(e.acc/mx*100).toFixed(2)}%"></i></span><em>${pct(e.acc,2)}</em>`,
       L.rankAria(label(e),pct(e.acc,2),e.rank),()=>setPick(e.model,e.opt));box.append(b);});
   const eff=E().find(e=>e.model==="effnet");$("#rankNote").textContent=eff?L.rankNote(eff.seed):"";}
-function syncFlowMode(){const eff=S.model==="effnet";$("#flowArea").hidden=eff;$("#effMsg").hidden=!eff;$("#effMsgText").textContent=L.effMsg;
-  const g=G();$("#heroTitle").textContent=`Bagaimana ${MODEL()} membaca gambar ${g.H} × ${g.H}`;}
+function syncFlowMode(){const eff=S.model==="effnet";$("#cnnArea").hidden=eff;$("#effPanel").hidden=!eff;
+  const g=G();$("#heroTitle").textContent=eff?L.effTitle(g.H):`Bagaimana ${MODEL()} membaca gambar ${g.H} × ${g.H}`;}
+
+/* ---------- EfficientNetV2B0 in the browser: class probabilities only (ONNX Runtime Web, loaded on first use) ---------- */
+const ORT_VER="1.23.2", ORT_CDN=`https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VER}/dist/`;
+let ortP=null,EFFINFO=null;const ESESS={};
+function loadOrt(){if(window.ort)return Promise.resolve(window.ort);
+  return ortP||(ortP=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src=ORT_CDN+"ort.wasm.min.js";sc.crossOrigin="anonymous";
+    sc.onload=()=>{ort.env.logLevel="error";ort.env.wasm.wasmPaths=ORT_CDN;ort.env.wasm.numThreads=1;ok(ort);};sc.onerror=()=>{ortP=null;no(new Error("ort"));};document.head.append(sc);}));}
+async function effInfo(){if(EFFINFO)return EFFINFO;const r=await fetch("data/effnet_onnx.json");if(!r.ok)throw new Error(r.status);return EFFINFO=await r.json();}
+/* AdamW has no file of its own when its weights are identical to Adam's */
+async function effFile(ds,opt){const i=(await effInfo())[ds][opt];if(!i)throw new Error("no model");return i.same_as?effFile(ds,i.same_as):i.file;}
+async function effSession(ds,opt){const f=await effFile(ds,opt),k=ds+"/"+f;
+  if(!ESESS[k])ESESS[k]=(async()=>{const o=await loadOrt();return o.InferenceSession.create(`data/${ds}/${f}`,{executionProviders:["wasm"]});})().catch(e=>{delete ESESS[k];throw e;});
+  return ESESS[k];}
+/* EfficientNet was trained on the official CIFAR-10 files; the gallery atlas of the historical sweep is a JPG copy,
+   so gallery images are read from an atlas of the official pixels when the export provides one */
+const EATL={};
+async function effAtlas(ds){const a=(await effInfo())[ds].atlas;if(!a)return null;
+  if(!EATL[ds])EATL[ds]=(async()=>{const img=new Image();img.src=`data/${ds}/${a}`;await img.decode();
+    const c=document.createElement("canvas");c.width=img.width;c.height=img.height;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0);return x;})().catch(e=>{delete EATL[ds];throw e;});
+  return EATL[ds];}
+async function effPx(ds){if(S.cur.kind!=="g")return curPx();const ctx=await effAtlas(ds);if(!ctx)return curPx();
+  const {H:s2,C}=G(),k=S.cur.k,c=k%D.cols,r=Math.floor(k/D.cols),im=ctx.getImageData(c*s2,r*s2,s2,s2).data,px=new Float32Array(s2*s2*C);
+  for(let i=0;i<s2*s2;i++)for(let ch=0;ch<C;ch++)px[i*C+ch]=im[i*4+ch]/255;return px;}
+let effSeq=0;
+async function runEff(){if(S.model!=="effnet"||!S.cur)return;const seq=++effSeq,ds=S.ds,opt=S.opt,e=curE(),g=G();
+  const panel=$("#effPanel"),note=$("#effNote");note.classList.remove("err");
+  const k=ds+"/"+await effFile(ds,opt).catch(()=>"");
+  if(!ESESS[k]||!ESESS[k].done){panel.classList.add("busy");note.textContent=L.effLoading;}
+  let prob;
+  try{const px=await effPx(ds);if(seq!==effSeq)return;drawEffImg(px);
+    const sess=await effSession(ds,opt);ESESS[k].done=true;
+    const x=new Float32Array(px.length);for(let i=0;i<px.length;i++)x[i]=px[i]*255;   // the model takes pixels 0..255 at the dataset's own size
+    const out=await sess.run({[sess.inputNames[0]]:new ort.Tensor("float32",x,[1,g.H,g.H,g.C])});prob=Array.from(out[sess.outputNames[0]].data);}
+  catch(err){if(seq!==effSeq)return;panel.classList.remove("busy");note.classList.add("err");note.textContent=L.effErr;$("#effVerdict").innerHTML="";$("#effOut").innerHTML="";return;}
+  if(seq!==effSeq||ds!==S.ds||opt!==S.opt)return;
+  panel.classList.remove("busy");
+  const i=EFFINFO[ds][opt].same_as?EFFINFO[ds][EFFINFO[ds][opt].same_as]:EFFINFO[ds][opt];note.textContent=L.effNote(nf(i.agreement*100,2));
+  const r={prob},top=prob.indexOf(Math.max(...prob)),on=label(e),v=$("#effVerdict");
+  if(S.cur.truth===null)v.innerHTML=`<span class="tab unk">Label asli tidak diketahui</span><strong>Prediksi: ${CLS[top]}</strong><span style="color:var(--muted)">keyakinan ${pct(r.prob[top])}, ${on}</span>`;
+  else{const ok=top===S.cur.truth;v.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?"Cocok":"Tidak cocok"}</span><strong>Prediksi: ${CLS[top]}</strong><span style="color:var(--muted)">asli ${CLS[S.cur.truth]}, keyakinan ${pct(r.prob[top])}, ${on}</span>`;}
+  const box=$("#effOut");box.innerHTML="";
+  prob.forEach((p,j)=>{const row=document.createElement("div");row.className="out-row"+(j===top?" top":"")+(j===S.cur.truth?" truth":"");
+    row.innerHTML=`<span>${CLS[j]}</span><span class="bar"><i style="width:${(p*100).toFixed(1)}%"></i></span><em>${pct(p)}</em>`;box.append(row);});}
+function drawEffImg(px){const cv=$("#effImg");drawPx(cv,px);}
 let pickSeq=0;
 async function setPick(model,opt){
   const has=(m,o)=>E().some(e=>e.model===m&&e.opt===o);if(!ofModel(model).length)return;
@@ -332,7 +376,7 @@ async function setPick(model,opt){
   if(modelChanged)resetCompare();
   renderPick();renderRank();syncFlowMode();syncCmpSelect();S.shown=24;renderGallery();renderTraining();
   const m=$("#optMsg");m.classList.remove("err");m.textContent="";
-  if(model==="effnet")return;
+  if(model==="effnet"){if(S.cur)runEff();else select({kind:"g",k:D.demo[9]});return;}
   if(!WCACHE[wk(opt)]){m.textContent=L.loadingW(label(curE()));$("#flowWrap").classList.add("busy");}
   try{await loadW(opt);}catch(e){if(seq!==pickSeq)return;$("#flowWrap").classList.remove("busy");m.classList.add("err");m.textContent=L.wErr(label(curE()));return;}
   if(seq!==pickSeq)return;
@@ -384,7 +428,7 @@ async function renderGallery(){const sum=$("#summary"),g=$("#grid");
   sum.innerHTML=txt;const cp=$("#clrPred");if(cp)cp.onclick=()=>{S.pred=null;renderGallery();};
   g.innerHTML="";
   if(!rows.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1">${L.empty}</div>`;$("#more").innerHTML="";return;}
-  const live=a.browser;   // only MLP/CNN can be opened in the network flow
+  const live=true;
   rows.slice(0,S.shown).forEach(it=>{const ok=it.t===it.p,el=document.createElement(live?"button":"div");if(live)el.type="button";el.className="card";
     let lab=L.cardLab(ok,CLS[it.t],CLS[it.p],pct(it.c));
     el.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?L.ok:L.bad}</span>`;
@@ -409,7 +453,10 @@ function showInGallery(cls,pred){S.cls=cls;S.pred=pred;S.status=pred==null?"all"
   optAria:(n,acc)=>`${n}, akurasi uji ${acc}`, modelAria:(n,acc)=>`${n}, akurasi terbaik ${acc}`,
   loadingW:n=>`Memuat bobot ${n}…`, wErr:n=>`Bobot ${n} gagal dimuat. Pilih lagi untuk mencoba ulang.`,
   loadingDs:t=>`Memuat ${t}…`, dsErr:t=>`${t} gagal dimuat. Pilih dataset itu sekali lagi untuk mencoba ulang.`,
-  effMsg:"EfficientNetV2B0 terlalu besar untuk dijalankan di browser, jadi alur jaringan hanya tersedia untuk MLP dan CNN.",
+  effTitle:h=>`Prediksi EfficientNetV2B0 untuk gambar ${h} × ${h}`,
+  effLoading:"Memuat EfficientNetV2B0 (sekitar 12 MB, sekali saja)…",
+  effErr:"EfficientNetV2B0 gagal dimuat. Periksa koneksi, lalu pilih gambar lagi untuk mencoba ulang.",
+  effNote:a=>`Hanya prediksi kelas, tanpa feature map. Model berjalan di browser dengan bobot 16-bit; prediksinya sama dengan hasil Python pada ${a}% citra uji.`,
   loading:"Memuat…", runErr:"Hasil model ini gagal dimuat. Pilih model itu sekali lagi untuk mencoba ulang.",
   expErr:"Daftar hasil training gagal dimuat. Muat ulang halaman untuk mencoba lagi.",
   noB:"Tidak ada",
@@ -544,9 +591,9 @@ async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#optMsg
   buildClassChips();syncFilters();syncDS();
   if(S.cmpAll){S.cmpAll=false;resetCompare();}
   const keep=S.cur&&S.cur.kind==="u"?S.cur:{kind:"g",k:D.demo[9]};
-  if(S.model==="effnet"){S.cur=null;}
+  S.cur=null;
   await setPick(S.model,S.opt);
-  if(S.model!=="effnet")select(keep);}
+  select(keep);}
 document.querySelectorAll("[data-ds]").forEach(b=>b.onclick=()=>setDataset(b.dataset.ds));
 $("#fInv").addEventListener("change",e=>{S.inv=e.target.checked;if(S.cur&&S.cur.kind==="u")select(S.cur);else buildStrip();});
 
@@ -596,8 +643,7 @@ document.addEventListener("dragover",ev=>{if(!hasFiles(ev))return;ev.preventDefa
 document.addEventListener("dragleave",ev=>{if(!hasFiles(ev))return;dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)setDropping(false);});
 document.addEventListener("drop",ev=>{if(!hasFiles(ev))return;ev.preventDefault();dragDepth=0;setDropping(false);
   const f=ev.dataTransfer.files[0];if(!f||!D)return;
-  const go=()=>{handleFile(f);document.getElementById("alur").scrollIntoView();};
-  if(S.model==="effnet")setPick("cnn","adam").then(go);else go();});
+  handleFile(f);document.getElementById("alur").scrollIntoView();});
 
 /* ---------- boot ---------- */
 (async()=>{

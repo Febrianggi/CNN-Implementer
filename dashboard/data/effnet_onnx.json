@@ -1,0 +1,53 @@
+{
+ "cifar10": {
+  "atlas": "atlas-official.png",
+  "adam": {
+   "agreement": 0.9995,
+   "accuracy": 0.905,
+   "max_prob_diff": 0.01356,
+   "input_size": 96,
+   "seed": 1,
+   "checkpoint": "experiments/runs/budget/cifar10/effnet-adam/seed-1/best.weights.h5",
+   "file": "effnet-adam.onnx",
+   "bytes": 11854850
+  },
+  "adamw": {
+   "same_as": "adam"
+  },
+  "nadam": {
+   "agreement": 0.9993,
+   "accuracy": 0.8996,
+   "max_prob_diff": 0.01711,
+   "input_size": 96,
+   "seed": 1,
+   "checkpoint": "experiments/runs/budget/cifar10/effnet-nadam/seed-1/best.weights.h5",
+   "file": "effnet-nadam.onnx",
+   "bytes": 11855120
+  }
+ },
+ "fashion": {
+  "adam": {
+   "agreement": 1.0,
+   "accuracy": 0.8891,
+   "max_prob_diff": 0.00572,
+   "input_size": 96,
+   "seed": 1,
+   "checkpoint": "experiments/runs/budget/fashion/effnet-adam/seed-1/best.weights.h5",
+   "file": "effnet-adam.onnx",
+   "bytes": 11855260
+  },
+  "adamw": {
+   "same_as": "adam"
+  },
+  "nadam": {
+   "agreement": 1.0,
+   "accuracy": 0.8911,
+   "max_prob_diff": 0.00976,
+   "input_size": 96,
+   "seed": 1,
+   "checkpoint": "experiments/runs/budget/fashion/effnet-nadam/seed-1/best.weights.h5",
+   "file": "effnet-nadam.onnx",
+   "bytes": 11855260
+  }
+ }
+}

@@ -41,9 +41,14 @@
 .drop-zone p{background:var(--surface);color:var(--ink);font-size:18px;font-weight:600;padding:14px 22px;border-radius:var(--r-tile);box-shadow:var(--shadow)}
 .flow.mlp{grid-template-columns:repeat(5,auto);min-width:860px}
 .flow-wrap.busy .flow{opacity:.35;transition:opacity .15s}
-.effmsg{padding:18px 22px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.effmsg p{color:var(--muted);max-width:70ch}
-.effmsg a{text-decoration:none;color:var(--ink)}
+.eff-pred{margin-top:12px;box-shadow:var(--shadow)}
+.eff-body{display:grid;grid-template-columns:auto minmax(0,460px);justify-content:start;gap:40px;align-items:center;padding:20px 22px}
+.eff-img canvas{width:160px;height:160px;image-rendering:pixelated;border-radius:var(--r-tile);border:1px solid var(--line);display:block;background:var(--sunken)}
+.eff-pred .out-row{grid-template-columns:96px 1fr 52px}
+.eff-pred.busy .eff-body{opacity:.4}
+.eff-note{font-size:13px;color:var(--muted);padding:0 22px 16px;max-width:90ch}
+.eff-note.err{color:var(--bad)}
+@media (max-width:620px){.eff-body{grid-template-columns:1fr;gap:16px;padding:16px}.eff-img canvas{width:120px;height:120px}}
 .compare{margin-top:16px;padding:18px}
 .compare .c-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .compare h3{font-size:16px}
@@ -202,10 +207,6 @@ main section{scroll-margin-top:76px}
 
     <section id="alur" hidden>
       <div class="sec-head"><h2 id="heroTitle">Bagaimana CNN membaca gambar 32 × 32</h2></div>
-      <div class="panel effmsg" id="effMsg" hidden>
-        <p id="effMsgText"></p>
-        <a class="btn" href="#hasil" id="effMsgLink">Lihat prediksinya di hasil uji</a>
-      </div>
       <div id="flowArea">
         <div>
           <div class="strip" id="strip" role="group" aria-label="Pilih gambar untuk diperiksa"></div>
@@ -214,6 +215,15 @@ main section{scroll-margin-top:76px}
           <label class="check" id="invWrap" hidden><input type="checkbox" id="fInv" checked> Balik warna gambar unggahan (Fashion-MNIST memakai benda terang di latar hitam)</label>
         </div>
 
+        <div class="panel eff-pred" id="effPanel" hidden>
+          <div class="flow-bar"><div class="verdict-line" id="effVerdict" aria-live="polite"></div></div>
+          <div class="eff-body">
+            <div class="eff-img"><canvas id="effImg"></canvas></div>
+            <div class="out" id="effOut"></div>
+          </div>
+          <p class="eff-note" id="effNote"></p>
+        </div>
+        <div id="cnnArea">
         <div class="panel flow-wrap" id="flowWrap" style="margin-top:12px">
           <div class="flow-bar">
             <div class="verdict-line" id="verdict" aria-live="polite"></div>
@@ -237,6 +247,7 @@ main section{scroll-margin-top:76px}
             <button class="btn" type="button" id="cmpBtn">Bandingkan semua optimizer</button>
           </div>
           <div class="crows" id="crows" aria-live="polite"></div>
+        </div>
         </div>
       </div>
     </section>

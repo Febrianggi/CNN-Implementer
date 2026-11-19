@@ -28,13 +28,13 @@ Semuanya dimulai dari bagian atas halaman: pilih **dataset** (CIFAR-10 atau Fash
 Halaman ini punya empat bagian yang bisa dibuka dari sidebar. Header berisi dua tombol yang selalu ada di tempatnya: tombol menu di kiri membuka dan menutup sidebar, dan **Mode gelap** di kanan mengganti tema.
 
 1. **Akurasi.** Peringkat memuat ke-19 model yang sudah dilatih untuk dataset itu (8 MLP, 8 CNN, 3 EfficientNetV2B0) dalam satu skala. Klik baris untuk memilih model tersebut. Catatan di bawah peringkat menyebut cara tiap model dilatih, karena EfficientNetV2B0 di-fine-tune pada subset 3.000 citra dengan input 96 × 96, sedangkan MLP dan CNN memakai seluruh data latih.
-2. **Alur jaringan** (MLP dan CNN) menjalankan model terpilih di browser-mu. Pilih salah satu dari sepuluh thumbnail contoh, atau tekan **+** untuk mengunggah JPG atau PNG. Baca alurnya dari kiri ke kanan: channel input, lalu feature map conv1 dan conv2 dengan max pooling untuk CNN (atau flatten dan dua layer dense untuk MLP), lalu probabilitas kelas. Klik kotak mana saja untuk memperbesarnya dan melihat bobot di baliknya. "Bandingkan semua optimizer" menampilkan prediksi tiap optimizer untuk gambar yang sedang dipilih. EfficientNetV2B0 terlalu besar untuk dijalankan di browser, jadi bagian ini mengarahkan ke prediksinya.
+2. **Alur jaringan** menjalankan model terpilih di browser-mu. Pilih salah satu dari sepuluh thumbnail contoh, tekan **+** untuk mengunggah JPG atau PNG, atau tarik gambar ke mana saja di halaman. Untuk MLP dan CNN, baca alurnya dari kiri ke kanan: channel input, lalu feature map conv1 dan conv2 dengan max pooling untuk CNN (atau flatten dan dua layer dense untuk MLP), lalu probabilitas kelas. Klik kotak mana saja untuk memperbesarnya dan melihat bobot di baliknya. "Bandingkan semua optimizer" menampilkan prediksi tiap optimizer untuk gambar yang sedang dipilih. Untuk EfficientNetV2B0, bagian ini menampilkan kelas prediksi dan ke-10 probabilitasnya, tanpa feature map: modelnya diekspor ke ONNX dan dijalankan dengan ONNX Runtime Web, dan berkasnya (sekitar 12 MB) diunduh saat pertama kali dipakai.
 3. **Hasil uji** menampilkan prediksi model terpilih pada kumpulan tetap 1.000 citra uji (100 per kelas). Saring menurut status cocok dan kelas asli, dan bila perlu bandingkan dengan model kedua untuk menyaring *Keduanya benar*, *Hanya terpilih benar*, *Hanya pembanding benar*, atau *Keduanya salah*. Hitungan di baris ringkasan selalu memakai seluruh 10.000 citra uji.
 4. **Detail model** menampilkan kurva training, akurasi per kelas, dan confusion matrix model terpilih, lalu ringkasan semua optimizer model itu beserta peringkat keseluruhannya, kurva validasi optimizer-optimizer tersebut, dan tabel yang membandingkan MLP, CNN, dan EfficientNetV2B0 di kedua dataset dengan optimizer terpilih. Klik kelas atau sel di luar diagonal untuk membuka gambarnya di galeri.
 
 Di layar lebar, sidebar terbuka secara bawaan dan konten melebar saat sidebar ditutup. Di ponsel, sidebar terbuka sebagai drawer; tutup dengan ×, Escape, ketukan di luar drawer, atau dengan memilih salah satu bagian. Tombol bahasa Inggris/Indonesia ada di bagian bawah sidebar.
 
-| Akurasi semua model yang sudah dilatih | EfficientNetV2B0 dipilih |
+| Akurasi semua model yang sudah dilatih | Prediksi EfficientNetV2B0 di browser |
 |---|---|
 | ![Akurasi dan peringkat](docs/screenshots/id/accuracy.png) | ![EfficientNetV2B0 dipilih](docs/screenshots/id/effnet.png) |
 
@@ -63,11 +63,13 @@ src/experiments.py     eksperimen terkontrol:                  10.000 prediksi d
 src/export_experiments.py
   → dashboard/data/<dataset>/experiments.json, runs/*.json
 src/check_experiments.py  memeriksa ulang split, kesamaan warm-up, dan setiap metrik
+src/export_effnet_onnx.py  checkpoint EfficientNet → dashboard/data/<dataset>/effnet-*.onnx
+  (mengklasifikasi unggahan di browser; dicek terhadap ke-10.000 prediksi uji tersimpan)
 ```
 
 - **Tanpa server.** Dashboard adalah halaman statis dengan berkas JSON di sampingnya, jadi GitHub Pages bisa menayangkannya apa adanya.
 - **Browser menghitung CNN.** Forward pass ditulis ulang dalam sekitar 40 baris JavaScript. Probabilitasnya sama dengan Keras hingga selisih 0,000001 pada bobot yang sama.
-- **Ringan saat pertama dibuka.** Halaman memuat satu berkas dataset, satu berkas bobot CNN, dan indeks run yang kecil. Prediksi dan kurva sebuah run baru diambil saat run itu dibuka; bobot EfficientNet tidak pernah dikirim ke browser.
+- **Ringan saat pertama dibuka.** Halaman memuat satu berkas dataset, satu berkas bobot CNN, dan indeks run yang kecil. Prediksi dan kurva sebuah run baru diambil saat run itu dibuka. Bobot EfficientNet (sekitar 12 MB per optimizer, disimpan 16-bit, dihitung dalam float32) baru diunduh saat kamu mengklasifikasi gambar dengan EfficientNet; kelas prediksinya sama dengan evaluasi Python pada 99,93% sampai 100% citra uji, tergantung dataset dan optimizer (`dashboard/data/effnet_onnx.json`).
 - **Artefak mana menghasilkan angka mana.** Angka sapuan historis dihitung ulang dari bobot 16-bit yang dijalankan browser. Run terkontrol dievaluasi di Python dari checkpoint 32-bit, dan halaman menampilkan prediksi yang tersimpan itu.
 - **Unggahan tetap lokal.** Gambar yang diunggah dibaca dengan canvas API browser dan tidak dikirim ke mana pun.
 
@@ -263,7 +265,8 @@ Sitasi:
 │   ├── export_dashboard.py     model historis → dashboard/data/<dataset>/
 │   ├── experiments.py          eksperimen terkontrol: run, evaluate, report
 │   ├── export_experiments.py   setiap run → experiments.json dan runs/*.json untuk dashboard
-│   └── check_experiments.py    pemeriksaan independen atas split, warm-up, metrik, dan berkas ekspor
+│   ├── check_experiments.py    pemeriksaan independen atas split, warm-up, metrik, dan berkas ekspor
+│   └── export_effnet_onnx.py   checkpoint EfficientNet → ONNX untuk prediksi di browser
 ├── notebooks/
 │   ├── cnn_optimizers.ipynb    training historis, langkah demi langkah dengan penjelasan
 │   └── model_comparison.ipynb  MLP vs CNN vs EfficientNetV2B0, eksperimen terkontrol di Colab
@@ -331,6 +334,7 @@ python src/experiments.py evaluate --dataset cifar10 --study full
 python src/experiments.py report
 python src/export_experiments.py --jpeg-dir data/CIFAR-10-images
 python src/check_experiments.py
+python src/export_effnet_onnx.py   # butuh checkpoint dan: pip install tf2onnx onnx onnxruntime
 ```
 
 - Data diambil lewat `keras.datasets`, kecuali kamu memberi `--source files --data-dir <folder>` berisi folder resmi `cifar-10-batches-py` atau empat berkas `.gz` Fashion-MNIST (`export_experiments.py` dan `check_experiments.py` memakai `--cifar-dir` dan `--fashion-dir`). `export_experiments.py` juga butuh salinan JPG CIFAR-10 (`git clone https://github.com/YoongiKim/CIFAR-10-images data/CIFAR-10-images`) untuk menghitung ulang prediksi historis.
