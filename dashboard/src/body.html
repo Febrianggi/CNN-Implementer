@@ -37,6 +37,8 @@
 .rank button[aria-pressed="true"] .who,.rank button[aria-pressed="true"] em{font-weight:700}
 .rank em{font-style:normal;text-align:right}
 .rank-note{font-size:13px;color:var(--muted);margin-top:12px;max-width:90ch}
+.drop-zone{position:fixed;inset:12px;z-index:60;border:3px dashed var(--accent);border-radius:var(--r-panel);background:rgba(37,99,235,.10);display:grid;place-items:center;pointer-events:none}
+.drop-zone p{background:var(--surface);color:var(--ink);font-size:18px;font-weight:600;padding:14px 22px;border-radius:var(--r-tile);box-shadow:var(--shadow)}
 .flow.mlp{grid-template-columns:repeat(5,auto);min-width:860px}
 .flow-wrap.busy .flow{opacity:.35;transition:opacity .15s}
 .effmsg{padding:18px 22px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -318,4 +320,5 @@ main section{scroll-margin-top:76px}
   </main>
   </div>
   <div class="scrim" id="scrim" hidden></div>
+  <div class="drop-zone" id="dropZone" hidden aria-hidden="true"><p>Lepaskan gambar di mana saja untuk diperiksa</p></div>
 </div>

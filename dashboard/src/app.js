@@ -135,9 +135,6 @@ function buildStrip(){const st=$("#strip");st.innerHTML="";
   const up=document.createElement("button");up.type="button";up.className="upload";
   up.innerHTML='<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg>Unggah';
   up.setAttribute("aria-label","Unggah gambar sendiri");up.onclick=()=>$("#file").click();
-  ["dragenter","dragover"].forEach(e=>up.addEventListener(e,ev=>{ev.preventDefault();up.classList.add("drag");}));
-  ["dragleave","drop"].forEach(e=>up.addEventListener(e,()=>up.classList.remove("drag")));
-  up.addEventListener("drop",ev=>{ev.preventDefault();const f=ev.dataTransfer.files[0];if(f)handleFile(f);});
   st.append(up);}
 function msg(t,err){const m=$("#stripMsg");m.textContent=t;m.classList.toggle("err",!!err);}
 async function handleFile(f){
@@ -529,7 +526,7 @@ function syncDS(){
   const g=G();
   $("#invWrap").hidden=g.C!==1;
   $("#stripMsg").classList.remove("err");
-  $("#stripMsg").textContent=`Unggah JPG atau PNG, atau tarik gambar ke kotak +. Gambar dipotong persegi di tengah lalu diperkecil ke ${g.H} × ${g.H}`+(g.C===1?", diubah ke grayscale, dan (jika dicentang) dibalik warnanya.":".");
+  $("#stripMsg").textContent=`Unggah JPG atau PNG, atau tarik gambar ke mana saja di halaman ini. Gambar dipotong persegi di tengah lalu diperkecil ke ${g.H} × ${g.H}`+(g.C===1?", diubah ke grayscale, dan (jika dicentang) dibalik warnanya.":".");
 }
 let dsSeq=0;
 async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#optMsg");m.classList.remove("err");
@@ -589,6 +586,18 @@ $("#cmpBtn").onclick=loadAll;
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id));}),{rootMargin:"-40% 0px -55% 0px"});
 /* the flow links are drawn from element positions, so redraw whenever the canvas changes width (window, sidebar) */
 let rz;new ResizeObserver(()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(drawLinks);}).observe($("#flowWrap"));
+
+/* drag and drop an image anywhere on the page: it opens in the network flow of the selected model */
+let dragDepth=0;
+const hasFiles=ev=>ev.dataTransfer&&[...ev.dataTransfer.types].includes("Files");
+function setDropping(on){document.body.classList.toggle("dropping",on);$("#dropZone").hidden=!on;}
+document.addEventListener("dragenter",ev=>{if(!hasFiles(ev))return;ev.preventDefault();dragDepth++;setDropping(true);});
+document.addEventListener("dragover",ev=>{if(!hasFiles(ev))return;ev.preventDefault();ev.dataTransfer.dropEffect="copy";});
+document.addEventListener("dragleave",ev=>{if(!hasFiles(ev))return;dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)setDropping(false);});
+document.addEventListener("drop",ev=>{if(!hasFiles(ev))return;ev.preventDefault();dragDepth=0;setDropping(false);
+  const f=ev.dataTransfer.files[0];if(!f||!D)return;
+  const go=()=>{handleFile(f);document.getElementById("alur").scrollIntoView();};
+  if(S.model==="effnet")setPick("cnn","adam").then(go);else go();});
 
 /* ---------- boot ---------- */
 (async()=>{

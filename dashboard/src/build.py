@@ -15,6 +15,7 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE.parent
 
 P = [
+('<p>Lepaskan gambar di mana saja untuk diperiksa</p>', '<p>Drop the image anywhere to inspect it</p>'),
 ('aria-label="Tutup menu samping" title="Tutup menu samping"', 'aria-label="Close the side menu" title="Close the side menu"'),
 ('"Tutup menu samping":"Buka menu samping"', '"Close the side menu":"Open the side menu"'),
 ('aria-label="Menu samping"', 'aria-label="Side menu"'),
@@ -84,7 +85,7 @@ P = [
 ('"Loss validasi"', '"Validation loss"'),
 ('"Data model gagal dimuat. Muat ulang halaman; kalau masih gagal, berkas data tidak ikut terunggah."', '"Model data could not be loaded. Reload the page. If it still fails, the data files are missing next to this page, or the page was opened as a local file instead of through a web server."'),
 ('<title>CNN Explorer: dataset dan optimizer</title>', '<title>CNN Explorer: datasets and optimizers</title>'),
-('`Unggah JPG atau PNG, atau tarik gambar ke kotak +. Gambar dipotong persegi di tengah lalu diperkecil ke ${g.H} × ${g.H}`+(g.C===1?", diubah ke grayscale, dan (jika dicentang) dibalik warnanya.":".")', '`Upload a JPG or PNG, or drag an image onto the + box. It is center-cropped to a square and resized to ${g.H} × ${g.H}`+(g.C===1?", converted to grayscale, and (if checked) color-inverted.":".")'),
+('`Unggah JPG atau PNG, atau tarik gambar ke mana saja di halaman ini. Gambar dipotong persegi di tengah lalu diperkecil ke ${g.H} × ${g.H}`+(g.C===1?", diubah ke grayscale, dan (jika dicentang) dibalik warnanya.":".")', '`Upload a JPG or PNG, or drag an image anywhere onto this page. It is center-cropped to a square and resized to ${g.H} × ${g.H}`+(g.C===1?", converted to grayscale, and (if checked) color-inverted.":".")'),
 ('> Balik warna gambar unggahan (Fashion-MNIST memakai benda terang di latar hitam)<', '> Invert uploaded images (Fashion-MNIST shows light items on a black background)<'),
 ('`"${f.name}" diperkecil ke ${G().H} × ${G().H} dan diprediksi. Label aslinya tidak diketahui, jadi tidak ada status cocok.`', '`"${f.name}" was resized to ${G().H} × ${G().H} and classified. Its true label is unknown, so it has no match status.`'),
 ('["abu-abu"]', '["gray"]'),
