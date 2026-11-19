@@ -1,35 +1,35 @@
 "use strict";
 const LANG="id";
 const LOCALE=LANG==="en"?"en-US":"id-ID";
-const tx=(o,k)=>o[LANG==="en"?k+"_en":k];
 let D, atlasCtx, CLS, SUMMARY=null;
 const DSC = {};               // dataset key -> {D, atlasCtx}
 const WCACHE = {};            // "<dataset>/<model>-<slug>" -> weights
-const wk = (slug,ds=S.ds,model="cnn")=>ds+"/"+model+"-"+slug;
-/* Network Flow always runs the historical CNN in the browser (S.opt picks its optimizer).
-   Test Results compare two runs (S.runA, S.runB); the comparison section has its own selection (S.detail). */
-const S = {ds:"cifar10", inv:true, opt:"adam", cur:null, chMode:"top", sel:null, status:"all", agree:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmpAll:false,
-  runA:"historical__cnn-adam__s42", runB:"", study:"full", metric:"acc", detail:"", hm:"cnn", hopt:"adam"};
+/* One selection drives the whole page: dataset (S.ds) -> model (S.model) -> optimizer (S.opt).
+   MLP and CNN run in the browser; EfficientNetV2B0 results come from exported predictions. */
+const S = {ds:"cifar10", model:"cnn", opt:"adam", inv:true, cur:null, chMode:"top", sel:null, status:"all", agree:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmpAll:false, cmpB:""};
+const wk = (slug,ds=S.ds,model=S.model)=>ds+"/"+model+"-"+slug;
 const $ = s=>document.querySelector(s);
 const nf = (v,d=0)=>v.toLocaleString(LOCALE,{minimumFractionDigits:d,maximumFractionDigits:d});
 const pct = (v,d=1)=>nf(v*100,d)+"%";
 const css = n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const hex = h=>{h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));};
-const OPTS = ()=>D.models.cnn.opts;
-const MODEL = ()=>"CNN";
-const O = slug=>{const o=OPTS().find(o=>o.slug===slug);return o&&{...D.meta[slug],...o};};
-const optOf = ()=>O(S.opt);
+const MNAME={mlp:"MLP",cnn:"CNN",effnet:"EfficientNetV2B0"};
+const MODELS=["mlp","cnn","effnet"];
+const EFF_PARAMS=5932122;     // model.count_params() in experiments/runs/budget/*/effnet-*/seed-*/run.json
+const OPTS = ()=>D.models[S.model].opts;    // optimizers that run in the browser (MLP or CNN)
+const MODEL = ()=>MNAME[S.model];
+const optOf = ()=>curE();
 
 function f16(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);
   const h=new Uint16Array(u.buffer),o=new Float32Array(h.length);
   for(let i=0;i<h.length;i++){const x=h[i],sg=x&0x8000?-1:1,e=(x>>10)&31,f=x&1023;
     o[i]=e===0?sg*f*Math.pow(2,-24):e===31?(f?NaN:sg*Infinity):sg*(1+f/1024)*Math.pow(2,e-15);}
   return o;}
-async function loadW(slug,ds=S.ds,model="cnn"){
+async function loadW(slug,ds=S.ds,model=S.model){
   const key=wk(slug,ds,model);if(WCACHE[key])return WCACHE[key];
   const r=await fetch(`data/${ds}/w-${model}-${slug}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json();
   const L=j.layers.map(l=>({kind:l.kind,w:f16(l.w),b:f16(l.b),shape:l.shape}));
-  const W={model,conv1:L[0],conv2:L[1],dense:L[2],output:L[3]};
+  const W=model==="cnn"?{model,conv1:L[0],conv2:L[1],dense:L[2],output:L[3]}:{model,h1:L[0],h2:L[1],output:L[2]};
   W.ref=j.ref;WCACHE[key]=W;return W;}
 async function loadDS(ds){
   if(DSC[ds])return DSC[ds];
@@ -41,6 +41,37 @@ async function loadDS(ds){
 function G(){const H=D.shape[0],C=D.shape[2],c1=H-2,p1=Math.floor(c1/2),c2=p1-2,p2=Math.floor(c2/2);return {H,C,c1,p1,c2,p2,flat:p2*p2*64};}
 const CHN=()=>G().C===3?["merah","hijau","biru"]:["abu-abu"];
 const CHN_CAP=()=>G().C===3?["Merah","Hijau","Biru"]:["Abu-abu"];
+
+/* ---------- trained configurations ("entries") of a dataset ----------
+   MLP and CNN: the optimizer sweep (10 epochs, seed 42, full training split), 8 optimizers each.
+   EfficientNetV2B0: the fine-tuning branches on the small subset, lowest finished seed per optimizer.
+   Only finished runs become entries; planned runs are never shown. */
+const EXPC={}, RUNC={}, ENTC={};
+async function loadExp(ds=S.ds){if(EXPC[ds])return EXPC[ds];
+  const r=await fetch(`data/${ds}/experiments.json`);if(!r.ok)throw new Error(r.status);const x=await r.json();
+  x.byKey={};x.runs.forEach(r=>x.byKey[r.key]=r);EXPC[ds]=x;return x;}
+function u8(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+async function loadRun(key,ds=S.ds){const id=ds+"/"+key;if(RUNC[id])return RUNC[id];
+  const r=await fetch(`data/${ds}/runs/${key}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json();
+  if(j.key!==key)throw new Error("key mismatch");
+  j.p=u8(j.preds);j.c=u8(j.conf);RUNC[id]=j;return j;}
+const EFF_OPTS={adam:"Adam",adamw:"AdamW",nadam:"Nadam"};
+function effRun(X,opt){return X.runs.filter(r=>r.study==="budget"&&r.model==="effnet"&&r.opt===opt&&r.status==="complete").sort((a,b)=>a.seed-b.seed)[0];}
+function buildEntries(ds){const d=DSC[ds].D,X=EXPC[ds],out=[];
+  for(const m of ["mlp","cnn"])for(const o of d.models[m].opts){const key=`historical__${m}-${o.slug}__s42`,r=X.byKey[key];if(!r)continue;
+    out.push({id:m+"-"+o.slug,model:m,opt:o.slug,name:o.name,acc:r.acc,key,seed:42,hist:o.hist,warm:0,best:null,params:d.models[m].params,browser:true});}
+  for(const o of Object.keys(EFF_OPTS)){const r=effRun(X,o);if(!r)continue;
+    out.push({id:"effnet-"+o,model:"effnet",opt:o,name:EFF_OPTS[o],acc:r.acc,key:r.key,seed:r.seed,hist:null,warm:r.warmup_epochs||2,best:r.best_epoch,params:EFF_PARAMS,browser:false});}
+  const sorted=[...out].sort((a,b)=>b.acc-a.acc);
+  out.forEach(e=>{e.rank=1+out.filter(x=>x.acc>e.acc).length;});   // ties share a rank
+  ENTC[ds]={all:out,sorted};return ENTC[ds];}
+const E=()=>ENTC[S.ds].all;
+const curE=()=>E().find(e=>e.model===S.model&&e.opt===S.opt);
+const ofModel=m=>E().filter(e=>e.model===m);
+const label=e=>`${MNAME[e.model]} · ${e.name}`;
+/* EfficientNet curves live in the run files; MLP/CNN curves are already in data.json */
+async function ensureHist(e,ds=S.ds){if(e.hist)return e.hist;const R=await loadRun(e.key,ds);
+  const h=R.history;e.hist={accuracy:h.map(x=>x.accuracy),val_accuracy:h.map(x=>x.val_accuracy),loss:h.map(x=>x.loss),val_loss:h.map(x=>x.val_loss)};return e.hist;}
 
 /* ---------- forward pass (same math as Keras, channels-last) ---------- */
 function conv(x,H,Wd,C,L){const k=L.shape,O2=k[3],oh=H-2,ow=Wd-2,y=new Float32Array(oh*ow*O2),w=L.w,b=L.b;
@@ -58,8 +89,10 @@ function dense(x,L,relu){const [I,O2]=L.shape,y=new Float32Array(O2);for(let o=0
   if(relu)for(let o=0;o<O2;o++)if(y[o]<0)y[o]=0;return y;}
 function forward(px,W,full=true){
   const g=G(),inp={d:px,h:g.H,w:g.H,c:g.C};let z,out;
-  const c1=conv(px,g.H,g.H,g.C,W.conv1),p1=pool(c1),c2=conv(p1.d,p1.h,p1.w,32,W.conv2),p2=pool(c2);
-  const h=dense(p2.d,W.dense,true);z=dense(h,W.output,false);out={model:"cnn",inp,c1,p1,c2,p2,h};
+  if(W.model==="mlp"){   // Flatten keeps the channels-last order, so the pixel array is already the flattened vector
+    const h1=dense(px,W.h1,true),h2=dense(h1,W.h2,true);z=dense(h2,W.output,false);out={model:"mlp",inp,flat:px,h1,h2};}
+  else{const c1=conv(px,g.H,g.H,g.C,W.conv1),p1=pool(c1),c2=conv(p1.d,p1.h,p1.w,32,W.conv2),p2=pool(c2);
+    const h=dense(p2.d,W.dense,true);z=dense(h,W.output,false);out={model:"cnn",inp,c1,p1,c2,p2,h};}
   const m=Math.max(...z),e=z.map(v=>Math.exp(v-m)),s=e.reduce((a,b)=>a+b,0);
   const prob=Array.from(e,v=>v/s);
   return full?{...out,prob}:{prob};}
@@ -89,36 +122,6 @@ function uploadPx(u){const {H:s,C}=G(),cv=document.createElement("canvas");cv.wi
     else{const y=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;px[i]=S.inv?1-y:y;}}
   return px;}
 function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):uploadPx(S.uploads[S.cur.i]);}
-
-/* ---------- optimizer control ---------- */
-function bestVal(o){const v=o.hist.val_accuracy,m=Math.max(...v);return [m,v.indexOf(m)+1];}
-function buildOptList(){const L=$("#optList");L.innerHTML="";
-  OPTS().forEach(o=>{const b=document.createElement("button");b.type="button";b.className="optbtn";b.dataset.slug=o.slug;
-    b.setAttribute("aria-pressed",o.slug===S.opt?"true":"false");
-    b.setAttribute("aria-label",`${o.name}, akurasi uji ${pct(o.acc)}`);
-    b.innerHTML=`<span>${o.name}</span><small>${pct(o.acc)}</small>`;b.onclick=()=>setOpt(o.slug);L.append(b);});}
-function renderOptInfo(){const o=optOf(),[bv,be]=bestVal(o),gap=o.hist.accuracy.at(-1)-o.hist.val_accuracy.at(-1);
-  const rank=[...OPTS()].sort((a,b)=>b.acc-a.acc).findIndex(x=>x.slug===o.slug)+1;
-  $("#optInfo").innerHTML=`<h3>${o.name}</h3><p class="cfg">${tx(o,"cfg")}</p>
-   <dl><dt>Karakteristik</dt><dd>${tx(o,"ch")}</dd><dt>Kapan digunakan</dt><dd>${tx(o,"use")}</dd></dl>
-   <div class="optstats"><div>Akurasi uji<b>${pct(o.acc,2)}</b></div><div>Peringkat<b>${rank} dari ${OPTS().length}</b></div>
-   <div>Val terbaik<b>${pct(bv)} <span style="font-size:13px;color:var(--muted);font-weight:400">epoch ${be}</span></b></div>
-   <div>Selisih train−val<b>${gap>=0?"+":"−"}${nf(Math.abs(gap)*100,1)} poin</b></div><div>Waktu latih<b>${nf(o.time,0)} dtk</b></div></div>`;}
-let optSeq=0;
-async function setOpt(slug){
-  const seq=++optSeq;S.opt=slug;
-  document.querySelectorAll("#optList .optbtn").forEach(b=>b.setAttribute("aria-pressed",b.dataset.slug===slug?"true":"false"));
-  renderOptInfo();renderFacts();renderCompare();
-  const m=$("#optMsg");m.classList.remove("err");
-  if(!WCACHE[wk(slug)]){m.textContent=`Memuat bobot ${optOf().name}…`;$("#flowWrap").classList.add("busy");}
-  try{await loadW(slug);}catch(e){if(seq!==optSeq)return;$("#flowWrap").classList.remove("busy");
-    m.classList.add("err");m.textContent=`Bobot ${optOf().name} gagal dimuat. Pilih optimizer itu sekali lagi untuk mencoba ulang.`;return;}
-  if(seq!==optSeq)return;
-  $("#flowWrap").classList.remove("busy");m.textContent="";
-  if(S.cur){S.cur.res=forward(curPx(),WCACHE[wk(slug)]);if(S.sel)closeDetail();renderFlow();renderCompare();}
-}
-function renderFacts(){const o=optOf();
-  $("#facts").innerHTML=`<div><dt>Parameter ${MODEL()}</dt><dd>${nf(D.models.cnn.params)}</dd></div><div><dt>Akurasi uji (${MODEL()} + ${o.name})</dt><dd>${pct(o.acc,2)}</dd></div><div><dt>Data uji</dt><dd>10.000 citra</dd></div>`;}
 
 /* ---------- strip ---------- */
 function buildStrip(){const st=$("#strip");st.innerHTML="";
@@ -153,7 +156,7 @@ async function handleFile(f){
 
 /* ---------- flow ---------- */
 let flowState=null;
-function select(it){const W=WCACHE[wk(S.opt)];if(!W)return;
+function select(it){if(S.model==="effnet")return;const W=WCACHE[wk(S.opt)];if(!W)return;
   const truth=it.kind==="g"?D.pool[it.k].t:null;
   S.cur={...it,truth};S.cur.res=forward(curPx(),W);S.sel=null;$("#detail").hidden=true;buildStrip();renderFlow();renderCompare();}
 function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
@@ -161,9 +164,10 @@ function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
   return m.sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>x[1]).sort((a,b)=>a-b);}
 function maxOf(t,chs){let m=0;for(const c of chs)for(let i=c;i<t.d.length;i+=t.c)if(t.d[i]>m)m=t.d[i];return m;}
 const dims=t=>`${t.h} × ${t.w} × ${t.c}`;
-function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";const cnn=true;
+function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
+  const cnn=r.model==="cnn";$("#chSeg").hidden=!cnn;fl.classList.toggle("mlp",!cnn);
   const cols=[{key:"inp",t:r.inp,name:"input",sub:dims(r.inp),chs:[...Array(r.inp.c).keys()],gray:true}];
-  {const ch1=pickCh(r.c1),ch2=pickCh(r.c2);cols.push(
+  if(cnn){const ch1=pickCh(r.c1),ch2=pickCh(r.c2);cols.push(
     {key:"c1",t:r.c1,name:"conv1 + ReLU",sub:dims(r.c1),chs:ch1},
     {key:"p1",t:r.p1,name:"max_pool1",sub:dims(r.p1),chs:ch1},
     {key:"c2",t:r.c2,name:"conv2 + ReLU",sub:dims(r.c2),chs:ch2},
@@ -183,13 +187,17 @@ function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerH
       if(col.gray){const t=document.createElement("div");t.className="chan";
         t.style.color=G().C===1?"var(--muted)":(dark?["#FF8A7A","#4ADE80","#6EA0FF"]:["#C0392B","#1E8449","#2563EB"])[c];t.textContent=CHN_CAP()[c];maps.append(t);}});
     el.append(maps);fl.append(el);colEls.push(el);});
-  {const de=document.createElement("div");de.className="col dense";
+  if(cnn){const de=document.createElement("div");de.className="col dense";
   de.innerHTML=`<div class="col-h"><b>dense + ReLU</b><small>128 unit</small></div>`;
   const dm=document.createElement("div");dm.className="maps";const db=document.createElement("button");db.type="button";db.className="map";db.dataset.col="dense";
   db.setAttribute("aria-label","Dense 128 unit. Buka detail");const dc=document.createElement("canvas");
   const dmax=Math.max(...r.h);paint(dc,r.h,8,16,dmax,"ramp");db.append(dc);db.onclick=()=>openDense(dmax);
   db.onmouseenter=db.onfocus=()=>hot(db,true);db.onmouseleave=db.onblur=()=>hot(db,false);
   dm.append(db);de.append(dm);fl.append(de);colEls.push(de);}
+  else{const n=r.flat.length,H=G().H;
+    colEls.push(vecCol(fl,"flat","flatten",`${nf(n)} nilai`,r.flat,H,n/H,"Flatten. Buka detail"));
+    colEls.push(vecCol(fl,"h1","dense1 + ReLU","256 unit",r.h1,16,16,"Dense1 256 unit. Buka detail"));
+    colEls.push(vecCol(fl,"h2","dense2 + ReLU","128 unit",r.h2,8,16,"Dense2 128 unit. Buka detail"));}
   const oe=document.createElement("div");oe.className="col";
   oe.innerHTML=`<div class="col-h"><b>output (softmax)</b><small>10 kelas</small></div>`;
   const om=document.createElement("div");om.className="out";
@@ -201,6 +209,14 @@ function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerH
   if(S.cur.truth===null)v.innerHTML=`<span class="tab unk">Label asli tidak diketahui</span><strong>Prediksi: ${CLS[top]}</strong><span style="color:var(--muted)">keyakinan ${pct(r.prob[top])}, ${on}</span>`;
   else{const ok=top===S.cur.truth;v.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?"Cocok":"Tidak cocok"}</span><strong>Prediksi: ${CLS[top]}</strong><span style="color:var(--muted)">asli ${CLS[S.cur.truth]}, keyakinan ${pct(r.prob[top])}, ${on}</span>`;}
   flowState={colEls,cnn};requestAnimationFrame(drawLinks);}
+/* one column holding a single vector (MLP layers, flatten), drawn as a small grid */
+function vecCol(fl,key,name,sub,vals,gw,gh,label){const el=document.createElement("div");el.className="col dense";
+  el.innerHTML=`<div class="col-h"><b>${name}</b><small>${sub}</small></div>`;
+  const m=document.createElement("div");m.className="maps";const b=document.createElement("button");b.type="button";b.className="map";b.dataset.col=key;
+  b.setAttribute("aria-label",label);const cv=document.createElement("canvas");let mx=0;for(const v of vals)if(v>mx)mx=v;
+  paint(cv,vals,gw,gh,mx,key==="flat"?"gray":"ramp");cv.style.width="52px";cv.style.height=Math.round(52*gh/gw)+"px";b.append(cv);
+  b.onclick=()=>openVec(key,mx);b.onmouseenter=b.onfocus=()=>hot(b,true);b.onmouseleave=b.onblur=()=>hot(b,false);
+  m.append(b);el.append(m);fl.append(el);return el;}
 function drawLinks(){if(!flowState)return;const fl=$("#flow"),svg=fl.querySelector("svg.links");if(!svg)return;const fr=fl.getBoundingClientRect();
   svg.innerHTML="";const pts=el=>[...el.querySelectorAll(".maps > .map, .out")].map(m=>{const b=m.getBoundingClientRect();return {el:m,l:b.left-fr.left,r:b.right-fr.left,y:b.top-fr.top+b.height/2};});
   const C=flowState.colEls.map(pts);
@@ -245,17 +261,39 @@ function openDense(mx){const r=S.cur.res,d=$("#detail");d.hidden=false;S.sel={co
    <button class="icon-btn" type="button" id="dClose" aria-label="Tutup detail">${closeSvg}</button></div>
    <div class="stats"><div>Unit aktif (&gt; 0)<b>${act} dari 128</b></div><div>Maksimum<b>${nf(mx,3)}</b></div></div></div>`;
   paint(d.querySelector("canvas"),r.h,8,16,mx,"ramp");d.querySelector("#dClose").onclick=closeDetail;}
+function openVec(key,mx){const r=S.cur.res,W=WCACHE[wk(S.opt)],d=$("#detail");d.hidden=false;S.sel={col:key};
+  document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.col===key?"true":"false"));
+  const g=G(),n=r.flat.length,vals=key==="flat"?r.flat:key==="h1"?r.h1:r.h2,[gw,gh]=key==="flat"?[g.H,n/g.H]:key==="h1"?[16,16]:[8,16];
+  const act=vals.filter(v=>v>0).length,run=MODEL()+" + "+optOf().name;
+  const T={flat:[`flatten, ${nf(n)} nilai`,`Gambar ${g.H} × ${g.H} × ${g.C} diratakan menjadi satu vektor berisi ${nf(n)} angka. Mulai di sini posisi piksel tidak lagi diperhatikan: piksel yang bersebelahan diperlakukan sama seperti piksel yang berjauhan. Inilah perbedaan utama MLP dengan CNN.`],
+    h1:[`dense1 + ReLU, 256 unit (${run})`,`Setiap unit menerima ke-${nf(n)} nilai input (${nf(n)} × 256 + 256 = ${nf(n*256+256)} parameter, layer terbesar di MLP ini). Ditampilkan sebagai grid 16 × 16.`],
+    h2:[`dense2 + ReLU, 128 unit (${run})`,`Setiap unit menerima 256 nilai dari dense1 (256 × 128 + 128 = 32.896 parameter). Ditampilkan sebagai grid 8 × 16.`]}[key];
+  const big=Math.round(208*gh/gw)>320?[Math.round(320*gw/gh),320]:[208,Math.round(208*gh/gw)];
+  d.innerHTML=`<div class="detail-big"><canvas style="width:${big[0]}px;height:${big[1]}px"></canvas></div><div>
+   <div class="d-head"><div><h3>${T[0]}</h3><p>${T[1]}</p></div>
+   <button class="icon-btn" type="button" id="dClose" aria-label="Tutup detail">${closeSvg}</button></div>
+   <div class="stats">${key==="flat"?"":`<div>Unit aktif (&gt; 0)<b>${act} dari ${vals.length}</b></div>`}<div>Maksimum<b>${nf(mx,3)}</b></div></div><div id="kwrap"></div></div>`;
+  paint(d.querySelector("canvas"),vals,gw,gh,mx,key==="flat"?"gray":"ramp");
+  if(key==="h1"){let u=0;for(let i=1;i<vals.length;i++)if(vals[i]>vals[u])u=i;
+    const kw=d.querySelector("#kwrap"),C=g.C,H=g.H;let km=0;for(let i=0;i<n;i++)km=Math.max(km,Math.abs(W.h1.w[i*256+u]));
+    kw.innerHTML=`<p style="margin:0 0 6px;font-size:13px">Bobot masuk unit #${u}, unit paling aktif untuk gambar ini, disusun kembali ke bentuk gambar. Merah negatif, biru positif: ini pola yang "dicari" unit tersebut di seluruh gambar sekaligus.</p><div class="kernels"></div>`;
+    const kk=kw.querySelector(".kernels");
+    for(let c=0;c<C;c++){const v=new Float32Array(H*H);for(let p=0;p<H*H;p++)v[p]=W.h1.w[(p*C+c)*256+u];
+      const k=document.createElement("div");k.className="kern";const cv=document.createElement("canvas");paintDiv(cv,v,H,H,km);cv.style.width="96px";cv.style.height="96px";
+      const lab=document.createElement("span");lab.textContent=CHN()[c];k.append(cv,lab);kk.append(k);}}
+  d.querySelector("#dClose").onclick=closeDetail;}
 function closeDetail(){$("#detail").hidden=true;S.sel=null;document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed","false"));}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#detail").hidden)closeDetail();});
 
-/* ---------- compare all optimizers for current image ---------- */
+/* ---------- compare all optimizers of the current model for the current image ---------- */
+function resetCompare(){S.cmpAll=false;const b=$("#cmpBtn");b.hidden=false;b.disabled=false;b.textContent="Bandingkan semua optimizer";$("#cmpNote").textContent="";$("#crows").innerHTML="";}
 async function loadAll(){const b=$("#cmpBtn");b.disabled=true;b.textContent="Memuat bobot…";$("#cmpNote").textContent="Memuat bobot kedelapan optimizer…";
-  const ds=S.ds,res=await Promise.allSettled(OPTS().map(o=>loadW(o.slug,ds)));if(ds!==S.ds){b.disabled=false;return;}const fail=res.filter(r=>r.status==="rejected").length;
+  const ds=S.ds,md=S.model,res=await Promise.allSettled(OPTS().map(o=>loadW(o.slug,ds,md)));if(ds!==S.ds||md!==S.model){b.disabled=false;return;}const fail=res.filter(r=>r.status==="rejected").length;
   S.cmpAll=true;b.disabled=false;
   if(fail){b.textContent="Coba muat ulang";$("#cmpNote").textContent=`${fail} optimizer gagal dimuat. Tekan tombol untuk mencoba lagi.`;}
   else{b.hidden=true;$("#cmpNote").textContent="Klik salah satu kartu untuk memakai optimizer itu di seluruh dashboard.";}
   renderCompare();}
-function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur){box.innerHTML="";return;}
+function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur||S.model==="effnet"){box.innerHTML="";return;}
   const px=curPx();box.innerHTML="";
   OPTS().forEach(o=>{const W=WCACHE[wk(o.slug)];const b=document.createElement("button");b.type="button";b.className="crow";
     b.setAttribute("aria-pressed",o.slug===S.opt?"true":"false");
@@ -265,148 +303,142 @@ function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur){box.innerHT
     b.innerHTML=`<div class="r1"><b>${o.name}</b>${tab}</div><span class="p">Prediksi <strong>${CLS[top]}</strong>, keyakinan ${pct(p[top])}</span>
       <span class="conf"><span class="bar"><i style="width:${(p[top]*100).toFixed(1)}%"></i></span></span>`;
     b.setAttribute("aria-label",`${o.name}: prediksi ${CLS[top]}, keyakinan ${pct(p[top])}. Pakai optimizer ini`);
-    b.onclick=()=>setOpt(o.slug);box.append(b);});}
+    b.onclick=()=>setPick(S.model,o.slug);box.append(b);});}
 
-/* ---------- strings for the run-based sections (the build swaps this block for strings_en.js) ---------- */
-/*L:ID*/const L={
-  mHist:"Historis", mFull:"Terkontrol, split penuh", mBudget:"Terkontrol, subset kecil",
-  stShort:{historical:"historis 10 epoch",full:"split penuh",budget:"subset kecil"},
-  ft:o=>`fine-tune ${o} (warm-up Adam)`, fixed:(o,e)=>`${o}, berhenti di epoch ${e}`, es:o=>`${o}, early stopping`,
-  seed:s=>`seed ${s}`, notRun:"belum dilatih", noB:"Tanpa pembanding",
-  where:{browser:"dijalankan di browser dari bobot 16-bit", export:"prediksi hasil ekspor (dihitung di Python, dimuat dari berkas)"},
-  loadingRuns:"Memuat daftar run…", runErr:k=>`Artefak run ${k} gagal dimuat. Tidak ada data pengganti yang ditampilkan; pilih run itu sekali lagi untuk mencoba ulang.`,
-  expErr:"Daftar run gagal dimuat, jadi hasil dan perbandingan model tidak bisa ditampilkan. Muat ulang halaman untuk mencoba lagi.",
-  aLine:(lab,acc,f1)=>`<b>A</b>: ${lab}. Akurasi uji <b>${acc}</b>, macro-F1 <b>${f1}</b> pada 10.000 citra uji.`,
-  bLine:(lab,acc,f1)=>` <b>B</b>: ${lab}. Akurasi uji <b>${acc}</b>, macro-F1 <b>${f1}</b>.`,
-  agreeLine:(a,b,c,d)=>` Pada 10.000 citra uji: keduanya benar <b>${a}</b>, hanya A benar <b>${b}</b>, hanya B benar <b>${c}</b>, keduanya salah <b>${d}</b>.`,
-  classLine:(cls,ok,tot)=>` Kelas <b>${cls}</b> menurut A: ${ok} benar dari ${tot}.`,
-  galLine:(n,m)=>` Galeri memakai subset tetap 1.000 citra uji (100 per kelas): menampilkan <b>${n}</b> dari ${m} yang sesuai filter.`,
-  predOnly:c=>` Hanya yang diprediksi A sebagai <b>${c}</b>.`, clrPred:"Hapus filter prediksi",
-  same:" Pembanding sama dengan A, jadi tidak ditampilkan.",
-  empty:"Tidak ada contoh untuk kombinasi filter ini. Ganti status, kelas, atau pembanding.",
-  cardA:"Prediksi A", ok:"Cocok", bad:"Tidak cocok", okShort:"Benar", badShort:"Salah",
-  cardLab:(ok,t,p,c)=>`A ${ok?"benar":"salah"}. Asli ${t}, prediksi A ${p}, keyakinan ${c}`, cardLabB:p=>`. B memprediksi ${p}`,
-  cardOpen:". Buka di alur jaringan (CNN historis)", more:n=>`Tampilkan ${n} contoh lagi`, id:i=>`ID uji ${i}`,
-  metAcc:"Akurasi uji", metF1:"Macro-F1",
-  cfgHead:["Konfigurasi","Input","Data latih","Seed","Akurasi uji","Macro-F1","Δ vs CNN awal","Epoch terbaik / jalan"],
-  seedsOf:(n,m)=>n===m?`${n}`:`${n} dari ${m}`, nRun:"belum ada", nr:"belum dilatih",
-  cfgNote:{full:"Split stratifikasi tetap 90/10 dari data latih resmi, sama untuk semua model dan seed. Checkpoint dipilih dengan macro-F1 validasi; test set hanya dipakai untuk evaluasi akhir. CNN awal = CNN–Adam yang dihentikan di epoch 10 pada split dan seed yang sama (pembanding berpasangan).",
-    budget:"Subset stratifikasi tetap: 300 citra latih dan 150 citra validasi per kelas, diambil dari split yang sama. Dipakai agar EfficientNetV2B0 bisa dilatih di CPU. Test set resmi penuh (10.000 citra). EfficientNet memakai input 96 × 96, bobot ImageNet, dan augmentasi flip + rotasi seperti repo referensi; MLP dan CNN memakai resolusi asli tanpa augmentasi, jadi perbandingan arsitektur ini tidak hanya mengubah satu faktor."},
-  delta:(m,s,n)=>n>1?`${m} ± ${s}`:m, deltaNone:"tidak ada pasangan seed",
-  chartLab:(st,met)=>`${met} per konfigurasi, ${st}. Titik = satu seed, garis tebal = rata-rata.`,
-  curveT:lab=>`Kurva training: ${lab}`, warm:"warm-up", best:e=>`terbaik: epoch ${e}`, last:"tanpa pemilihan checkpoint (epoch terakhir dipakai)",
-  trainL:"train", valL:"validasi", accT:"Akurasi", lossT:"Loss", epoch:"epoch",
-  seedPick:"Seed", fitGap:"Train − validasi di epoch terpilih", fitMin:"Loss validasi minimum", fitAfter:(e,n)=>`epoch ${e}, lalu ${n} epoch sesudahnya`,
-  fitStop:"Epoch dijalankan", fitSel:"Checkpoint", fitSelBest:e=>`epoch ${e} (macro-F1 validasi tertinggi)`, fitSelLast:e=>`epoch ${e} (terakhir)`, fitSelFixed:e=>`epoch ${e} (tetap)`,
-  points:v=>`${v} poin`,
-  identical:n=>`${n.join(" dan ")} menghasilkan kurva dan bobot yang identik di seed ini: dengan learning rate 6e-5, weight decay 1e-5 hanya mengurangi bobot sebesar 6e-10 kali nilainya per langkah, lebih kecil dari presisi float32, jadi AdamW berperilaku persis seperti Adam.`,
-  branchT:s=>`Cabang fine-tuning EfficientNet, seed ${s}: akurasi validasi`, branchN:"Epoch 1 sampai 2 adalah warm-up bersama (Adam 0,001, backbone beku) dari checkpoint yang sama. Garis berhenti di epoch yang berbeda karena early stopping.",
-  trainNote:"Akurasi train dihitung selama epoch dengan dropout dan augmentasi aktif; validasi dihitung di akhir epoch. Garis putus-putus vertikal = checkpoint terpilih.",
-  pclsT:lab=>`Akurasi per kelas: ${lab}`, cmT:lab=>`Confusion matrix: ${lab}`,
-  effElsewhere:"Hasil EfficientNet 96 px ada di tab Subset kecil", effShort:"lihat tab Subset kecil",
-  pickRun:"Pilih konfigurasi di tabel untuk melihat kurvanya.", noneDone:"Belum ada run yang selesai untuk eksperimen ini. Tabel di bawah menunjukkan run yang direncanakan.", loading:"Memuat…",
-  histT:m=>`Sapuan optimizer historis: ${m}, 10 epoch, seed 42`,
-  aWhere:"Model A", bWhere:"Model B",
-};/*L:END*/
+/* ---------- selection: dataset -> model -> optimizer ---------- */
+function btn(cls,pressed,html,aria,on){const b=document.createElement("button");b.type="button";b.className=cls;
+  b.setAttribute("aria-pressed",pressed?"true":"false");b.innerHTML=html;if(aria)b.setAttribute("aria-label",aria);b.onclick=on;return b;}
+function renderPick(){
+  document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));
+  $("#pageTitle").textContent=L.pageTitle(D.title);
+  const ml=$("#modelList");ml.innerHTML="";
+  MODELS.forEach(m=>{const es=ofModel(m);if(!es.length)return;const top=Math.max(...es.map(e=>e.acc));
+    ml.append(btn("optbtn",m===S.model,`<span>${MNAME[m]}</span><small>${L.best(pct(top))}</small>`,L.modelAria(MNAME[m],pct(top)),()=>setPick(m,S.opt)));});
+  const ol=$("#optList");ol.innerHTML="";
+  ofModel(S.model).forEach(e=>ol.append(btn("optbtn",e.opt===S.opt,`<span>${e.name}</span><small>${pct(e.acc)}</small>`,L.optAria(e.name,pct(e.acc,2)),()=>setPick(S.model,e.opt))));
+  const e=curE(),n=E().length;
+  $("#score").innerHTML=`<span class="who">${label(e)}</span><b class="num">${pct(e.acc,2)}</b><span class="cap">${L.accCap}</span><span class="rk">${L.rankLine(e.rank,n)}</span>`;}
+function renderRank(){const box=$("#rank"),{sorted}=ENTC[S.ds],mx=sorted[0].acc;box.innerHTML="";
+  sorted.forEach(e=>{const sel=e.model===S.model&&e.opt===S.opt;
+    const b=btn(e.model===S.model&&!sel?"same":"",sel,`<span class="n">${e.rank}</span><span class="who"><b>${MNAME[e.model]}</b>${e.name}</span><span class="bar"><i style="width:${(e.acc/mx*100).toFixed(2)}%"></i></span><em>${pct(e.acc,2)}</em>`,
+      L.rankAria(label(e),pct(e.acc,2),e.rank),()=>setPick(e.model,e.opt));box.append(b);});
+  const eff=E().find(e=>e.model==="effnet");$("#rankNote").textContent=eff?L.rankNote(eff.seed):"";}
+function syncFlowMode(){const eff=S.model==="effnet";$("#flowArea").hidden=eff;$("#effMsg").hidden=!eff;$("#effMsgText").textContent=L.effMsg;
+  const g=G();$("#heroTitle").textContent=`Bagaimana ${MODEL()} membaca gambar ${g.H} × ${g.H}`;}
+let pickSeq=0;
+async function setPick(model,opt){
+  const has=(m,o)=>E().some(e=>e.model===m&&e.opt===o);if(!ofModel(model).length)return;
+  if(!has(model,opt))opt=has(model,S.opt)?S.opt:has(model,"adam")?"adam":ofModel(model)[0].opt;
+  const seq=++pickSeq,modelChanged=model!==S.model;S.model=model;S.opt=opt;
+  try{localStorage.setItem("cnn-model",model);localStorage.setItem("cnn-opt",opt);}catch(e){}
+  if(S.cmpB===curE().id)S.cmpB="";
+  if(modelChanged)resetCompare();
+  renderPick();renderRank();syncFlowMode();syncCmpSelect();S.shown=24;renderGallery();renderTraining();
+  const m=$("#optMsg");m.classList.remove("err");m.textContent="";
+  if(model==="effnet")return;
+  if(!WCACHE[wk(opt)]){m.textContent=L.loadingW(label(curE()));$("#flowWrap").classList.add("busy");}
+  try{await loadW(opt);}catch(e){if(seq!==pickSeq)return;$("#flowWrap").classList.remove("busy");m.classList.add("err");m.textContent=L.wErr(label(curE()));return;}
+  if(seq!==pickSeq)return;
+  $("#flowWrap").classList.remove("busy");m.textContent="";
+  if(S.cur){S.cur.res=forward(curPx(),WCACHE[wk(opt)]);closeDetail();buildStrip();renderFlow();renderCompare();}
+  else select({kind:"g",k:D.demo[9]});}
 
-const MNAME={mlp:"MLP",cnn:"CNN",effnet:"EfficientNetV2B0"};
-const EXPC={}, RUNC={};
-const fmtF1=v=>nf(v,3);
-function optName(slug){const o=D.models.cnn.opts.find(o=>o.slug===slug);return o?o.name:{adam:"Adam",adamw:"AdamW",nadam:"Nadam"}[slug]||slug;}
-function optPart(r){const m=/^(.*)-e(\d+)$/.exec(r.opt);
-  if(r.model==="effnet")return L.ft(optName(r.opt));
-  if(m)return L.fixed(optName(m[1]),+m[2]);
-  return r.study==="historical"?optName(r.opt):L.es(optName(r.opt));}
-const cfgLabel=r=>`${MNAME[r.model]} · ${optPart(r)}`;
-const runLabel=r=>`${cfgLabel(r)} · ${L.stShort[r.study]} · ${L.seed(r.seed)}`;
-const runWhere=r=>r.browser?L.where.browser:L.where.export;
-async function loadExp(ds=S.ds){if(EXPC[ds])return EXPC[ds];
-  const r=await fetch(`data/${ds}/experiments.json`);if(!r.ok)throw new Error(r.status);const x=await r.json();
-  x.byKey={};x.runs.forEach(r=>x.byKey[r.key]=r);EXPC[ds]=x;return x;}
-function u8(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
-async function loadRun(key,ds=S.ds){const id=ds+"/"+key;if(RUNC[id])return RUNC[id];
-  const r=await fetch(`data/${ds}/runs/${key}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json();
-  if(j.key!==key)throw new Error("key mismatch");
-  j.p=u8(j.preds);j.c=u8(j.conf);RUNC[id]=j;return j;}
-const EX=()=>EXPC[S.ds];
-
-/* ---------- run pickers (Test Results) ---------- */
-function fillRunSelect(sel,value,withNone){const X=EX();sel.innerHTML="";
-  if(withNone){const o=document.createElement("option");o.value="";o.textContent=L.noB;sel.append(o);}
-  for(const [st,name] of [["historical",L.mHist],["full",L.mFull],["budget",L.mBudget]]){
-    const rows=[...X.runs.filter(r=>r.study===st).map(r=>({r,done:true})),...X.planned.filter(p=>p.study===st).map(r=>({r,done:false}))];
-    if(!rows.length)continue;
-    rows.sort((a,b)=>cfgOrder(a.r)-cfgOrder(b.r)||(a.r.seed-b.r.seed));
-    const g=document.createElement("optgroup");g.label=name;
-    rows.forEach(({r,done})=>{const o=document.createElement("option");o.value=done?r.key:"";o.disabled=!done;
-      o.textContent=`${cfgLabel(r)} · ${L.seed(r.seed)}`+(done?"":` (${L.notRun})`);g.append(o);});
-    sel.append(g);}
-  sel.value=value;}
-const ORDER=["mlp-adam-e10","mlp-adam","cnn-adam-e10","cnn-adam","effnet-adam","effnet-adamw","effnet-nadam"];
-const HORDER=["sgd","rmsprop","adam","adamw","adagrad","nadam","adadelta","sgd-momentum"];
-function cfgOrder(r){const k=r.model+"-"+r.opt;const i=ORDER.indexOf(k);
-  return i>=0?i:(r.model==="cnn"?0:20)+HORDER.indexOf(r.opt);}
-function syncRunPickers(){if(!EX())return;fillRunSelect($("#selA"),S.runA,false);fillRunSelect($("#selB"),S.runB,true);
-  const a=EX().byKey[S.runA],b=EX().byKey[S.runB];
-  $("#whereA").textContent=a?runWhere(a):"";$("#whereB").textContent=b?runWhere(b):"";
-  $("#agreeRow").hidden=!b||S.runB===S.runA;}
-
-/* ---------- gallery ---------- */
+/* ---------- gallery: the selected model, optionally against one other trained model ---------- */
+function syncCmpSelect(){const sel=$("#selB"),cur=curE();sel.innerHTML="";
+  const none=document.createElement("option");none.value="";none.textContent=L.noB;sel.append(none);
+  MODELS.forEach(m=>{const es=ofModel(m).filter(e=>e.id!==cur.id);if(!es.length)return;const g=document.createElement("optgroup");g.label=MNAME[m];
+    es.forEach(e=>{const o=document.createElement("option");o.value=e.id;o.textContent=`${label(e)} (${pct(e.acc,2)})`;g.append(o);});sel.append(g);});
+  sel.value=S.cmpB;$("#agreeRow").hidden=!S.cmpB;if(!S.cmpB)S.agree="all";}
 function buildClassChips(){const fc=$("#fClass");fc.innerHTML="";
   [-1,...CLS.keys()].forEach(i=>{const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.v=i;
-    b.textContent=i<0?"Semua kelas":CLS[i];b.onclick=()=>{S.cls=i;S.pred=null;S.shown=24;syncFilters();renderGallery();};fc.append(b);});}
+    b.textContent=i<0?L.allCls:CLS[i];b.onclick=()=>{S.cls=i;S.pred=null;S.shown=24;syncFilters();renderGallery();};fc.append(b);});}
 function buildFilters(){buildClassChips();
   $("#fStatus").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.status=b.dataset.v;S.shown=24;syncFilters();renderGallery();});
   $("#fAgree").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.agree=b.dataset.v;S.shown=24;syncFilters();renderGallery();});
   $("#fSort").onchange=e=>{S.sort=e.target.value;renderGallery();};
-  $("#selA").onchange=e=>{S.runA=e.target.value;S.shown=24;syncRunPickers();renderGallery();};
-  $("#selB").onchange=e=>{S.runB=e.target.value;if(!S.runB)S.agree="all";S.shown=24;syncRunPickers();syncFilters();renderGallery();};
+  $("#selB").onchange=e=>{S.cmpB=e.target.value;S.shown=24;syncCmpSelect();syncFilters();renderGallery();};
   syncFilters();}
 function syncFilters(){$("#fClass").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.v===S.cls?"true":"false"));
   $("#fStatus").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.status?"true":"false"));
   $("#fAgree").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.agree?"true":"false"));}
+const agreeOf=(a,b)=>a&&b?"both":a?"onlyA":b?"onlyB":"none";
+/* ground truth for all 10,000 test images by official index (the gallery pool only covers 1,000) */
+function yTrue(){const X=EXPC[S.ds];return X.y||(X.y=u8(X.labels));}
 let galSeq=0;
-async function renderGallery(){const X=EX(),sum=$("#summary"),g=$("#grid");if(!X){return;}
-  const seq=++galSeq,ds=S.ds,a=X.byKey[S.runA],b=S.runB&&S.runB!==S.runA?X.byKey[S.runB]:null;
-  if(!a){sum.innerHTML=L.runErr(S.runA);g.innerHTML="";$("#more").innerHTML="";return;}
+async function renderGallery(){const sum=$("#summary"),g=$("#grid");
+  const seq=++galSeq,ds=S.ds,a=curE(),b=S.cmpB?E().find(e=>e.id===S.cmpB):null;
   let A,B=null;
   if(!RUNC[ds+"/"+a.key]||(b&&!RUNC[ds+"/"+b.key]))sum.textContent=L.loading;
   try{A=await loadRun(a.key,ds);if(b)B=await loadRun(b.key,ds);}
-  catch(e){if(seq!==galSeq)return;const bad=!RUNC[ds+"/"+a.key]?a.key:b.key;sum.innerHTML=`<span style="color:var(--bad)">${L.runErr(bad)}</span>`;g.innerHTML="";$("#more").innerHTML="";return;}
+  catch(e){if(seq!==galSeq)return;sum.innerHTML=`<span style="color:var(--bad)">${L.runErr}</span>`;g.innerHTML="";$("#more").innerHTML="";return;}
   if(seq!==galSeq||ds!==S.ds)return;
-  const ids=X.pool_ids;
+  const ids=EXPC[ds].pool_ids;
   let rows=D.pool.map((it,k)=>{const id=ids[k],p=A.p[id],q=B?B.p[id]:null;return {...it,k,id,p,c:A.c[id]/255,q};})
     .filter(it=>(S.cls<0||it.t===S.cls)&&(S.status==="all"||(S.status==="ok")===(it.t===it.p))&&(S.pred==null||it.p===S.pred)
       &&(!B||S.agree==="all"||agreeOf(it.t===it.p,it.q===it.t)===S.agree));
   rows.sort(S.sort==="hi"?(x,y)=>y.c-x.c:S.sort==="lo"?(x,y)=>x.c-y.c:(x,y)=>x.id-y.id);
-  let txt=L.aLine(`<b>${runLabel(a)}</b>`,pct(A.acc,2),fmtF1(A.f1));
+  let txt=L.aLine(label(a),pct(A.acc,2));
   if(S.cls>=0){const r=A.cm[S.cls];txt+=L.classLine(CLS[S.cls],nf(r[S.cls]),nf(r.reduce((x,y)=>x+y,0)));}
-  if(B){txt+=L.bLine(`<b>${runLabel(b)}</b>`,pct(B.acc,2),fmtF1(B.f1));
-    const n=[0,0,0,0];const y=yTrue(A);for(let i=0;i<10000;i++){const ok1=A.p[i]===y[i],ok2=B.p[i]===y[i];n[ok1&&ok2?0:ok1?1:ok2?2:3]++;}
+  if(B){txt+=L.bLine(label(b),pct(B.acc,2));
+    const n=[0,0,0,0];const y=yTrue();for(let i=0;i<10000;i++){const ok1=A.p[i]===y[i],ok2=B.p[i]===y[i];n[ok1&&ok2?0:ok1?1:ok2?2:3]++;}
     txt+=L.agreeLine(...n.map(v=>nf(v)));}
-  else if(S.runB&&S.runB===S.runA)txt+=L.same;
-  txt+=L.galLine(Math.min(S.shown,rows.length),rows.length);
+  txt+=L.galLine(nf(Math.min(S.shown,rows.length)),nf(rows.length));
   if(S.pred!=null)txt+=L.predOnly(CLS[S.pred])+` <button class="chip" type="button" id="clrPred">${L.clrPred}</button>`;
   sum.innerHTML=txt;const cp=$("#clrPred");if(cp)cp.onclick=()=>{S.pred=null;renderGallery();};
   g.innerHTML="";
   if(!rows.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1">${L.empty}</div>`;$("#more").innerHTML="";return;}
-  rows.slice(0,S.shown).forEach(it=>{const ok=it.t===it.p,el=document.createElement("button");el.type="button";el.className="card";
+  const live=a.browser;   // only MLP/CNN can be opened in the network flow
+  rows.slice(0,S.shown).forEach(it=>{const ok=it.t===it.p,el=document.createElement(live?"button":"div");if(live)el.type="button";el.className="card";
     let lab=L.cardLab(ok,CLS[it.t],CLS[it.p],pct(it.c));
     el.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?L.ok:L.bad}</span>`;
     const cv=document.createElement("canvas");drawTile(cv,it.k);el.append(cv);
-    el.insertAdjacentHTML("beforeend",`<dl><dt>Asli</dt><dd>${CLS[it.t]}</dd><dt>${L.cardA}</dt><dd>${CLS[it.p]}</dd></dl>
+    el.insertAdjacentHTML("beforeend",`<dl><dt>${L.trueL}</dt><dd>${CLS[it.t]}</dd><dt>${L.predL}</dt><dd>${CLS[it.p]}</dd></dl>
       <div class="conf"><span class="bar"><i style="width:${(it.c*100).toFixed(1)}%"></i></span><span>${pct(it.c)}</span></div>`);
     if(B){const ok2=it.q===it.t;
-      el.insertAdjacentHTML("beforeend",`<div class="vs"><span>B:</span><strong style="color:var(--ink);font-weight:500">${CLS[it.q]}</strong><span class="tab ${ok2?"ok":"bad"}">${ok2?L.okShort:L.badShort}</span></div>`);
+      el.insertAdjacentHTML("beforeend",`<div class="vs"><span>${L.cmpL}:</span><strong style="color:var(--ink);font-weight:500">${CLS[it.q]}</strong><span class="tab ${ok2?"ok":"bad"}">${ok2?L.okShort:L.badShort}</span></div>`);
       lab+=L.cardLabB(CLS[it.q]);}
     el.insertAdjacentHTML("beforeend",`<span class="sid">${L.id(it.id)}</span>`);
-    el.setAttribute("aria-label",lab+". "+L.id(it.id)+L.cardOpen);
-    el.onclick=()=>{select({kind:"g",k:it.k});document.getElementById("alur").scrollIntoView();};g.append(el);});
+    if(live){el.setAttribute("aria-label",lab+". "+L.id(it.id)+L.cardOpen);el.onclick=()=>{select({kind:"g",k:it.k});document.getElementById("alur").scrollIntoView();};}
+    g.append(el);});
   $("#more").innerHTML=rows.length>S.shown?`<button class="btn" type="button" id="moreBtn">${L.more(Math.min(24,rows.length-S.shown))}</button>`:"";
   const mb=$("#moreBtn");if(mb)mb.onclick=()=>{S.shown+=24;renderGallery();};}
-const agreeOf=(a,b)=>a&&b?"both":a?"onlyA":b?"onlyB":"none";
-/* ground truth for all 10,000 test images by official index (the gallery pool only covers 1,000) */
-function yTrue(){return EX().y||(EX().y=u8(EX().labels));}
+function showInGallery(cls,pred){S.cls=cls;S.pred=pred;S.status=pred==null?"all":"bad";S.shown=24;syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();}
+
+/* ---------- strings for the selection, ranking, gallery and detail sections (the build swaps this block for strings_en.js) ---------- */
+/*L:ID*/const L={
+  pageTitle:t=>`Akurasi uji pada ${t}`, best:v=>`terbaik ${v}`, accCap:"akurasi uji, 10.000 citra",
+  rankLine:(r,n)=>`Peringkat <b>${r}</b> dari ${n}`, rankAria:(lab,acc,r)=>`${lab}, akurasi uji ${acc}, peringkat ${r}. Pilih model ini`,
+  rankNote:s=>`MLP dan CNN: 10 epoch dengan seluruh data latih, seed 42. EfficientNetV2B0: bobot ImageNet, fine-tuning dengan 3.000 citra latih pada input 96 × 96, seed ${s}. Semua akurasi dihitung pada 10.000 citra uji yang sama.`,
+  optAria:(n,acc)=>`${n}, akurasi uji ${acc}`, modelAria:(n,acc)=>`${n}, akurasi terbaik ${acc}`,
+  loadingW:n=>`Memuat bobot ${n}…`, wErr:n=>`Bobot ${n} gagal dimuat. Pilih lagi untuk mencoba ulang.`,
+  loadingDs:t=>`Memuat ${t}…`, dsErr:t=>`${t} gagal dimuat. Pilih dataset itu sekali lagi untuk mencoba ulang.`,
+  effMsg:"EfficientNetV2B0 terlalu besar untuk dijalankan di browser, jadi alur jaringan hanya tersedia untuk MLP dan CNN.",
+  loading:"Memuat…", runErr:"Hasil model ini gagal dimuat. Pilih model itu sekali lagi untuk mencoba ulang.",
+  expErr:"Daftar hasil training gagal dimuat. Muat ulang halaman untuk mencoba lagi.",
+  noB:"Tidak ada",
+  aLine:(lab,acc)=>`<b>${lab}</b>: akurasi uji <b>${acc}</b>.`,
+  bLine:(lab,acc)=>` Pembanding <b>${lab}</b>: <b>${acc}</b>.`,
+  agreeLine:(a,b,c,d)=>` Dari 10.000 citra uji: keduanya benar <b>${a}</b>, hanya terpilih benar <b>${b}</b>, hanya pembanding benar <b>${c}</b>, keduanya salah <b>${d}</b>.`,
+  classLine:(cls,ok,tot)=>` Kelas <b>${cls}</b>: ${ok} benar dari ${tot}.`,
+  galLine:(n,m)=>` Galeri menampilkan <b>${n}</b> dari ${m} contoh.`,
+  predOnly:c=>` Hanya yang diprediksi sebagai <b>${c}</b>.`, clrPred:"Hapus filter prediksi",
+  empty:"Tidak ada contoh untuk kombinasi filter ini. Ganti status, kelas, atau pembanding.",
+  trueL:"Asli", predL:"Prediksi", cmpL:"Pembanding", ok:"Cocok", bad:"Tidak cocok", okShort:"Benar", badShort:"Salah",
+  cardLab:(ok,t,p,c)=>`${ok?"Benar":"Salah"}. Asli ${t}, prediksi ${p}, keyakinan ${c}`, cardLabB:p=>`. Pembanding memprediksi ${p}`,
+  cardOpen:". Buka di alur jaringan", more:n=>`Tampilkan ${n} contoh lagi`, id:i=>`ID uji ${i}`, allCls:"Semua kelas",
+  detT:lab=>`Detail model: ${lab}`,
+  warm:"warm-up", best2:e=>`dipakai: epoch ${e}`, trainL:"train", valL:"validasi", accT:"Akurasi", lossT:"Loss", epoch:"epoch",
+  valAccT:"Akurasi validasi", valLossT:"Loss validasi",
+  pcAria:(c,a)=>`${c} akurasi ${a}. Tampilkan di galeri`, cmAria:(v,t,p)=>`${v} citra ${t} diprediksi ${p}. Tampilkan contoh`,
+  optT:m=>`Ringkasan per optimizer: ${m}`, optHead:["Optimizer","Akurasi uji","Peringkat","Val terbaik","Train − val"],
+  rankOf:(r,n)=>`${r} dari ${n}`, ep:e=>`epoch ${e}`, pts:v=>`${v} poin`,
+  optNoteHist:"Peringkat dihitung dari semua model. Train − val diukur di epoch terakhir.",
+  optNoteEff:"Peringkat dihitung dari semua model. Train − val diukur di epoch yang dipakai untuk uji.",
+  adamwSame:" AdamW sama persis dengan Adam: weight decay 1e-5 pada learning rate 6e-5 terlalu kecil untuk mengubah bobot float32.",
+  curvesT:m=>`Kurva validasi per epoch: ${m}`,
+  mvcNote:o=>`Akurasi uji dengan optimizer ${o}.`, mvcNoEff:o=>` EfficientNetV2B0 hanya dilatih dengan Adam, AdamW, dan Nadam.`,
+  mvcHead:["Model","Parameter","Akurasi uji"],
+};/*L:END*/
 
 /* ---------- charts ---------- */
 function lineChart(series,title,key,w=420,h=210,opt={}){
@@ -418,203 +450,108 @@ function lineChart(series,title,key,w=420,h=210,opt={}){
   for(let g=0;g<=3;g++){const v=y0+(y1-y0)*g/3;s+=`<line x1="${l}" x2="${w-10}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${l-4}" y="${Y(v)+3}" text-anchor="end">${v.toFixed(2)}</text>`;}
   const ticks=[...new Set([1,Math.round((n+1)/2),n])].filter(e=>e>=1&&e<=n);
   ticks.forEach(e=>s+=`<text x="${X(e-1)}" y="${h-6}" text-anchor="${e===1?"start":e===n?"end":"middle"}">${e===n?L.epoch+" "+e:e}</text>`);
-  if(opt.best){const x=X(opt.best-1),r=x>w*.65;s+=`<line x1="${x}" x2="${x}" y1="14" y2="${h-b}" stroke="var(--ink)" stroke-dasharray="3 3" stroke-width="1"/><text x="${r?x-4:x+4}" y="26" text-anchor="${r?"end":"start"}" style="font-size:10px;fill:var(--ink)">${L.best(opt.best)}</text>`;}
+  if(opt.best){const x=X(opt.best-1),r=x>w*.65;s+=`<line x1="${x}" x2="${x}" y1="14" y2="${h-b}" stroke="var(--ink)" stroke-dasharray="3 3" stroke-width="1"/><text x="${r?x-4:x+4}" y="26" text-anchor="${r?"end":"start"}" style="font-size:10px;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:4px">${L.best2(opt.best)}</text>`;}
   series.filter(x=>!x.sel).concat(series.filter(x=>x.sel)).forEach(x=>{const pts=x.v.map((v,i)=>v==null?null:X(i)+","+Y(v)).filter(Boolean);
     s+=`<polyline fill="none" stroke="${x.color}" stroke-width="${x.sel?2.6:1.3}" ${x.dash?'stroke-dasharray="4 3"':""} opacity="${x.sel||x.solid?1:.75}" points="${pts.join(" ")}"/>`;
     if(opt.best&&x.dot&&x.v[opt.best-1]!=null)s+=`<circle cx="${X(opt.best-1)}" cy="${Y(x.v[opt.best-1])}" r="3.5" fill="${x.color}"/>`;
     if(x.label){const li=x.v.length-1,lv=x.v[li];s+=`<text x="${Math.min(w-12,X(li)+4)}" y="${Y(lv)-5}" text-anchor="end" style="fill:${x.color};font-size:11px;font-weight:600">${x.label}</text>`;}});
   return s+"</svg>";}
 
-/* ---------- Model & Optimizer Comparison ---------- */
-function configs(study){const X=EX(),m={};
-  X.runs.filter(r=>r.study===study).forEach(r=>{const k=r.model+"-"+r.opt;(m[k]=m[k]||{k,model:r.model,opt:r.opt,study,runs:[],planned:[]}).runs.push(r);});
-  X.planned.filter(p=>p.study===study).forEach(p=>{const k=p.model+"-"+p.opt;(m[k]=m[k]||{k,model:p.model,opt:p.opt,study,runs:[],planned:[]}).planned.push(p);});
-  return Object.values(m).sort((a,b)=>cfgOrder(a)-cfgOrder(b));}
+/* ---------- model detail: curves, per-class accuracy, confusion matrix, optimizer summary, model comparison ---------- */
 const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
-const sd=a=>a.length>1?Math.sqrt(a.reduce((s,x)=>s+(x-mean(a))**2,0)/(a.length-1)):0;
-function renderCfg(){const X=EX();if(!X)return;const met=S.metric==="acc"?"acc":"f1",C=configs(S.study);
-  document.querySelectorAll("#studySeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.study?"true":"false"));
-  document.querySelectorAll("#metricSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.metric?"true":"false"));
-  $("#cfgNote").textContent=L.cfgNote[S.study];
-  const base=C.find(c=>c.k==="cnn-adam-e10"),bs={};if(base)base.runs.forEach(r=>bs[r.seed]=r[met]);
-  const fmt=v=>met==="acc"?pct(v,2):fmtF1(v);
-  // chart: one row per configuration, a dot per seed and a bar up to the mean (HTML, so it reflows on small screens)
-  const done=C.filter(c=>c.runs.length),vals=done.flatMap(c=>c.runs.map(r=>r[met]));
-  const box=$("#cfgChart");
-  if(!vals.length)box.innerHTML=`<p class="note">${L.noneDone}</p>`;
-  else{let lo=Math.min(...vals),hi=Math.max(...vals);const pd=(hi-lo)*.12||.02;lo=Math.max(0,lo-pd);hi=Math.min(1,hi+pd);
-    const P=v=>(100*(v-lo)/(hi-lo)).toFixed(2);
-    let h=`<div class="dots" role="img" aria-label="${L.chartLab(L.stShort[S.study],S.metric==="acc"?L.metAcc:L.metF1)}">`;
-    C.forEach(c=>{const sel=c.runs.some(r=>r.key===S.detail),v=c.runs.map(r=>r[met]);
-      h+=`<div class="drow${sel?" sel":""}" aria-hidden="true"><span class="dl">${MNAME[c.model]} · ${optPart(c)}</span><span class="dt">`
-        +(v.length?`<i style="width:${P(mean(v))}%"></i>`+v.map(x=>`<b style="left:${P(x)}%"></b>`).join(""):`<span class="nr">${L.nr}${c.model==="effnet"&&S.study==="full"&&EX().runs.some(r=>r.study==="budget"&&r.model==="effnet")?" · "+L.effShort:""}</span>`)
-        +`</span><span class="dn">${v.length?fmt(mean(v))+` <small>n = ${v.length}</small>`:""}</span></div>`;});
-    h+=`<div class="drow axis" aria-hidden="true"><span class="dl"></span><span class="dt">${[0,1,2,3,4].map(g=>{const v=lo+(hi-lo)*g/4;return `<em style="left:${g*25}%">${met==="acc"?nf(v*100,0)+"%":v.toFixed(2)}</em>`;}).join("")}</span><span class="dn"></span></div>`;
-    box.innerHTML=h+"</div>";}
-  // table
-  let t=`<thead><tr>${L.cfgHead.map((h,i)=>`<th scope="col"${i?"":' style="text-align:left"'}>${h}</th>`).join("")}</tr></thead><tbody>`;
-  C.forEach(c=>{const R=c.runs,total=R.length+c.planned.length,sel=R.some(r=>r.key===S.detail);
-    const first=R[0]||c.planned[0];
-    if(!R.length){t+=`<tr><th scope="row">${MNAME[c.model]} · ${optPart(c)}</th><td colspan="7" style="text-align:left;color:var(--muted)">${L.nr} (0 / ${total} seed)${c.model==="effnet"&&S.study==="full"&&EX().runs.some(r=>r.study==="budget"&&r.model==="effnet")?". "+L.effElsewhere:""}</td></tr>`;return;}
-    const a=R.map(r=>r.acc),f=R.map(r=>r.f1),mv=R.map(r=>r[met]);
-    const pairs=R.filter(r=>bs[r.seed]!=null).map(r=>(r[met]-bs[r.seed])*100),md=pairs.length?mean(pairs):0;
-    const dtxt=c.k==="cnn-adam-e10"?"0":pairs.length?L.delta((md>=0?"+":"−")+nf(Math.abs(md),2),nf(sd(pairs),2),pairs.length):L.deltaNone;
-    const ep=R.map(r=>`${r.best_epoch??r.epochs_run}/${r.epochs_run}`).join(", ");
-    t+=`<tr class="click${sel?" sel":""}" data-k="${c.k}"><th scope="row"><button class="optrow-btn" type="button" data-k="${c.k}" aria-pressed="${sel}">${MNAME[c.model]} · ${optPart(c)}</button></th>
-      <td>${first.input??"?"} px</td><td>${nf(first.n_train??0)}</td><td>${L.seedsOf(R.length,total)}</td>
-      <td>${pct(mean(a),2)}${R.length>1?` <span style="color:var(--muted)">± ${nf(sd(a)*100,2)}</span>`:""}</td>
-      <td>${fmtF1(mean(f))}${R.length>1?` <span style="color:var(--muted)">± ${nf(sd(f),3)}</span>`:""}</td>
-      <td>${dtxt}</td><td>${ep}</td></tr>`;});
-  $("#cfgTable").innerHTML=t+"</tbody>";
-  $("#cfgTable").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>{const c=C.find(c=>c.k===r.dataset.k),cur=EX().byKey[S.detail];
-    const pick=c.runs.find(x=>cur&&x.seed===cur.seed)||c.runs[0];setDetail(pick.key);});
-  $("#seedTable").innerHTML=seedTable(C,met,fmt);}
-function seedTable(C,met,fmt){const seeds=[...new Set(C.flatMap(c=>[...c.runs,...c.planned].map(r=>r.seed)))].sort((a,b)=>a-b);
-  let t=`<thead><tr><th scope="col" style="text-align:left">${L.cfgHead[0]}</th>${seeds.map(s=>`<th scope="col">${L.seed(s)}</th>`).join("")}<th scope="col">${S.metric==="acc"?L.metAcc:L.metF1}</th></tr></thead><tbody>`;
-  C.forEach(c=>{const by={};c.runs.forEach(r=>by[r.seed]=r);
-    t+=`<tr><th scope="row">${MNAME[c.model]} · ${optPart(c)}</th>${seeds.map(s=>by[s]?`<td>${fmt(by[s][met])}</td>`:`<td style="color:var(--muted)">${c.planned.some(p=>p.seed===s)?L.nr:""}</td>`).join("")}<td><b>${c.runs.length?fmt(mean(c.runs.map(r=>r[met]))):""}</b></td></tr>`;});
-  return t+"</tbody>";}
-
+function bestVal(h){const v=h.val_accuracy,m=Math.max(...v);return [m,v.indexOf(m)+1];}
+/* the epoch whose weights were tested: the last one for the sweep, the chosen checkpoint for EfficientNet */
+const usedEpoch=e=>e.best||e.hist.accuracy.length;
 let detSeq=0;
-async function setDetail(key){S.detail=key;renderCfg();renderHist();await renderDetail();}
-async function renderDetail(){const X=EX();if(!X)return;const r=X.byKey[S.detail];const box=$("#runCurves");
-  if(!r){$("#runTitle").textContent=L.pickRun;box.innerHTML="";$("#seedSeg").innerHTML="";$("#fitStats").innerHTML="";$("#branchWrap").hidden=true;$("#pcls").innerHTML="";$("#cm").innerHTML="";return;}
-  const seq=++detSeq,ds=S.ds;$("#runTitle").textContent=L.curveT(runLabel(r));
-  // seed buttons for this configuration
-  const same=[...X.runs,...X.planned].filter(x=>x.study===r.study&&x.model===r.model&&x.opt===r.opt).sort((a,b)=>a.seed-b.seed);
-  const ss=$("#seedSeg");ss.innerHTML="";
-  same.forEach(x=>{const b=document.createElement("button");b.type="button";b.textContent=L.seed(x.seed)+(x.key?"":` (${L.nr})`);
-    b.disabled=!x.key;b.setAttribute("aria-pressed",x.key===r.key?"true":"false");if(x.key)b.onclick=()=>setDetail(x.key);ss.append(b);});
-  box.innerHTML=`<p class="note">${L.loading}</p>`;
-  let R;try{R=await loadRun(r.key,ds);}catch(e){if(seq!==detSeq)return;box.innerHTML=`<p class="note" style="color:var(--bad)">${L.runErr(r.key)}</p>`;return;}
+async function renderDetail(){const e=curE(),seq=++detSeq,ds=S.ds,lab=label(e);
+  $("#detTitle").textContent=L.detT(lab);
+  $("#optTitle").textContent=L.optT(MNAME[e.model]);$("#curvesTitle").textContent=L.curvesT(MNAME[e.model]);
+  const es=ofModel(e.model);
+  $("#runCurves").innerHTML=`<p class="note">${L.loading}</p>`;
+  let R;try{[R]=await Promise.all([loadRun(e.key,ds),...es.map(x=>ensureHist(x,ds))]);}
+  catch(err){if(seq!==detSeq)return;$("#runCurves").innerHTML=`<p class="note" style="color:var(--bad)">${L.runErr}</p>`;return;}
   if(seq!==detSeq||ds!==S.ds)return;
-  const h=R.history,acc=css("--accent"),warm=r.model==="effnet"?(r.warmup_epochs||2):0;
-  const o={best:r.best_epoch||null,warm,n:h.length};
-  box.innerHTML=lineChart([{v:h.map(e=>e.accuracy),color:acc,solid:true,sel:true,label:L.trainL},{v:h.map(e=>e.val_accuracy),color:acc,dash:true,solid:true,dot:true,label:L.valL}],L.accT,"",420,210,o)
-    +lineChart([{v:h.map(e=>e.loss),color:acc,solid:true,sel:true,label:L.trainL},{v:h.map(e=>e.val_loss),color:acc,dash:true,solid:true,dot:true,label:L.valL}],L.lossT,"",420,210,o);
-  // fit indicators read off the curves
-  const sel=(r.best_epoch||h.length)-1,gap=h[sel].accuracy-h[sel].val_accuracy;
-  const vl=h.map(e=>e.val_loss),mi=vl.indexOf(Math.min(...vl));
-  const selTxt=r.study==="historical"?L.fitSelLast(h.length):/-e\d+$/.test(r.opt)?L.fitSelFixed(r.best_epoch):L.fitSelBest(r.best_epoch);
-  $("#fitStats").innerHTML=`<div>${L.fitSel}<b>${selTxt}</b></div><div>${L.fitGap}<b>${gap>=0?"+":"−"}${L.points(nf(Math.abs(gap)*100,1))}</b></div>
-    <div>${L.fitMin}<b>${L.fitAfter(mi+1,h.length-mi-1)}</b></div><div>${L.fitStop}<b>${h.length}</b></div>`;
-  // the three EfficientNet branches of this seed
-  const bw=$("#branchWrap");
-  if(r.model==="effnet"){bw.hidden=false;$("#branchTitle").textContent=L.branchT(r.seed);$("#branchNote").textContent=L.branchN;
-    const sib=["adam","adamw","nadam"].map(o=>X.runs.find(x=>x.study===r.study&&x.model==="effnet"&&x.opt===o&&x.seed===r.seed)).filter(Boolean);
-    let S2;try{S2=await Promise.all(sib.map(x=>loadRun(x.key,ds)));}catch(e){S2=null;}
-    if(seq!==detSeq)return;
-    if(!S2){$("#branchCurves").innerHTML=`<p class="note" style="color:var(--bad)">${L.runErr("EfficientNet")}</p>`;}
-    else{const grey=css("--muted"),n=Math.max(...S2.map(x=>x.history.length));
-      // branches whose curves are identical share one label (AdamW with a tiny weight decay can equal Adam exactly)
-      const sig=x=>JSON.stringify(x.history.map(e=>[e.loss,e.val_accuracy])),groups={};S2.forEach((x,i)=>(groups[sig(x)]=groups[sig(x)]||[]).push(i));
-      const labelOf=i=>{const g=groups[sig(S2[i])];return g[0]===i?g.map(j=>optName(sib[j].opt)).join(" = "):"";};
-      $("#branchCurves").innerHTML=lineChart(S2.map((x,i)=>({v:x.history.map(e=>e.val_accuracy),sel:sib[i].key===r.key,color:sib[i].key===r.key?acc:grey,dash:sib[i].opt==="adamw",solid:true,label:labelOf(i)})),L.accT,"",1000,260,{warm,n});
-      const same=Object.values(groups).filter(g=>g.length>1);
-      $("#branchNote").textContent=L.branchN+(same.length?" "+same.map(g=>L.identical(g.map(j=>optName(sib[j].opt)))).join(" "):"");
-      const k=$("#branchKey");k.innerHTML="";sib.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.key===r.key?"true":"false");
-        b.innerHTML=`<i></i>${optName(x.opt)} · ${pct(x.acc,2)}`;b.onclick=()=>setDetail(x.key);k.append(b);});}}
-  else bw.hidden=true;
-  renderClassPanels(r,R);}
-function renderClassPanels(r,R){const lab=cfgLabel(r)+" · "+L.seed(r.seed);
-  $("#pclsTitle").textContent=L.pclsT(lab);const pc=$("#pcls");pc.innerHTML="";
+  const h=e.hist,acc=css("--accent"),o={best:e.best,warm:e.warm,n:h.accuracy.length};
+  const pair=(a,b)=>[{v:h[a],color:acc,solid:true,sel:true,label:L.trainL},{v:h[b],color:acc,dash:true,solid:true,dot:true,label:L.valL}];
+  $("#runCurves").innerHTML=lineChart(pair("accuracy","val_accuracy"),L.accT,"",420,210,o)+lineChart(pair("loss","val_loss"),L.lossT,"",420,210,o);
+  renderClassPanels(R);renderOptSummary(es);renderCurves(es);renderMvc();}
+function renderClassPanels(R){const pc=$("#pcls");pc.innerHTML="";
   R.cm.forEach((row,i)=>{const a=row[i]/row.reduce((x,y)=>x+y,0),b=document.createElement("button");b.type="button";
-    b.setAttribute("aria-label",`${CLS[i]} akurasi ${pct(a)}. Tampilkan di galeri`);
+    b.setAttribute("aria-label",L.pcAria(CLS[i],pct(a)));
     b.innerHTML=`<span>${CLS[i]}</span><span class="bar"><i style="width:${a*100}%"></i></span><em>${pct(a)}</em>`;
-    b.onclick=()=>{S.runA=r.key;S.cls=i;S.status="all";S.pred=null;S.shown=24;syncRunPickers();syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};pc.append(b);});
-  $("#cmTitle").textContent=L.cmT(lab);
+    b.onclick=()=>showInGallery(i,null);pc.append(b);});
   const acc=css("--accent"),cmx=Math.max(...R.cm.map((x,i)=>x[i]));let ct=`<table class="cm"><thead><tr><th></th>${CLS.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>`;
   const a1=hex(acc),z=hex(css("--surface")),bad=hex(css("--bad"));
   R.cm.forEach((row,i)=>{ct+=`<tr><th scope="row" style="text-align:right">${CLS[i]}</th>`;
     row.forEach((v,j)=>{const u=i===j?v/cmx:Math.min(1,v/150),e=i===j?a1:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u));
       const dk=(0.299*c[0]+0.587*c[1]+0.114*c[2])<140,fg=dk?"#fff":"inherit";
-      ct+=`<td style="background:rgb(${c})">${i!==j&&v>0?`<button type="button" data-t="${i}" data-p="${j}" aria-label="${v} citra ${CLS[i]} diprediksi ${CLS[j]}. Tampilkan contoh" style="all:unset;cursor:pointer;display:block;width:100%;height:100%;color:${fg}">${v}</button>`:`<span style="color:${fg}">${v}</span>`}</td>`;});ct+="</tr>";});
+      ct+=`<td style="background:rgb(${c})">${i!==j&&v>0?`<button type="button" data-t="${i}" data-p="${j}" aria-label="${L.cmAria(v,CLS[i],CLS[j])}" style="all:unset;cursor:pointer;display:block;width:100%;height:100%;color:${fg}">${v}</button>`:`<span style="color:${fg}">${v}</span>`}</td>`;});ct+="</tr>";});
   $("#cm").innerHTML=ct+"</tbody></table>";
   $("#cm").querySelectorAll("button").forEach(b=>{b.addEventListener("focus",()=>b.style.outline="2px solid var(--accent)");b.addEventListener("blur",()=>b.style.outline="");
-    b.onclick=()=>{S.runA=r.key;S.cls=+b.dataset.t;S.pred=+b.dataset.p;S.status="bad";S.shown=24;syncRunPickers();syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};});}
-
-/* ---------- historical optimizer sweep (10 epochs, seed 42) ---------- */
-const HOPTS=()=>D.models[S.hm].opts;
-const hOpt=()=>HOPTS().find(o=>o.slug===S.hopt);
-function pickHist(slug){S.hopt=slug;setDetail(`historical__${S.hm}-${slug}__s42`);}
-function renderHist(){const o=hOpt(),sorted=[...HOPTS()].sort((a,b)=>b.acc-a.acc),HM=S.hm.toUpperCase();
-  document.querySelectorAll("#hmSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.hm?"true":"false"));
-  $("#histTitle").textContent=L.histT(HM);
-  const onDetail=x=>S.detail===`historical__${S.hm}-${x.slug}__s42`;
-  let t=`<thead><tr><th scope="col">Optimizer</th><th scope="col">Akurasi uji</th><th scope="col">Loss uji</th><th scope="col">Val terbaik</th><th scope="col">Train−val</th><th scope="col">Waktu</th></tr></thead><tbody>`;
-  sorted.forEach(x=>{const [bv,be]=bestVal(x),gap=x.hist.accuracy.at(-1)-x.hist.val_accuracy.at(-1);
-    t+=`<tr class="click${x.slug===S.hopt?" sel":""}" data-slug="${x.slug}"><th scope="row"><button class="optrow-btn" type="button" data-slug="${x.slug}" aria-pressed="${x.slug===S.hopt}">${x.name}</button></th>
-      <td>${pct(x.acc,2)}</td><td>${nf(x.loss,3)}</td><td>${pct(bv)} <span style="color:var(--muted)">(ep ${be})</span></td><td>${gap>=0?"+":"−"}${nf(Math.abs(gap)*100,1)}</td><td>${nf(x.time,0)} dtk</td></tr>`;});
+    b.onclick=()=>showInGallery(+b.dataset.t,+b.dataset.p);});}
+const sameHist=(a,b)=>JSON.stringify([a.hist.loss,a.hist.val_accuracy])===JSON.stringify([b.hist.loss,b.hist.val_accuracy]);
+function renderOptSummary(es){const n=E().length,sorted=[...es].sort((a,b)=>b.acc-a.acc);
+  let t=`<thead><tr>${L.optHead.map(h=>`<th scope="col">${h}</th>`).join("")}</tr></thead><tbody>`;
+  sorted.forEach(x=>{const [bv,be]=bestVal(x.hist),u=usedEpoch(x)-1,gap=x.hist.accuracy[u]-x.hist.val_accuracy[u],sel=x.opt===S.opt;
+    t+=`<tr class="click${sel?" sel":""}" data-opt="${x.opt}"><th scope="row"><button class="optrow-btn" type="button" aria-pressed="${sel}">${x.name}</button></th>
+      <td>${pct(x.acc,2)}</td><td>${L.rankOf(x.rank,n)}</td><td>${pct(bv)} <span style="color:var(--muted)">(${L.ep(be)})</span></td><td>${gap>=0?"+":"−"}${L.pts(nf(Math.abs(gap)*100,1))}</td></tr>`;});
   $("#optTable").innerHTML=t+"</tbody>";
-  $("#optTable").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>pickHist(r.dataset.slug));
-  const other=S.hm==="cnn"?"mlp":"cnn",oth=s=>D.models[other].opts.find(x=>x.slug===s).acc;
-  $("#accNote").textContent=`Garis putus-putus: ${other.toUpperCase()} dengan optimizer yang sama.`;
-  $("#accTitle").textContent=`Akurasi uji ${HM}`;
-  const bx=$("#accBars");bx.innerHTML="";const mx=Math.max(...HOPTS().map(x=>x.acc),...D.models[other].opts.map(x=>x.acc));
-  sorted.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.hopt?"true":"false");
-    b.setAttribute("aria-label",`${x.name} akurasi uji ${pct(x.acc)}. Pilih optimizer ini`);
-    b.innerHTML=`<span>${x.name}</span><span class="bar" style="position:relative"><i style="width:${x.acc/mx*100}%"></i><span style="position:absolute;top:-3px;bottom:-3px;left:${Math.min(100,oth(x.slug)/mx*100)}%;border-left:2px dashed var(--muted)"></span></span><em>${pct(x.acc)}</em>`;
-    b.onclick=()=>pickHist(x.slug);bx.append(b);});
-  const acc=css("--accent"),grey=css("--link");
-  const ser=k=>HOPTS().map(x=>({v:x.hist[k],sel:x.slug===S.hopt,color:x.slug===S.hopt?acc:grey,label:x.slug===S.hopt?x.name:""}));
-  $("#curves").innerHTML=lineChart(ser("val_accuracy"),"Akurasi validasi")+lineChart(ser("val_loss"),"Loss validasi");
+  $("#optTable").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>setPick(S.model,r.dataset.opt));
+  const eff=es[0].model==="effnet",a=es.find(x=>x.opt==="adam"),w=es.find(x=>x.opt==="adamw");
+  $("#optNote").textContent=(eff?L.optNoteEff:L.optNoteHist)+(eff&&a&&w&&sameHist(a,w)?L.adamwSame:"");}
+function renderCurves(es){const acc=css("--accent"),grey=css("--link"),warm=es[0].warm,n=Math.max(...es.map(x=>x.hist.accuracy.length));
+  const ser=k=>es.map(x=>({v:x.hist[k],sel:x.opt===S.opt,color:x.opt===S.opt?acc:grey,dash:x.model==="effnet"&&x.opt==="adamw",label:x.opt===S.opt?x.name:""}));
+  $("#curves").innerHTML=lineChart(ser("val_accuracy"),L.valAccT,"",420,210,{warm,n})+lineChart(ser("val_loss"),L.valLossT,"",420,210,{warm,n});
   const ok=$("#okey");ok.innerHTML="";
-  HOPTS().forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.hopt?"true":"false");
-    b.innerHTML=`<i></i>${x.name}`;b.onclick=()=>pickHist(x.slug);ok.append(b);});
-  // MLP vs CNN
-  const sl=S.hopt;$("#mvcNote").textContent=`Keduanya dilatih dengan ${o.name}, optimizer yang sedang dipilih. Dataset yang sedang dipilih ditandai biru.`;
-  const row=(n,p,a)=>`<tr${n===HM?' class="sel"':""}><th scope="row">${n}</th><td>${nf(p)}</td><td>${pct(a,2)}</td></tr>`;
-  const gap=(a,b)=>`<tr><th scope="row">Selisih CNN − MLP</th><td></td><td class="${b>=a?"pos":""}">${b>=a?"+":"−"}${nf(Math.abs(b-a)*100,2)} poin</td></tr>`;
+  es.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.opt===S.opt?"true":"false");
+    b.innerHTML=`<i></i>${x.name}`;b.onclick=()=>setPick(S.model,x.opt);ok.append(b);});}
+/* MLP vs CNN vs EfficientNetV2B0 on both datasets, with the selected optimizer */
+let mvcSeq=0;
+async function renderMvc(){const seq=++mvcSeq,o=S.opt,e=curE();
+  await Promise.allSettled(DSLIST.map(d=>loadExp(d.key)));if(seq!==mvcSeq)return;
+  const effHas=Object.keys(EFF_OPTS).includes(o);
+  $("#mvcNote").textContent=L.mvcNote(e.name)+(effHas?"":L.mvcNoEff(e.name));
+  const row=(m,p,a,ds)=>`<tr${m===S.model&&ds===S.ds?' class="sel"':""}><th scope="row">${MNAME[m]}</th><td>${nf(p)}</td><td>${pct(a,2)}</td></tr>`;
   let body="";
   for(const ds of DSLIST){const s=SUMMARY&&SUMMARY[ds.key];if(!s||!s.mlp||!s.mlp.acc)continue;
-    body+=`<tr class="grp${ds.key===S.ds?" sel":""}"><td colspan="3">${s.title} (${s.shape.join(" × ")})</td></tr>${row("MLP",s.mlp.params,s.mlp.acc[sl])}${row("CNN",s.cnn.params,s.cnn.acc[sl])}${gap(s.mlp.acc[sl],s.cnn.acc[sl])}`;}
-  $("#cmpTable").innerHTML=`<thead><tr><th scope="col">Model</th><th scope="col">Parameter</th><th scope="col">Akurasi uji</th></tr></thead><tbody>${body}</tbody>`;}
-function renderTraining(){if(!EX())return;
-  if(!EX().byKey[S.detail]){const C=configs(S.study),c=C.find(c=>c.runs.length&&c.model==="effnet")||C.find(c=>c.runs.length&&c.k==="cnn-adam")||C.find(c=>c.runs.length);S.detail=c?c.runs[0].key:"";}
-  renderCfg();renderHist();if(detailSeen)renderDetail();}
-/* curves and per-run files load only once the comparison section is near the screen */
+    let rows=row("mlp",s.mlp.params,s.mlp.acc[o],ds.key)+row("cnn",s.cnn.params,s.cnn.acc[o],ds.key);
+    const X=EXPC[ds.key],r=X&&effHas?effRun(X,o):null;if(r)rows+=row("effnet",EFF_PARAMS,r.acc,ds.key);
+    body+=`<tr class="grp${ds.key===S.ds?" sel":""}"><td colspan="3">${s.title} (${s.shape.join(" × ")})</td></tr>${rows}`;}
+  $("#cmpTable").innerHTML=`<thead><tr>${L.mvcHead.map(h=>`<th scope="col">${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody>`;}
+function renderTraining(){if(detailSeen)renderDetail();}
+/* curves and per-run files load only once the detail section is near the screen */
 let detailSeen=false;
-new IntersectionObserver((es,ob)=>{if(es.some(e=>e.isIntersecting)&&!detailSeen){detailSeen=true;ob.disconnect();if(EX())renderDetail();}},{rootMargin:"400px 0px"}).observe(document.getElementById("training"));
+new IntersectionObserver((es,ob)=>{if(es.some(e=>e.isIntersecting)&&!detailSeen){detailSeen=true;ob.disconnect();if(D&&ENTC[S.ds])renderDetail();}},{rootMargin:"400px 0px"}).observe(document.getElementById("training"));
 
 /* ---------- dataset control ---------- */
 const DSLIST=[{key:"cifar10"},{key:"fashion"}];
 function syncDS(){
-  document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));
-  const g=G();$("#heroTitle").textContent=`Bagaimana ${MODEL()} membaca gambar ${g.H} × ${g.H}`;
-  $("#heroLead").textContent=`${D.title}: ${nf(D.pool.length)} contoh uji di galeri, ${CLS.length} kelas, input ${g.H} × ${g.H} × ${g.C}. Alur ini menjalankan CNN historis di browser, dengan delapan optimizer dari bobot awal yang sama. Hasil MLP, CNN, dan EfficientNetV2B0 ada di bagian hasil dan perbandingan.`;
+  const g=G();
   $("#invWrap").hidden=g.C!==1;
   $("#stripMsg").classList.remove("err");
   $("#stripMsg").textContent=`Unggah JPG atau PNG, atau tarik gambar ke kotak +. Gambar dipotong persegi di tengah lalu diperkecil ke ${g.H} × ${g.H}`+(g.C===1?", diubah ke grayscale, dan (jika dicentang) dibalik warnanya.":".");
 }
 let dsSeq=0;
-async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#dsMsg");m.classList.remove("err");
+async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#optMsg");m.classList.remove("err");
   const title=ds==="fashion"?"Fashion-MNIST":"CIFAR-10";
   document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===ds?"true":"false"));
-  m.textContent=`Memuat ${title}…`;$("#flowWrap").classList.add("busy");
-  let c;try{[c]=await Promise.all([loadDS(ds),loadW(S.opt,ds)]);}catch(e){if(seq!==dsSeq)return;$("#flowWrap").classList.remove("busy");
-    m.classList.add("err");m.textContent=`${title} gagal dimuat. Pilih dataset itu sekali lagi untuk mencoba ulang.`;syncDSButtons();return;}
+  m.textContent=L.loadingDs(title);$("#flowWrap").classList.add("busy");
+  let c;try{[c]=await Promise.all([loadDS(ds),loadExp(ds),S.model==="effnet"?null:loadW(S.opt,ds)]);}catch(e){if(seq!==dsSeq)return;$("#flowWrap").classList.remove("busy");
+    m.classList.add("err");m.textContent=L.dsErr(title);document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));return;}
   if(seq!==dsSeq)return;
   S.ds=ds;D=c.D;atlasCtx=c.atlasCtx;CLS=D.classes;try{localStorage.setItem("cnn-dataset",ds);}catch(e){}
+  if(!ENTC[ds])buildEntries(ds);
   S.cls=-1;S.pred=null;S.shown=24;S.sel=null;$("#detail").hidden=true;
+  if(S.cmpB&&!E().some(e=>e.id===S.cmpB))S.cmpB="";
   $("#flowWrap").classList.remove("busy");m.textContent="";
-  buildClassChips();syncFilters();syncDS();buildOptList();renderOptInfo();renderFacts();
-  const keep=S.cur&&S.cur.kind==="u"?S.cur:{kind:"g",k:D.demo[9]};select(keep);
-  if(S.cmpAll){S.cmpAll=false;loadAll();}else renderCompare();
-  $("#grid").innerHTML="";$("#more").innerHTML="";$("#summary").textContent=L.loadingRuns;
-  let X;try{X=await loadExp(ds);}catch(e){if(seq!==dsSeq)return;$("#summary").innerHTML=`<span style="color:var(--bad)">${L.expErr}</span>`;$("#cfgNote").textContent=L.expErr;return;}
-  if(seq!==dsSeq)return;
-  // keep the same run identities when the other dataset has them; never substitute another run
-  if(!X.byKey[S.runA])S.runA="historical__cnn-adam__s42";if(S.runB&&!X.byKey[S.runB])S.runB="";
-  if(!X.byKey[S.detail])S.detail="";
-  syncRunPickers();renderGallery();renderTraining();}
-function syncDSButtons(){document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));}
+  buildClassChips();syncFilters();syncDS();
+  if(S.cmpAll){S.cmpAll=false;resetCompare();}
+  const keep=S.cur&&S.cur.kind==="u"?S.cur:{kind:"g",k:D.demo[9]};
+  if(S.model==="effnet"){S.cur=null;}
+  await setPick(S.model,S.opt);
+  if(S.model!=="effnet")select(keep);}
 document.querySelectorAll("[data-ds]").forEach(b=>b.onclick=()=>setDataset(b.dataset.ds));
 $("#fInv").addEventListener("change",e=>{S.inv=e.target.checked;if(S.cur&&S.cur.kind==="u")select(S.cur);else buildStrip();});
-document.querySelectorAll("#studySeg button").forEach(b=>b.onclick=()=>{S.study=b.dataset.v;const c=configs(S.study),cur=EX().byKey[S.detail];
-  const same=cur&&c.find(x=>x.model===cur.model&&x.opt===cur.opt&&x.runs.length);const pick=same||c.find(x=>x.model==="effnet"&&x.runs.length)||c.find(x=>x.runs.length);
-  if(pick)setDetail((pick.runs.find(r=>cur&&r.seed===cur.seed)||pick.runs[0]).key);else renderCfg();});
-document.querySelectorAll("#metricSeg button").forEach(b=>b.onclick=()=>{S.metric=b.dataset.v;renderCfg();});
-document.querySelectorAll("#hmSeg button").forEach(b=>b.onclick=()=>{S.hm=b.dataset.v;try{localStorage.setItem("cnn-model",S.hm);}catch(e){}pickHist(S.hopt);});
 
 /* ---------- sidebar: open by default on desktop, a drawer on mobile ---------- */
 const app=document.querySelector(".app"),MQ=matchMedia("(max-width:860px)");
@@ -643,7 +580,7 @@ MQ.addEventListener("change",initSidebar);
 function setRamp(){$("#ramp").style.background=`linear-gradient(90deg,${css("--map0")},${css("--map1")},${css("--map2")})`;}
 function setTheme(t){document.documentElement.dataset.theme=t;$("#themeBtn").setAttribute("aria-pressed",t==="dark"?"true":"false");
   try{localStorage.setItem("cnn-theme",t);}catch(e){}setRamp();
-  if(D){buildStrip();renderFlow();renderTraining();renderGallery();renderCompare();}}
+  if(D&&ENTC[S.ds]){buildStrip();renderFlow();renderTraining();renderGallery();renderCompare();}}
 $("#themeBtn").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
 document.querySelectorAll(".flow-bar .seg button").forEach(b=>b.onclick=()=>{S.chMode=b.dataset.ch;
   document.querySelectorAll(".flow-bar .seg button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));closeDetail();renderFlow();});
@@ -659,19 +596,14 @@ let rz;new ResizeObserver(()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame
   let t="light";try{t=localStorage.getItem("cnn-theme")||t;}catch(e){}
   document.documentElement.dataset.theme=t;$("#themeBtn").setAttribute("aria-pressed",t==="dark"?"true":"false");setRamp();
   try{let d="cifar10";try{d=localStorage.getItem("cnn-dataset")||d;}catch(e){}if(!DSLIST.some(x=>x.key===d))d="cifar10";
-    try{const mm=localStorage.getItem("cnn-model");if(mm==="mlp"||mm==="cnn")S.hm=mm;}catch(e){}
-    S.ds=d;const [c]=await Promise.all([loadDS(d),loadW(S.opt,d)]);D=c.D;atlasCtx=c.atlasCtx;CLS=D.classes;
+    try{const mm=localStorage.getItem("cnn-model"),oo=localStorage.getItem("cnn-opt");if(MODELS.includes(mm))S.model=mm;if(oo)S.opt=oo;}catch(e){}
+    S.ds=d;const [c]=await Promise.all([loadDS(d),loadExp(d)]);D=c.D;atlasCtx=c.atlasCtx;CLS=D.classes;buildEntries(d);
+    if(!curE()){S.model="cnn";S.opt="adam";}
+    if(S.model!=="effnet")await loadW(S.opt,d);
     try{const r=await fetch("data/summary.json");if(r.ok)SUMMARY=await r.json();}catch(e){}
   }catch(e){const b=$("#boot");b.classList.add("err");b.textContent="Data model gagal dimuat. Muat ulang halaman; kalau masih gagal, berkas data tidak ikut terunggah.";return;}
-  $("#boot").remove();["alur","hasil","training"].forEach(id=>{$("#"+id).hidden=false;io.observe($("#"+id));});
-  buildOptList();renderOptInfo();renderFacts();buildFilters();syncDS();
-  select({kind:"g",k:D.demo[9]});
-  // run index: small, loaded after the flow is on screen; predictions and curves load per run on demand
-  $("#summary").textContent=L.loadingRuns;
-  try{await loadExp(S.ds);}catch(e){$("#summary").innerHTML=`<span style="color:var(--bad)">${L.expErr}</span>`;$("#cfgNote").textContent=L.expErr;window.__ready=true;return;}
-  // open on the experiment that has EfficientNet results (the full 224 px recipe has not been run yet)
-  const effIn=st=>EX().runs.some(r=>r.study===st&&r.model==="effnet");
-  if(!effIn(S.study)&&effIn("budget"))S.study="budget";
-  syncRunPickers();renderGallery();renderTraining();
+  $("#boot").remove();["akurasi","alur","hasil","training"].forEach(id=>{$("#"+id).hidden=false;io.observe($("#"+id));});
+  buildFilters();syncDS();
+  await setPick(S.model,S.opt);
   window.__ready=true;
 })();

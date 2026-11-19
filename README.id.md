@@ -8,65 +8,43 @@ Halaman web interaktif yang membuka isi sebuah *convolutional neural network* (C
 
 Tidak ada server: CNN berjalan di browser-mu, dan gambar yang kamu unggah tidak keluar dari komputermu. Prediksi uji model lain dihitung di Python lalu dimuat dari berkas.
 
-![Tampilan alur jaringan](docs/screenshots/id/flow.png)
+![Akurasi uji semua model yang sudah dilatih](docs/screenshots/id/accuracy.png)
 
 ## Untuk apa ini?
 
-CNN biasanya dijelaskan dengan diagram kotak dan panah. Halaman ini memperlihatkan wujud aslinya: feature map dan kernel dari model yang benar-benar dilatih, dihitung langsung untuk gambar yang kamu pilih. Halaman ini dibuat untuk mahasiswa dan siapa saja yang sedang belajar cara kerja CNN, dan menjawab tiga pertanyaan:
+CNN biasanya dijelaskan dengan diagram kotak dan panah. Halaman ini memperlihatkan wujud aslinya: feature map dan kernel dari model yang benar-benar dilatih, dihitung langsung untuk gambar yang kamu pilih. Halaman ini dibuat untuk mahasiswa dan siapa saja yang sedang belajar cara kerja CNN, dan menjawab empat pertanyaan:
 
 - **Apa yang dilakukan setiap layer terhadap gambar?** Ikuti satu gambar dari channel warnanya sampai probabilitas kelas di akhir.
 - **Apakah optimizer berpengaruh?** Jaringan yang sama dilatih delapan kali, sekali per optimizer, dari bobot awal yang identik. Ganti-ganti optimizer lalu bandingkan.
-- **Apakah konvolusi dan pretraining berpengaruh?** MLP tanpa konvolusi, CNN kecil, dan EfficientNetV2B0 yang sudah dilatih di ImageNet dilatih pada split yang sama dengan seed yang sama, jadi kamu bisa membandingkannya per seed dan gambar demi gambar.
+- **Apakah konvolusi dan pretraining berpengaruh?** MLP tanpa konvolusi, CNN kecil, dan EfficientNetV2B0 yang sudah dilatih di ImageNet dilatih pada split yang sama dengan seed yang sama, jadi kamu bisa membandingkannya gambar demi gambar.
 - **Apakah dataset berpengaruh?** Arsitektur yang sama dilatih pada gambar pakaian grayscale yang mudah dan foto berwarna yang lebih sulit.
 
 Tata letak tampilan jaringannya terinspirasi dari [CNN Explainer](https://poloclub.github.io/cnn-explainer/).
 
 ## Cara memakai dashboard
 
-Halaman ini punya tiga bagian yang bisa dibuka dari sidebar: **Alur jaringan**, **Hasil uji**, dan **Perbandingan model & optimizer**. Pilihan dataset (CIFAR-10 atau Fashion-MNIST) berlaku untuk ketiganya. Header berisi dua tombol yang selalu ada di tempatnya: tombol menu di kiri membuka dan menutup sidebar, dan **Mode gelap** di kanan mengganti tema.
+Semuanya dimulai dari bagian atas halaman: pilih **dataset** (CIFAR-10 atau Fashion-MNIST), lalu **model** (MLP, CNN, atau EfficientNetV2B0), lalu **optimizer**. Angka besar di samping tombol adalah akurasi uji model itu pada 10.000 citra uji, beserta peringkatnya di antara semua model yang sudah dilatih. Semua bagian di bawahnya mengikuti pilihan ini. Hanya model yang benar-benar sudah dilatih yang ditampilkan.
 
-**Alur jaringan** selalu menjalankan CNN historis di browser-mu, jadi setiap feature map dihitung langsung.
+Halaman ini punya empat bagian yang bisa dibuka dari sidebar. Header berisi dua tombol yang selalu ada di tempatnya: tombol menu di kiri membuka dan menutup sidebar, dan **Mode gelap** di kanan mengganti tema.
 
-1. **Pilih optimizer.** Kartu di samping tombol menjelaskan cara optimizer itu memperbarui bobot, kapan biasanya dipakai, dan seberapa baik hasil CNN dengannya.
-2. **Pilih gambar.** Klik salah satu dari sepuluh thumbnail contoh, atau tekan **+** untuk mengunggah JPG atau PNG milikmu (bisa juga dengan menarik berkas ke kotak itu). Unggahan dipotong persegi di tengah lalu diperkecil ke ukuran dataset. Untuk Fashion-MNIST, gambar juga diubah ke grayscale dan, secara bawaan, warnanya dibalik, karena Fashion-MNIST menampilkan benda terang di latar hitam.
-3. **Baca alurnya dari kiri ke kanan.**
-   - **input**: channel warna gambar (merah, hijau, biru untuk CIFAR-10; satu channel abu-abu untuk Fashion-MNIST).
-   - **conv1** dan **conv2**: setiap kotak adalah *feature map*, keluaran satu filter 3 × 3 hasil latihan. Area terang adalah tempat filter menemukan polanya. Hanya 8 dari 32 atau 64 map yang ditampilkan; pilih "8 paling aktif" atau "Channel #0 sampai #7".
-   - **max_pool**: mengambil nilai terbesar di setiap blok 2 × 2, sehingga ukurannya jadi separuh.
-   - **dense**: 128 unit yang masing-masing menggabungkan semua input-nya.
-   - **output**: probabilitas tiap kelas dari 10 kelas. Label di atas alur menunjukkan apakah prediksi teratas sama dengan kelas aslinya.
-4. **Klik kotak mana saja** untuk memperbesarnya dan melihat bobot kernel yang menghasilkannya (merah negatif, biru positif).
-5. **Bandingkan semua optimizer pada satu gambar.** "Bandingkan semua optimizer" menampilkan prediksi dan keyakinan tiap optimizer untuk gambar yang sedang dipilih.
+1. **Akurasi.** Peringkat memuat ke-19 model yang sudah dilatih untuk dataset itu (8 MLP, 8 CNN, 3 EfficientNetV2B0) dalam satu skala. Klik baris untuk memilih model tersebut. Catatan di bawah peringkat menyebut cara tiap model dilatih, karena EfficientNetV2B0 di-fine-tune pada subset 3.000 citra dengan input 96 × 96, sedangkan MLP dan CNN memakai seluruh data latih.
+2. **Alur jaringan** (MLP dan CNN) menjalankan model terpilih di browser-mu. Pilih salah satu dari sepuluh thumbnail contoh, atau tekan **+** untuk mengunggah JPG atau PNG. Baca alurnya dari kiri ke kanan: channel input, lalu feature map conv1 dan conv2 dengan max pooling untuk CNN (atau flatten dan dua layer dense untuk MLP), lalu probabilitas kelas. Klik kotak mana saja untuk memperbesarnya dan melihat bobot di baliknya. "Bandingkan semua optimizer" menampilkan prediksi tiap optimizer untuk gambar yang sedang dipilih. EfficientNetV2B0 terlalu besar untuk dijalankan di browser, jadi bagian ini mengarahkan ke prediksinya.
+3. **Hasil uji** menampilkan prediksi model terpilih pada kumpulan tetap 1.000 citra uji (100 per kelas). Saring menurut status cocok dan kelas asli, dan bila perlu bandingkan dengan model kedua untuk menyaring *Keduanya benar*, *Hanya terpilih benar*, *Hanya pembanding benar*, atau *Keduanya salah*. Hitungan di baris ringkasan selalu memakai seluruh 10.000 citra uji.
+4. **Detail model** menampilkan kurva training, akurasi per kelas, dan confusion matrix model terpilih, lalu ringkasan semua optimizer model itu beserta peringkat keseluruhannya, kurva validasi optimizer-optimizer tersebut, dan tabel yang membandingkan MLP, CNN, dan EfficientNetV2B0 di kedua dataset dengan optimizer terpilih. Klik kelas atau sel di luar diagonal untuk membuka gambarnya di galeri.
 
-**Hasil uji** membandingkan dua run pada citra uji yang sama.
+Di layar lebar, sidebar terbuka secara bawaan dan konten melebar saat sidebar ditutup. Di ponsel, sidebar terbuka sebagai drawer; tutup dengan ×, Escape, ketukan di luar drawer, atau dengan memilih salah satu bagian. Tombol bahasa Inggris/Indonesia ada di bagian bawah sidebar.
 
-6. **Pilih model A dan, bila perlu, model B.** Setiap daftar berisi semua run yang ada, dikelompokkan per eksperimen (sapuan historis, terkontrol split penuh, terkontrol subset kecil) dan dinamai menurut model, optimizer, dan seed. Run yang direncanakan tetapi belum dilatih tetap tercantum dalam keadaan nonaktif. Catatan di samping daftar menyebut asal prediksinya: browser (MLP dan CNN historis) atau berkas prediksi hasil ekspor (run terkontrol).
-7. **Saring.** Menurut status A (*Cocok* atau *Tidak cocok*), kelas asli, dan, bila B dipilih, kesepakatan keduanya: *Keduanya benar*, *Hanya A benar*, *Hanya B benar*, *Keduanya salah*. Setiap kartu menampilkan ID uji resmi, jadi gambar yang sama punya ID yang sama di semua run.
-8. **Baca baris ringkasan.** Akurasi, macro-F1, dan hitungan kesepakatan selalu dihitung dari 10.000 citra uji; galerinya sendiri menampilkan kumpulan tetap 1.000 citra (100 per kelas). Klik kartu untuk membuka gambar itu di alur jaringan.
-
-**Perbandingan model & optimizer**
-
-9. **Pilih eksperimen dan metrik.** *Split penuh* atau *Subset kecil*, lalu *Akurasi uji* atau *Macro-F1*. Grafiknya punya satu baris per konfigurasi, satu titik per seed, dan batang sampai rata-rata; tabelnya memuat rata-rata ± simpangan baku, jumlah seed, dan Δ, yaitu selisih berpasangan per seed terhadap CNN awal (CNN–Adam yang dihentikan di epoch 10 pada split dan seed yang sama) dalam poin persentase. *Hasil per seed* mencantumkan setiap seed.
-10. **Klik baris** untuk membuka run tersebut: akurasi dan loss train serta validasi per epoch, checkpoint terpilih (garis putus-putus), warm-up bersama (area abu-abu, khusus EfficientNet), dan beberapa angka yang dibaca dari kurvanya. Untuk EfficientNet, grafik kedua menumpuk cabang fine-tuning Adam, AdamW, dan Nadam dari seed yang sama. Akurasi per kelas dan confusion matrix mengikuti run terpilih; klik kelas atau sel untuk membuka gambarnya di galeri.
-11. **Sapuan historis** (delapan optimizer, 10 epoch, satu seed) ada di bawahnya, dengan pilihan CNN/MLP. Klik optimizer untuk membuka kurvanya di atas.
-
-Di layar lebar, sidebar terbuka secara bawaan dan konten melebar saat sidebar ditutup. Di ponsel, sidebar tertutup dan terbuka sebagai drawer; tutup dengan ×, Escape, ketukan di luar drawer, atau dengan memilih salah satu bagian. Tombol bahasa Inggris/Indonesia ada di bagian bawah sidebar.
-
-| Satu gambar, delapan optimizer | Dua run pada citra uji yang sama |
+| Akurasi semua model yang sudah dilatih | EfficientNetV2B0 dipilih |
 |---|---|
-| ![Membandingkan optimizer](docs/screenshots/id/compare.png) | ![Galeri yang membandingkan dua run](docs/screenshots/id/gallery.png) |
+| ![Akurasi dan peringkat](docs/screenshots/id/accuracy.png) | ![EfficientNetV2B0 dipilih](docs/screenshots/id/effnet.png) |
 
-| Model dan optimizer per seed | Kurva training dan cabang fine-tuning |
+| Alur jaringan (MLP) | Hasil uji dibandingkan dengan model lain |
 |---|---|
-| ![Perbandingan model dan optimizer](docs/screenshots/id/comparison.png) | ![Kurva training](docs/screenshots/id/curves.png) |
+| ![Alur jaringan MLP](docs/screenshots/id/mlp.png) | ![Galeri dengan pembanding](docs/screenshots/id/gallery.png) |
 
-| Sapuan optimizer historis | Fashion-MNIST di alur jaringan |
+| Detail model | Mode gelap, ponsel |
 |---|---|
-| ![Sapuan historis](docs/screenshots/id/training.png) | ![Alur Fashion-MNIST](docs/screenshots/id/fashion.png) |
-
-| Sidebar tertutup, mode gelap | Ponsel: sidebar sebagai drawer |
-|---|---|
-| ![Mode gelap dengan sidebar tertutup](docs/screenshots/id/dark.png) | ![Drawer di ponsel](docs/screenshots/id/mobile.png) |
+| ![Detail model](docs/screenshots/id/detail.png) | ![Ponsel dalam mode gelap](docs/screenshots/id/mobile.png) |
 
 ## Cara kerjanya
 

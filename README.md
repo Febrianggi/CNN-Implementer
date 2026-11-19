@@ -8,65 +8,43 @@ An interactive web page that opens up a small convolutional neural network (CNN)
 
 There is no server: the CNN runs in your browser, and nothing you upload leaves your computer. The other models' test predictions were computed in Python and are loaded from files.
 
-![The network flow view](docs/screenshots/en/flow.png)
+![Test accuracy of every trained model](docs/screenshots/en/accuracy.png)
 
 ## What is this for?
 
-A CNN is often explained with diagrams of boxes and arrows. This page shows the real thing: actual feature maps and kernels from trained models, computed live for the image you choose. It is built for students and anyone learning how CNNs work, and it answers three questions:
+A CNN is often explained with diagrams of boxes and arrows. This page shows the real thing: actual feature maps and kernels from trained models, computed live for the image you choose. It is built for students and anyone learning how CNNs work, and it answers four questions:
 
 - **What does each layer do to an image?** Follow one picture from its color channels to the final class probabilities.
 - **Does the optimizer matter?** The same network was trained eight times, once per optimizer, from identical starting weights. Switch between them and compare.
-- **Does convolution matter, and does pretraining?** An MLP with no convolution, the small CNN, and an ImageNet-pretrained EfficientNetV2B0 are trained on the same split with the same seeds, so you can compare them per seed and image by image.
+- **Does convolution matter, and does pretraining?** An MLP with no convolution, the small CNN, and an ImageNet-pretrained EfficientNetV2B0 are trained on the same split with the same seeds, so you can compare them image by image.
 - **Does the dataset matter?** The same architectures are trained on easy grayscale clothing images and on harder color photos.
 
 The layout of the network view is inspired by [CNN Explainer](https://poloclub.github.io/cnn-explainer/).
 
 ## How to use the dashboard
 
-The page has three sections, reachable from the sidebar: **Network flow**, **Test results**, and **Model & optimizer comparison**. The dataset switch (CIFAR-10 or Fashion-MNIST) applies to all three. The header holds two buttons that stay put: the menu button on the left opens and closes the sidebar, and **Dark mode** on the right switches the theme.
+Everything starts at the top of the page: choose a **dataset** (CIFAR-10 or Fashion-MNIST), then a **model** (MLP, CNN, or EfficientNetV2B0), then an **optimizer**. The large number next to the buttons is that model's test accuracy on all 10,000 test images, with its rank among every trained model. Every section below follows this choice. Only models that have actually been trained are listed.
 
-**Network flow** always runs the historical CNN in your browser, so every feature map you see is computed live.
+The page has four sections, reachable from the sidebar. The header keeps two buttons in place: the menu button on the left opens and closes the sidebar, and **Dark mode** on the right switches the theme.
 
-1. **Choose an optimizer.** The card next to the buttons explains how that optimizer updates the weights, when it is usually used, and how well the CNN did with it.
-2. **Choose an image.** Click one of the ten example thumbnails, or press **+** to upload your own JPG or PNG (you can also drag a file onto it). Uploads are center-cropped and resized to the dataset's size. For Fashion-MNIST they are also converted to grayscale and, by default, color-inverted, because Fashion-MNIST shows light items on a black background.
-3. **Read the flow from left to right.**
-   - **input**: the image's color channels (red, green, blue for CIFAR-10; one gray channel for Fashion-MNIST).
-   - **conv1** and **conv2**: each square is a *feature map*, the output of one learned 3 × 3 filter. Bright areas are where the filter found its pattern. Only 8 of the 32 or 64 maps are shown; switch between "8 most active" and "Channels #0 to #7".
-   - **max_pool**: keeps the strongest value in every 2 × 2 block, halving the size.
-   - **dense**: 128 units that each combine all of their inputs.
-   - **output**: the probability of each of the 10 classes. The label above the flow says whether the top prediction matches the true class.
-4. **Click any square** to enlarge it and see the kernel weights that produced it (red is negative, blue is positive).
-5. **Compare all optimizers on one image.** "Compare all optimizers" shows each optimizer's prediction and confidence for the current image.
+1. **Accuracy.** The ranking lists all 19 trained models of the dataset (8 MLP, 8 CNN, 3 EfficientNetV2B0) on one scale. Click a row to select that model. The note under the ranking says how each model was trained, because EfficientNetV2B0 was fine-tuned on a 3,000-image subset at 96 × 96 while MLP and CNN used the full training set.
+2. **Network flow** (MLP and CNN) runs the selected model in your browser. Pick one of the ten example thumbnails, or press **+** to upload a JPG or PNG. Read the flow from left to right: the input channels, then conv1 and conv2 feature maps with max pooling for the CNN (or flatten and two dense layers for the MLP), then the class probabilities. Click any square to enlarge it and see the weights behind it. "Compare all optimizers" shows each optimizer's prediction for the current image. EfficientNetV2B0 is too large to run in the browser, so this section points to its predictions instead.
+3. **Test results** shows the selected model's predictions on a fixed set of 1,000 test images (100 per class). Filter by match status and true class, and optionally compare with a second model to filter by *Both right*, *Only selected right*, *Only comparison right*, or *Both wrong*. The counts in the summary line always use all 10,000 test images.
+4. **Model details** shows the selected model's training curves, per-class accuracy, and confusion matrix, then a summary of every optimizer of that model with its overall rank, the validation curves of those optimizers, and a table comparing MLP, CNN, and EfficientNetV2B0 on both datasets with the selected optimizer. Click a class or an off-diagonal cell to open those images in the gallery.
 
-**Test results** compares two runs on the same test images.
+On a wide screen the sidebar is open by default and the content widens when you close it. On a phone it opens as a drawer; close it with ×, Escape, a tap outside it, or by choosing a section. An English/Indonesian switch sits at the bottom of the sidebar.
 
-6. **Choose model A and, if you like, model B.** Each list holds every run that exists, grouped by experiment (historical sweep, controlled full split, controlled small subset), named by model, optimizer, and seed. Runs that are planned but not trained yet are listed and greyed out. The note next to each list says where its predictions come from: the browser (historical MLP and CNN) or an exported prediction file (controlled runs).
-7. **Filter.** By A's status (*Match* or *No match*), by true class, and, when B is set, by agreement: *Both right*, *Only A right*, *Only B right*, *Both wrong*. Every card shows its official test ID, so the same image means the same ID in every run.
-8. **Read the summary line.** Accuracy, macro-F1, and the agreement counts are always computed on all 10,000 test images; the gallery itself shows a fixed set of 1,000 (100 per class). Click a card to open that image in the network flow.
-
-**Model & optimizer comparison**
-
-9. **Pick an experiment and a metric.** *Full split* or *Small subset*, then *Test accuracy* or *Macro-F1*. The chart has one row per configuration, a dot per seed and a bar to the mean; the table gives mean ± standard deviation, the number of seeds, and Δ, the paired per-seed difference from the initial CNN (the Adam CNN stopped at epoch 10 on the same split and seeds), in percentage points. *Results per seed* lists every seed.
-10. **Click a row** to open that run: train and validation accuracy and loss per epoch, the chosen checkpoint (dashed line), the shared warm-up (grey area, EfficientNet only), and a few numbers read off the curves. For EfficientNet a second chart overlays the Adam, AdamW, and Nadam fine-tuning branches of the same seed. Per-class accuracy and the confusion matrix follow the selected run; click a class or a cell to open those images in the gallery.
-11. **The historical sweep** (eight optimizers, 10 epochs, one seed) sits below, with a CNN/MLP switch. Click an optimizer to open its curves above.
-
-On a wide screen the sidebar is open by default and the content widens when you close it. On a phone it is closed and opens as a drawer; close it with ×, Escape, a tap outside it, or by choosing a section. An English/Indonesian switch sits at the bottom of the sidebar.
-
-| One image, eight optimizers | Two runs on the same test images |
+| Accuracy of every trained model | EfficientNetV2B0 selected |
 |---|---|
-| ![Compare optimizers](docs/screenshots/en/compare.png) | ![Gallery comparing two runs](docs/screenshots/en/gallery.png) |
+| ![Accuracy and ranking](docs/screenshots/en/accuracy.png) | ![EfficientNetV2B0 selected](docs/screenshots/en/effnet.png) |
 
-| Models and optimizers per seed | Training curves and fine-tuning branches |
+| Network flow (MLP) | Test results compared with another model |
 |---|---|
-| ![Model and optimizer comparison](docs/screenshots/en/comparison.png) | ![Training curves](docs/screenshots/en/curves.png) |
+| ![MLP network flow](docs/screenshots/en/mlp.png) | ![Gallery with a comparison](docs/screenshots/en/gallery.png) |
 
-| Historical optimizer sweep | Fashion-MNIST in the network flow |
+| Model details | Dark mode, phone |
 |---|---|
-| ![Historical sweep](docs/screenshots/en/training.png) | ![Fashion-MNIST flow](docs/screenshots/en/fashion.png) |
-
-| Sidebar closed, dark mode | Phone: the sidebar as a drawer |
-|---|---|
-| ![Dark mode with the sidebar closed](docs/screenshots/en/dark.png) | ![Mobile drawer](docs/screenshots/en/mobile.png) |
+| ![Model details](docs/screenshots/en/detail.png) | ![Phone in dark mode](docs/screenshots/en/mobile.png) |
 
 ## How it works
 
