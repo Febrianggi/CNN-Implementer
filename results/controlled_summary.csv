@@ -1,0 +1,55 @@
+dataset,study,model,optimizer,seeds,acc_mean,acc_sd,macro_f1_mean,macro_f1_sd,per_seed_acc
+cifar10,budget,cnn,adam,3,0.5143,0.0108,0.5123,0.0165,s1=0.5048 s2=0.5122 s3=0.5260
+cifar10,budget,cnn,adam-e10,3,0.4736,0.0315,0.4636,0.032,s1=0.4427 s2=0.5056 s3=0.4724
+cifar10,budget,effnet,adam,1,0.9051,,0.9048,,s1=0.9051
+cifar10,budget,effnet,adamw,1,0.9051,,0.9048,,s1=0.9051
+cifar10,budget,effnet,nadam,1,0.8998,,0.9001,,s1=0.8998
+cifar10,budget,mlp,adam,3,0.374,0.0058,0.3659,0.0045,s1=0.3673 s2=0.3771 s3=0.3775
+cifar10,budget,mlp,adam-e10,3,0.3371,0.022,0.3257,0.025,s1=0.3624 s2=0.3255 s3=0.3233
+cifar10,full,cnn,adam,3,0.6942,0.0119,0.6943,0.0094,s1=0.7008 s2=0.6805 s3=0.7014
+cifar10,full,cnn,adam-e10,3,0.6796,0.0062,0.6797,0.0057,s1=0.6750 s2=0.6772 s3=0.6867
+cifar10,full,mlp,adam,3,0.4921,0.0116,0.4883,0.0087,s1=0.5022 s2=0.4794 s3=0.4947
+cifar10,full,mlp,adam-e10,3,0.4677,0.0056,0.4607,0.0026,s1=0.4694 s2=0.4614 s3=0.4722
+cifar10,historical,cnn,adadelta,1,0.1607,,0.0989,,s42=0.1607
+cifar10,historical,cnn,adagrad,1,0.3193,,0.2925,,s42=0.3193
+cifar10,historical,cnn,adam,1,0.6786,,0.6794,,s42=0.6786
+cifar10,historical,cnn,adamw,1,0.6774,,0.6781,,s42=0.6774
+cifar10,historical,cnn,nadam,1,0.6888,,0.6876,,s42=0.6888
+cifar10,historical,cnn,rmsprop,1,0.6853,,0.6863,,s42=0.6853
+cifar10,historical,cnn,sgd,1,0.4748,,0.4663,,s42=0.4748
+cifar10,historical,cnn,sgd-momentum,1,0.641,,0.6398,,s42=0.6410
+cifar10,historical,mlp,adadelta,1,0.3069,,0.294,,s42=0.3069
+cifar10,historical,mlp,adagrad,1,0.3858,,0.3813,,s42=0.3858
+cifar10,historical,mlp,adam,1,0.4687,,0.4614,,s42=0.4687
+cifar10,historical,mlp,adamw,1,0.482,,0.4772,,s42=0.4820
+cifar10,historical,mlp,nadam,1,0.4817,,0.4739,,s42=0.4817
+cifar10,historical,mlp,rmsprop,1,0.4308,,0.4212,,s42=0.4308
+cifar10,historical,mlp,sgd,1,0.4347,,0.4258,,s42=0.4347
+cifar10,historical,mlp,sgd-momentum,1,0.4399,,0.4339,,s42=0.4399
+fashion,budget,cnn,adam,3,0.8409,0.0045,0.8401,0.0047,s1=0.8453 s2=0.8410 s3=0.8364
+fashion,budget,cnn,adam-e10,3,0.8197,0.0093,0.8147,0.0129,s1=0.8260 s2=0.8241 s3=0.8090
+fashion,budget,effnet,adam,3,0.8882,0.0008,0.8885,0.0011,s1=0.8891 s2=0.8877 s3=0.8879
+fashion,budget,effnet,adamw,3,0.8882,0.0008,0.8885,0.0011,s1=0.8891 s2=0.8877 s3=0.8879
+fashion,budget,effnet,nadam,3,0.8895,0.0014,0.8892,0.0023,s1=0.8911 s2=0.8884 s3=0.8890
+fashion,budget,mlp,adam,3,0.8214,0.0036,0.8197,0.0051,s1=0.8244 s2=0.8224 s3=0.8175
+fashion,budget,mlp,adam-e10,3,0.8201,0.0025,0.8179,0.0046,s1=0.8186 s2=0.8187 s3=0.8229
+fashion,full,cnn,adam,3,0.9115,0.0018,0.911,0.0022,s1=0.9136 s2=0.9108 s3=0.9102
+fashion,full,cnn,adam-e10,3,0.9043,0.0009,0.9031,0.002,s1=0.9052 s2=0.9043 s3=0.9035
+fashion,full,mlp,adam,3,0.8793,0.0043,0.8785,0.0039,s1=0.8816 s2=0.8743 s3=0.8819
+fashion,full,mlp,adam-e10,3,0.8761,0.0046,0.8749,0.0053,s1=0.8726 s2=0.8743 s3=0.8813
+fashion,historical,cnn,adadelta,1,0.5041,,0.4371,,s42=0.5041
+fashion,historical,cnn,adagrad,1,0.7382,,0.7271,,s42=0.7382
+fashion,historical,cnn,adam,1,0.9103,,0.9108,,s42=0.9103
+fashion,historical,cnn,adamw,1,0.9061,,0.9071,,s42=0.9061
+fashion,historical,cnn,nadam,1,0.9096,,0.9095,,s42=0.9096
+fashion,historical,cnn,rmsprop,1,0.9104,,0.9101,,s42=0.9104
+fashion,historical,cnn,sgd,1,0.8163,,0.8113,,s42=0.8163
+fashion,historical,cnn,sgd-momentum,1,0.8997,,0.8985,,s42=0.8997
+fashion,historical,mlp,adadelta,1,0.6655,,0.625,,s42=0.6655
+fashion,historical,mlp,adagrad,1,0.8003,,0.7962,,s42=0.8003
+fashion,historical,mlp,adam,1,0.8729,,0.8723,,s42=0.8729
+fashion,historical,mlp,adamw,1,0.8662,,0.8657,,s42=0.8662
+fashion,historical,mlp,nadam,1,0.8772,,0.8768,,s42=0.8772
+fashion,historical,mlp,rmsprop,1,0.8743,,0.8728,,s42=0.8743
+fashion,historical,mlp,sgd,1,0.8428,,0.8412,,s42=0.8428
+fashion,historical,mlp,sgd-momentum,1,0.8746,,0.8737,,s42=0.8746

@@ -1,0 +1,51 @@
+{
+ "study": "full",
+ "dataset": "fashion",
+ "smoke": false,
+ "n_train": 54000,
+ "n_val": 6000,
+ "n_test": 10000,
+ "split_file": "experiments/splits/fashion.json",
+ "split_sha256": {
+  "train": "4d7925716c76776d5747eb96712cd1dbf05efb875883c9d10b31397d5b9410a6",
+  "val": "23ddfa4a9e37bdd478fbc2ecf34a071891667d48ceda832fbaf21c2505b13c41"
+ },
+ "test_fingerprint": "9a494dc49efeb996f4076c469b31cd058152067b1594ba6ab85dd739fce3775e",
+ "class_order": [
+  "T-shirt/top",
+  "Trouser",
+  "Pullover",
+  "Dress",
+  "Coat",
+  "Sandal",
+  "Shirt",
+  "Sneaker",
+  "Bag",
+  "Ankle boot"
+ ],
+ "tuning_budget": "1 configuration per model (initial config, no search)",
+ "keras": "3.15.1",
+ "model": "mlp",
+ "optimizer": "adam",
+ "seed": 1,
+ "phase": "train",
+ "recipe": {
+  "batch_size": 128,
+  "max_epochs": 40,
+  "patience": 5,
+  "learning_rate": 0.001,
+  "snapshot_epoch": 10,
+  "input": "pixels / 255",
+  "augmentation": "none"
+ },
+ "status": "evaluated",
+ "started": "2026-11-19T10:00:00+00:00",
+ "init_weights_sha256": "958a1c17898c09fedab577f228bda00b014bda9be6386c8fc96db249e6a28fad",
+ "params": 235146,
+ "train_seconds": 44.0,
+ "epochs_run": 25,
+ "best_epoch": 20,
+ "best_val_macro_f1": 0.89122,
+ "snapshot_epoch": 10,
+ "finished": "2026-11-19T10:00:44+00:00"
+}

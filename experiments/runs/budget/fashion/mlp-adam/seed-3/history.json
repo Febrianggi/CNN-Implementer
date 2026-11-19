@@ -1,0 +1,142 @@
+[
+{
+"epoch": 1,
+"phase": "train",
+"seconds": 0.9,
+"loss": 1.14765,
+"accuracy": 0.605,
+"val_loss": 0.68205,
+"val_accuracy": 0.75733,
+"val_macro_f1": 0.74866
+},
+{
+"epoch": 2,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.66067,
+"accuracy": 0.77433,
+"val_loss": 0.65538,
+"val_accuracy": 0.77267,
+"val_macro_f1": 0.74972
+},
+{
+"epoch": 3,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.57153,
+"accuracy": 0.801,
+"val_loss": 0.5934,
+"val_accuracy": 0.79,
+"val_macro_f1": 0.77539
+},
+{
+"epoch": 4,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.49579,
+"accuracy": 0.83167,
+"val_loss": 0.503,
+"val_accuracy": 0.83267,
+"val_macro_f1": 0.8279
+},
+{
+"epoch": 5,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.43827,
+"accuracy": 0.85667,
+"val_loss": 0.49995,
+"val_accuracy": 0.83333,
+"val_macro_f1": 0.82915
+},
+{
+"epoch": 6,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.40512,
+"accuracy": 0.868,
+"val_loss": 0.50184,
+"val_accuracy": 0.832,
+"val_macro_f1": 0.82807
+},
+{
+"epoch": 7,
+"phase": "train",
+"seconds": 0.3,
+"loss": 0.37821,
+"accuracy": 0.87833,
+"val_loss": 0.48532,
+"val_accuracy": 0.83533,
+"val_macro_f1": 0.83243
+},
+{
+"epoch": 8,
+"phase": "train",
+"seconds": 0.3,
+"loss": 0.35541,
+"accuracy": 0.88333,
+"val_loss": 0.4873,
+"val_accuracy": 0.84267,
+"val_macro_f1": 0.84044
+},
+{
+"epoch": 9,
+"phase": "train",
+"seconds": 0.3,
+"loss": 0.32931,
+"accuracy": 0.88967,
+"val_loss": 0.47637,
+"val_accuracy": 0.85,
+"val_macro_f1": 0.84906
+},
+{
+"epoch": 10,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.30809,
+"accuracy": 0.897,
+"val_loss": 0.47133,
+"val_accuracy": 0.84867,
+"val_macro_f1": 0.84795
+},
+{
+"epoch": 11,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.28676,
+"accuracy": 0.90267,
+"val_loss": 0.47377,
+"val_accuracy": 0.84533,
+"val_macro_f1": 0.84433
+},
+{
+"epoch": 12,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.26992,
+"accuracy": 0.91333,
+"val_loss": 0.47163,
+"val_accuracy": 0.84533,
+"val_macro_f1": 0.84373
+},
+{
+"epoch": 13,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.25509,
+"accuracy": 0.916,
+"val_loss": 0.49375,
+"val_accuracy": 0.838,
+"val_macro_f1": 0.83756
+},
+{
+"epoch": 14,
+"phase": "train",
+"seconds": 0.2,
+"loss": 0.23943,
+"accuracy": 0.92333,
+"val_loss": 0.52156,
+"val_accuracy": 0.83667,
+"val_macro_f1": 0.83414
+}
+]

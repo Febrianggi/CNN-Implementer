@@ -1,0 +1,22 @@
+[
+{
+"epoch": 1,
+"phase": "warmup",
+"seconds": 38.1,
+"loss": 0.95604,
+"accuracy": 0.70233,
+"val_loss": 0.53919,
+"val_accuracy": 0.83467,
+"val_macro_f1": 0.835
+},
+{
+"epoch": 2,
+"phase": "warmup",
+"seconds": 36.7,
+"loss": 0.52974,
+"accuracy": 0.82067,
+"val_loss": 0.44526,
+"val_accuracy": 0.84733,
+"val_macro_f1": 0.84719
+}
+]

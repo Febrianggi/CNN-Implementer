@@ -1,0 +1,70 @@
+{
+ "study": "budget",
+ "dataset": "fashion",
+ "smoke": false,
+ "n_train": 3000,
+ "n_val": 1500,
+ "n_test": 10000,
+ "split_file": "experiments/splits/fashion.json",
+ "split_sha256": {
+  "train": "35ed16ad35dbc2cd1fe4a4da4259d7a126df00abd3eb4496257b21e51d721628",
+  "val": "aa7f554bd01c530d404aad361de41fc12180ce657186bd074fc92dbef529294b"
+ },
+ "test_fingerprint": "9a494dc49efeb996f4076c469b31cd058152067b1594ba6ab85dd739fce3775e",
+ "class_order": [
+  "T-shirt/top",
+  "Trouser",
+  "Pullover",
+  "Dress",
+  "Coat",
+  "Sandal",
+  "Shirt",
+  "Sneaker",
+  "Bag",
+  "Ankle boot"
+ ],
+ "tuning_budget": "1 configuration per model (initial config, no search)",
+ "keras": "3.15.1",
+ "model": "effnet",
+ "optimizer": "warmup",
+ "seed": 1,
+ "phase": "warmup",
+ "recipe": {
+  "batch_size": 16,
+  "warm_epochs": 2,
+  "warm_lr": 0.001,
+  "fine_epochs": 23,
+  "learning_rate": 6e-05,
+  "weight_decay": 1e-05,
+  "dropout": 0.4,
+  "rotation": 0.03,
+  "horizontal_flip": true,
+  "patience": 5,
+  "input_size": 96,
+  "resize": "bilinear, inside the model",
+  "channels": "Fashion-MNIST grey repeated to 3 channels",
+  "backbone_input": "float pixels in [0, 255]; keras include_preprocessing does /255 and ImageNet mean/std",
+  "pretraining": {
+   "weights": "imagenet (file)",
+   "file": "efficientnetv2-b0_notop.port-v1.0.h5",
+   "sha256": "81252c58b42b8ba9aef3d3c87ccc1629570d9d5f6d9a72ddfe31371217f9b3ac"
+  },
+  "batchnorm": "frozen statistics (backbone BatchNorm and stochastic-depth Dropout pinned to inference mode; gamma/beta train)",
+  "loss": "sparse_categorical_crossentropy",
+  "class_weight": "none (classes are balanced)"
+ },
+ "status": "trained",
+ "started": "2026-11-19T08:31:32+00:00",
+ "backbone_input_range": [
+  0.0,
+  255.0
+ ],
+ "init_weights_sha256": "027be57b5edd7b8d7e670255e4ddfebc0cbcb590b046be95c4e463bc5c75546c",
+ "params": 5932122,
+ "trainable_params": 12810,
+ "train_seconds": 87.1,
+ "epochs_run": 2,
+ "warmup_weights_sha256": "3402273a02df5b1c6ae2f73f698809275e6ae8ad516a922f78e50dc80d04cebf",
+ "warmup_file_sha256": "7a71b91b358de5594452feb54bb99cdf75e8da0420bda9ab2920fd6a431807d2",
+ "finished": "2026-11-19T08:33:00+00:00"
+}

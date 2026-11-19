@@ -1,0 +1,142 @@
+[
+{
+"epoch": 1,
+"phase": "warmup",
+"seconds": 33.2,
+"loss": 0.97883,
+"accuracy": 0.68567,
+"val_loss": 0.53597,
+"val_accuracy": 0.82533,
+"val_macro_f1": 0.82134
+},
+{
+"epoch": 2,
+"phase": "warmup",
+"seconds": 24.6,
+"loss": 0.51298,
+"accuracy": 0.82733,
+"val_loss": 0.44753,
+"val_accuracy": 0.84867,
+"val_macro_f1": 0.84665
+},
+{
+"epoch": 3,
+"phase": "finetune",
+"seconds": 76.6,
+"loss": 0.41499,
+"accuracy": 0.85467,
+"val_loss": 0.32968,
+"val_accuracy": 0.88333,
+"val_macro_f1": 0.88182
+},
+{
+"epoch": 4,
+"phase": "finetune",
+"seconds": 49.9,
+"loss": 0.28474,
+"accuracy": 0.902,
+"val_loss": 0.28337,
+"val_accuracy": 0.898,
+"val_macro_f1": 0.89774
+},
+{
+"epoch": 5,
+"phase": "finetune",
+"seconds": 56.8,
+"loss": 0.19957,
+"accuracy": 0.92667,
+"val_loss": 0.29053,
+"val_accuracy": 0.89333,
+"val_macro_f1": 0.89199
+},
+{
+"epoch": 6,
+"phase": "finetune",
+"seconds": 61.0,
+"loss": 0.14283,
+"accuracy": 0.94767,
+"val_loss": 0.30706,
+"val_accuracy": 0.90067,
+"val_macro_f1": 0.90055
+},
+{
+"epoch": 7,
+"phase": "finetune",
+"seconds": 78.7,
+"loss": 0.11039,
+"accuracy": 0.96067,
+"val_loss": 0.32723,
+"val_accuracy": 0.89867,
+"val_macro_f1": 0.89798
+},
+{
+"epoch": 8,
+"phase": "finetune",
+"seconds": 82.6,
+"loss": 0.0733,
+"accuracy": 0.976,
+"val_loss": 0.36088,
+"val_accuracy": 0.896,
+"val_macro_f1": 0.89577
+},
+{
+"epoch": 9,
+"phase": "finetune",
+"seconds": 79.6,
+"loss": 0.07713,
+"accuracy": 0.97567,
+"val_loss": 0.33085,
+"val_accuracy": 0.90667,
+"val_macro_f1": 0.90664
+},
+{
+"epoch": 10,
+"phase": "finetune",
+"seconds": 75.7,
+"loss": 0.05203,
+"accuracy": 0.98167,
+"val_loss": 0.41325,
+"val_accuracy": 0.89,
+"val_macro_f1": 0.89061
+},
+{
+"epoch": 11,
+"phase": "finetune",
+"seconds": 56.3,
+"loss": 0.04265,
+"accuracy": 0.98567,
+"val_loss": 0.39971,
+"val_accuracy": 0.89867,
+"val_macro_f1": 0.89881
+},
+{
+"epoch": 12,
+"phase": "finetune",
+"seconds": 54.2,
+"loss": 0.02891,
+"accuracy": 0.99067,
+"val_loss": 0.44043,
+"val_accuracy": 0.894,
+"val_macro_f1": 0.89279
+},
+{
+"epoch": 13,
+"phase": "finetune",
+"seconds": 78.6,
+"loss": 0.01606,
+"accuracy": 0.995,
+"val_loss": 0.48796,
+"val_accuracy": 0.89733,
+"val_macro_f1": 0.89718
+},
+{
+"epoch": 14,
+"phase": "finetune",
+"seconds": 52.5,
+"loss": 0.0373,
+"accuracy": 0.98733,
+"val_loss": 0.47317,
+"val_accuracy": 0.896,
+"val_macro_f1": 0.89542
+}
+]

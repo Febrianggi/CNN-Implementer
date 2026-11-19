@@ -222,14 +222,6 @@ tr.grp td{color:var(--muted);font-size:13px;padding-top:14px;text-align:left}
 @media (max-width:1100px){.span-7,.span-5,.span-6{grid-column:span 12}}
 @media (max-width:860px){
   .app{grid-template-columns:minmax(0,1fr)}
-  .rail{min-width:0;position:sticky;top:0;z-index:5;height:auto;flex-direction:row;align-items:center;padding:10px 14px;gap:10px}
-  .brand span,.brand b{display:none}
-  .nav{flex-direction:row;gap:2px;overflow-x:auto;flex:1}
-  .nav a{padding:8px 10px;white-space:nowrap;font-size:14px}
-  .nav svg{display:none}
-  .rail-foot{margin:0;flex-direction:row}
-  .rail-foot p{display:none}
-  .theme-btn span{display:none}
   main{padding:20px 16px 48px;gap:32px}
   .top{grid-template-columns:1fr}
   .top h1{font-size:24px}
@@ -324,43 +316,83 @@ tr.grp.sel td{color:var(--accent);font-weight:600}
 .brand{position:relative}
 .brand-text{min-width:0}
 [hidden]{display:none!important}
-.rail-toggle .chev{transition:transform .2s;transform-origin:11.5px 9px}
-.app{transition:grid-template-columns .2s ease}
-@media (min-width:861px){
-.app.rail-collapsed{grid-template-columns:76px minmax(0,1fr)}
-.rail-collapsed .rail{padding:20px 12px;align-items:center}
-.rail-collapsed .brand{flex-direction:column;padding:0;gap:10px}
-.rail-collapsed .brand-text,.rail-collapsed .rail-ds,.rail-collapsed .rail-foot p{display:none}
-.rail-collapsed .rail-toggle .chev{transform:scaleX(-1)}
-.rail-collapsed .nav a{justify-content:center;padding:10px}
-.rail-collapsed .nav a,.rail-collapsed .theme-btn{width:52px}
-.rail-collapsed .theme-btn{justify-content:center;padding:10px 0}
-.rail-collapsed .lbl,.rail-collapsed #themeLbl,.rail-collapsed #railLbl,.rail-collapsed .lang-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.rail-collapsed .lang-btn{flex-direction:column;gap:2px;font-size:11px}
-.rail-collapsed .lang-short{display:inline}
-.rail-collapsed .rail-foot{align-items:center}
-}
-.flow.mlp{grid-template-columns:repeat(5,auto);min-width:860px}
+/* header: menu (left) and theme (right) stay reachable whatever the sidebar does */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 32px;background:var(--canvas);border-bottom:1px solid var(--line)}
+.topbar-title{font-weight:600;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar-title small{font-weight:400;color:var(--muted);margin-left:8px}
+.menu-btn,.theme-toggle{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-tile);min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.menu-btn{width:44px;justify-content:center}
+.theme-toggle{padding:0 12px;font-weight:500}
+.menu-btn:hover,.theme-toggle:hover{border-color:var(--accent)}
+.theme-toggle[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.theme-toggle .sun{display:none}.theme-toggle[aria-pressed="true"] .sun{display:block}.theme-toggle[aria-pressed="true"] .moon{display:none}
+.rail-close{display:none;background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--rail-ink);border-radius:var(--r-tile);width:44px;height:44px;place-items:center;cursor:pointer;margin-left:auto;flex:none}
+.rail-close:hover{background:rgba(255,255,255,.1)}
+.scrim{position:fixed;inset:0;background:rgba(5,10,20,.5);z-index:40}
+.app.rail-closed{grid-template-columns:minmax(0,1fr)}
+.app.rail-closed .rail{display:none}
+.main-col{min-width:0;display:flex;flex-direction:column}
+main section{scroll-margin-top:76px}
+.sid{font-size:11px;color:var(--muted)}
+#cfgTable td,#seedTable td{white-space:nowrap}
+.where{font-size:12px;color:var(--muted)}
+.runpick{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;align-items:center}
+.runpick select{max-width:100%;width:min(560px,100%)}
+.fitstats{display:flex;flex-wrap:wrap;gap:12px 28px;margin-top:10px}
+.fitstats div{font-size:13px;color:var(--muted)}
+.fitstats b{display:block;font-size:15px;color:var(--ink);font-weight:600}
+.seg button:disabled{opacity:.55;cursor:not-allowed}
+.dots{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.drow{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr) 120px;gap:14px;align-items:center;min-height:30px;font-size:13px}
+.drow .dl{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drow.sel .dl{font-weight:700;color:var(--accent)}
+.drow .dt{position:relative;height:18px;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 25%)}
+.drow .dt i{position:absolute;left:0;top:6px;height:6px;border-radius:3px;background:var(--link)}
+.drow.sel .dt i{background:var(--accent);opacity:.5}
+.drow .dt b{position:absolute;top:3px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--muted);border:2px solid var(--surface)}
+.drow.sel .dt b{background:var(--accent)}
+.drow .nr{font-size:12px;color:var(--muted);padding-left:6px;line-height:18px}
+.drow .dn{font-weight:600}
+.drow .dn small{font-weight:400;color:var(--muted);margin-left:4px}
+.drow.axis .dt{background:none;height:16px}
+.drow.axis em{position:absolute;transform:translateX(-50%);font-style:normal;font-size:11px;color:var(--muted)}
+.drow.axis em:first-child{transform:none}.drow.axis em:last-child{transform:translateX(-100%)}
+.sub-head{margin:28px 0 12px}
+.sub-head h3{font-size:19px}
+.sub-head p{color:var(--muted);font-size:14px;margin-top:4px;max-width:72ch}
 tr.sel th{color:var(--accent)}
 .span-4{grid-column:span 4}.span-8{grid-column:span 8}
 @media (max-width:1100px){.span-4,.span-8{grid-column:span 12}.optbox{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){.app,.rail-toggle .chev{transition:none}}
-@media (max-width:860px){.rail-ds,.rail-toggle{display:none}.dsbtn{min-width:0;flex:1}.lang-btn span{display:none}.lang-short{display:inline}.curves2{grid-template-columns:1fr}.optbtn{min-width:0}}
+@media (max-width:860px){
+  .dsbtn{min-width:0;flex:1}.curves2{grid-template-columns:1fr}.optbtn{min-width:0}
+  .topbar{padding:8px 16px}
+  .topbar-title small{display:none}
+  .runpick{grid-template-columns:1fr}
+  .rail-close{display:grid}
+  .drow{grid-template-columns:minmax(0,1fr) 92px;gap:2px 10px}
+  .drow .dl{grid-column:1/-1;text-align:left}
+  .drow.axis .dl{display:none}
+  .app .rail{position:fixed;inset:0 auto 0 0;z-index:50;width:min(300px,86vw);height:100dvh;overflow-y:auto;transform:translateX(-105%);transition:transform .2s ease;visibility:hidden}
+  .app.drawer-open .rail{transform:none;visibility:visible}
+}
+@media (max-width:860px) and (prefers-reduced-motion:reduce){.app .rail{transition:none}}
+@media (max-width:480px){.theme-toggle{width:44px;padding:0;justify-content:center}.theme-toggle span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="rail">
+  <aside class="rail" id="sidebar" aria-label="Side menu">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">
         <svg width="20" height="20" viewBox="0 0 20 20"><rect x="1" y="1" width="8" height="8" rx="1.5" fill="#fff"/><rect x="11" y="1" width="8" height="8" rx="1.5" fill="#fff" opacity=".6"/><rect x="1" y="11" width="8" height="8" rx="1.5" fill="#fff" opacity=".6"/><rect x="11" y="11" width="8" height="8" rx="1.5" fill="#fff" opacity=".3"/></svg>
       </div>
       <div class="brand-text"><b>CNN Explorer</b><span>Image Data Analysis</span></div>
+      <button class="rail-close" id="railClose" type="button" aria-label="Close the side menu" title="Close the side menu"><svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
     </div>
     <nav class="nav" id="railNav" aria-label="Page sections">
       <a href="#alur" class="on"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="5" width="4" height="8" rx="1"/><rect x="7" y="3" width="4" height="12" rx="1"/><rect x="12.5" y="6.5" width="4" height="5" rx="1"/></svg><span class="lbl">Network flow</span></a>
       <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg><span class="lbl">Test results</span></a>
-      <a href="#training"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 15.5h15M3 12l4-4 3 3 5-6"/></svg><span class="lbl">Optimizer comparison</span></a>
+      <a href="#training"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 15.5h15M3 12l4-4 3 3 5-6"/></svg><span class="lbl">Model &amp; optimizer comparison</span></a>
     </nav>
     <div class="rail-ds">
       <p id="lblDsRail">Dataset</p>
@@ -370,19 +402,17 @@ tr.sel th{color:var(--accent)}
       </div>
     </div>
     <div class="rail-foot">
-      <button class="theme-btn rail-toggle" id="railBtn" type="button" aria-expanded="true" aria-controls="railNav" title="Collapse sidebar">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="2.5" width="14" height="13" rx="2"/><path d="M7 2.5v13"/><path class="chev" d="M12.5 7l-2 2 2 2"/></svg>
-        <span id="railLbl">Collapse sidebar</span>
-      </button>
-      <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 10.5A6.5 6.5 0 0 1 7.5 3a6.5 6.5 0 1 0 7.5 7.5Z"/></svg>
-        <span id="themeLbl">Dark theme</span>
-      </button>
       <a class="theme-btn lang-btn" href="index.id.html" lang="id" hreflang="id"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="9" r="7.2"/><path d="M1.8 9h14.4M9 1.8c2 2.2 2.9 4.6 2.9 7.2S11 14 9 16.2C7 14 6.1 11.6 6.1 9S7 4 9 1.8Z"/></svg><span>Bahasa Indonesia</span><b class="lang-short">ID</b></a>
       <p>The model runs in your browser. Images you upload are not sent anywhere.</p>
     </div>
   </aside>
 
+  <div class="main-col">
+  <header class="topbar" id="topbar">
+    <button class="menu-btn" id="menuBtn" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Close the side menu" title="Close the side menu"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 4.5h13M2.5 9h13M2.5 13.5h13"/></svg></button>
+    <span class="topbar-title">CNN Explorer<small>MLP, CNN, EfficientNetV2B0</small></span>
+    <button class="theme-toggle" id="themeBtn" type="button" aria-pressed="false"><svg class="moon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 10.5A6.5 6.5 0 0 1 7.5 3a6.5 6.5 0 1 0 7.5 7.5Z"/></svg><svg class="sun" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.7 3.7l1.4 1.4M12.9 12.9l1.4 1.4M3.7 14.3l1.4-1.4M12.9 5.1l1.4-1.4"/></svg><span id="themeLbl">Dark mode</span></button>
+  </header>
   <main id="main">
     <div id="boot" class="loading" role="status">Loading test data and training results…</div>
 
@@ -403,13 +433,8 @@ tr.sel th{color:var(--accent)}
             <button type="button" class="optbtn dsbtn" data-ds="fashion" aria-pressed="false"><span>Fashion-MNIST</span><small>28 × 28 grayscale, 10 clothing items</small></button>
           </div>
           <p class="optmsg" id="dsMsg" aria-live="polite"></p>
-          <h2 id="lblModel" style="margin-top:10px">Model</h2>
-          <div class="dslist" role="group" aria-labelledby="lblModel">
-            <button type="button" class="optbtn dsbtn" data-model="cnn" aria-pressed="true"><span>CNN</span><small>2 convolution blocks + dense</small></button>
-            <button type="button" class="optbtn dsbtn" data-model="mlp" aria-pressed="false"><span>MLP</span><small>3 dense layers, no convolution</small></button>
-          </div>
-          <p class="optmsg" id="mdMsg" aria-live="polite"></p>
-          <h2 id="lblOpt" style="margin-top:10px">Optimizer</h2>
+          <h2 id="lblOpt" style="margin-top:10px">CNN optimizer</h2>
+          <p class="where" style="margin-top:4px">This flow always runs the historical CNN (10 epochs, seed 42) in your browser. Choose other models in the results and comparison sections.</p>
           <div class="optlist" role="group" aria-labelledby="lblOpt" id="optList"></div>
           <p class="optmsg" id="optMsg" aria-live="polite"></p>
         </div>
@@ -453,13 +478,19 @@ tr.sel th{color:var(--accent)}
       <div class="sec-head">
         <div>
           <h2>Results on test data</h2>
-          <p>A fixed set of 1,000 test images (100 per class, chosen at random). The match status follows the selected optimizer, so you can watch the same image change status when you switch optimizers.</p>
+          <p>Choose model A, and optionally model B, to see both predictions on the same test images. The gallery uses a fixed set of 1,000 test images (100 per class, chosen at random, with official test IDs); accuracy and macro-F1 are always computed on all 10,000 test images.</p>
         </div>
       </div>
       <div class="panel">
         <div class="controls">
+          <div class="runpick">
+            <label class="lbl" for="selA">Model A</label>
+            <div><select id="selA"></select> <span class="where" id="whereA"></span></div>
+            <label class="lbl" for="selB">Model B</label>
+            <div><select id="selB"></select> <span class="where" id="whereB"></span></div>
+          </div>
           <div class="ctrl-row">
-            <span class="lbl" id="lblStatus">Status</span>
+            <span class="lbl" id="lblStatus">A status</span>
             <div class="seg" role="group" aria-labelledby="lblStatus" id="fStatus">
               <button type="button" data-v="all" aria-pressed="true">All</button>
               <button type="button" data-v="ok" aria-pressed="false">Match</button>
@@ -476,11 +507,14 @@ tr.sel th{color:var(--accent)}
             <span class="lbl" id="lblKelas">True class</span>
             <div class="chips" role="group" aria-labelledby="lblKelas" id="fClass"></div>
           </div>
-          <div class="ctrl-row">
-            <label class="lbl" for="fCmp">Compare with</label>
-            <div class="cmp-row">
-              <select id="fCmp"><option value="">No comparison</option></select>
-              <label class="check" id="diffWrap" aria-disabled="true"><input type="checkbox" id="fDiff" disabled> Only images whose status differs</label>
+          <div class="ctrl-row" id="agreeRow" hidden>
+            <span class="lbl" id="lblAgree">A and B</span>
+            <div class="seg" role="group" aria-labelledby="lblAgree" id="fAgree">
+              <button type="button" data-v="all" aria-pressed="true">All</button>
+              <button type="button" data-v="both" aria-pressed="false">Both right</button>
+              <button type="button" data-v="onlyA" aria-pressed="false">Only A right</button>
+              <button type="button" data-v="onlyB" aria-pressed="false">Only B right</button>
+              <button type="button" data-v="none" aria-pressed="false">Both wrong</button>
             </div>
           </div>
         </div>
@@ -493,9 +527,66 @@ tr.sel th{color:var(--accent)}
     <section id="training" hidden>
       <div class="sec-head">
         <div>
-          <h2>Optimizer comparison</h2>
-          <p>Each optimizer trained the selected model (MLP or CNN) from the same initial weights (seed 42) for 10 epochs, batch size 128, with a 10% validation split. Click an optimizer name in the table, chart, or legend to select it.</p>
+          <h2>Model &amp; optimizer comparison</h2>
+          <p>MLP, CNN, and EfficientNetV2B0 from the controlled experiments, then the historical optimizer sweep. Every number names the model, optimizer, seed, and data budget that produced it.</p>
         </div>
+      </div>
+      <div class="train-grid">
+        <div class="panel span-12">
+          <div class="c-head" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+            <h3>Models and optimizers, per seed</h3>
+            <div class="cmp-row">
+              <div class="seg" role="group" aria-label="Experiment" id="studySeg">
+                <button type="button" data-v="full" aria-pressed="true">Full split</button>
+                <button type="button" data-v="budget" aria-pressed="false">Small subset</button>
+              </div>
+              <div class="seg" role="group" aria-label="Metric" id="metricSeg">
+                <button type="button" data-v="acc" aria-pressed="true">Test accuracy</button>
+                <button type="button" data-v="f1" aria-pressed="false">Macro-F1</button>
+              </div>
+            </div>
+          </div>
+          <p class="note" id="cfgNote"></p>
+          <div class="cfgchart" id="cfgChart"></div>
+          <div style="overflow-x:auto;margin-top:12px"><table id="cfgTable"></table></div>
+          <p class="note" style="margin-top:10px">Click a row to see that run's curves, per-class accuracy, and confusion matrix. Δ is the paired per-seed difference (mean ± SD) in percentage points.</p>
+          <details style="margin-top:8px"><summary style="cursor:pointer;font-size:14px">Results per seed</summary><div style="overflow-x:auto"><table id="seedTable"></table></div></details>
+        </div>
+        <div class="panel span-12">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+            <h3 id="runTitle">Training curves</h3>
+            <div class="seg" role="group" aria-label="Seed" id="seedSeg"></div>
+          </div>
+          <p class="note">Training accuracy is measured during the epoch with dropout and augmentation on; validation is measured at the end of the epoch. The dashed vertical line marks the checkpoint used for testing. The grey area is the warm-up.</p>
+          <div class="curves2" id="runCurves"></div>
+          <div class="fitstats" id="fitStats"></div>
+          <div id="branchWrap" hidden style="margin-top:18px">
+            <h3 id="branchTitle"></h3>
+            <p class="note" id="branchNote"></p>
+            <div class="curves2" style="grid-template-columns:1fr" id="branchCurves"></div>
+            <div class="okey" id="branchKey" role="group" aria-label="Fine-tuning branches"></div>
+          </div>
+        </div>
+        <div class="panel span-5">
+          <h3 id="pclsTitle">Per-class accuracy</h3>
+          <p class="note">Out of 1,000 test images per class. Click a class to open the gallery with this run as model A.</p>
+          <div class="pcls" id="pcls"></div>
+        </div>
+        <div class="panel span-7">
+          <h3 id="cmTitle">Confusion matrix</h3>
+          <p class="note">Rows are true classes, columns are predicted classes. Click an off-diagonal cell to see examples.</p>
+          <div class="cm-scroll" id="cm"></div>
+        </div>
+      </div>
+      <div class="sub-head">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+          <h3 id="histTitle">Historical optimizer sweep</h3>
+          <div class="seg" role="group" aria-label="Historical model" id="hmSeg">
+            <button type="button" data-v="cnn" aria-pressed="true">CNN</button>
+            <button type="button" data-v="mlp" aria-pressed="false">MLP</button>
+          </div>
+        </div>
+        <p>The first experiment: eight optimizers, the same initial weights (seed 42), 10 epochs, batch 128, the last 10% held out for validation, no checkpoint selection. One seed, so small gaps between optimizers cannot be told apart from random variation. Click an optimizer to open its curves above.</p>
       </div>
       <div class="train-grid">
         <div class="panel span-8">
@@ -514,30 +605,17 @@ tr.sel th{color:var(--accent)}
           <div class="curves2" id="curves"></div>
           <div class="okey" id="okey" role="group" aria-label="Select an optimizer in the chart"></div>
         </div>
-        <div class="panel span-6">
-          <h3 id="trainTitle">Train vs validation</h3>
-          <p class="note">Dashed lines show validation. A widening gap signals overfitting.</p>
-          <div class="curves" id="tv"></div>
-        </div>
-        <div class="panel span-6">
-          <h3 id="pclsTitle">Per-class accuracy</h3>
-          <p class="note">Out of 1,000 test images per class. Click a class to filter the gallery.</p>
-          <div class="pcls" id="pcls"></div>
-        </div>
-        <div class="panel span-7">
-          <h3 id="cmTitle">Confusion matrix</h3>
-          <p class="note">Rows are true classes, columns are predicted classes. Click an off-diagonal cell to see examples.</p>
-          <div class="cm-scroll" id="cm"></div>
-        </div>
-        <div class="panel span-5">
+        <div class="panel span-12">
           <h3>MLP vs CNN</h3>
           <p class="note" id="mvcNote"></p>
-          <table id="cmpTable"></table>
+          <table id="cmpTable" style="max-width:720px"></table>
         </div>
       </div>
-      <p class="prov" style="margin-top:16px">The models were trained on CPU (seed 42). CIFAR-10 uses the JPG-file copy and Fashion-MNIST uses the official files from the Zalando Research repository, so numbers may differ slightly from other runs. Weights are stored in 16-bit precision to keep them light; every number on this page is recomputed from those 16-bit weights.</p>
+      <p class="prov" style="margin-top:16px">The historical sweep was trained on a CPU (seed 42); the historical CIFAR-10 runs used a JPG copy of the files, and their predictions are mapped to official test IDs. The controlled experiments use the official CIFAR-10 and Fashion-MNIST files. The CNN in the network flow uses 16-bit weights; the historical sweep numbers are recomputed from those 16-bit weights, while controlled runs are evaluated from 32-bit checkpoints in Python.</p>
     </section>
   </main>
+  </div>
+  <div class="scrim" id="scrim" hidden></div>
 </div>
 
 <script>
@@ -548,15 +626,18 @@ const tx=(o,k)=>o[LANG==="en"?k+"_en":k];
 let D, atlasCtx, CLS, SUMMARY=null;
 const DSC = {};               // dataset key -> {D, atlasCtx}
 const WCACHE = {};            // "<dataset>/<model>-<slug>" -> weights
-const wk = (slug,ds=S.ds,model=S.model)=>ds+"/"+model+"-"+slug;
-const S = {ds:"cifar10", model:"cnn", inv:true, opt:"adam", cur:null, chMode:"top", sel:null, status:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmp:"", diff:false, cmpAll:false};
+const wk = (slug,ds=S.ds,model="cnn")=>ds+"/"+model+"-"+slug;
+/* Network Flow always runs the historical CNN in the browser (S.opt picks its optimizer).
+   Test Results compare two runs (S.runA, S.runB); the comparison section has its own selection (S.detail). */
+const S = {ds:"cifar10", inv:true, opt:"adam", cur:null, chMode:"top", sel:null, status:"all", agree:"all", cls:-1, pred:null, sort:"hi", shown:24, uploads:[], cmpAll:false,
+  runA:"historical__cnn-adam__s42", runB:"", study:"full", metric:"acc", detail:"", hm:"cnn", hopt:"adam"};
 const $ = s=>document.querySelector(s);
 const nf = (v,d=0)=>v.toLocaleString(LOCALE,{minimumFractionDigits:d,maximumFractionDigits:d});
 const pct = (v,d=1)=>nf(v*100,d)+"%";
 const css = n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const hex = h=>{h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));};
-const OPTS = ()=>D.models[S.model].opts;
-const MODEL = ()=>S.model.toUpperCase();
+const OPTS = ()=>D.models.cnn.opts;
+const MODEL = ()=>"CNN";
 const O = slug=>{const o=OPTS().find(o=>o.slug===slug);return o&&{...D.meta[slug],...o};};
 const optOf = ()=>O(S.opt);
 
@@ -565,11 +646,11 @@ function f16(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.l
   for(let i=0;i<h.length;i++){const x=h[i],sg=x&0x8000?-1:1,e=(x>>10)&31,f=x&1023;
     o[i]=e===0?sg*f*Math.pow(2,-24):e===31?(f?NaN:sg*Infinity):sg*(1+f/1024)*Math.pow(2,e-15);}
   return o;}
-async function loadW(slug,ds=S.ds,model=S.model){
+async function loadW(slug,ds=S.ds,model="cnn"){
   const key=wk(slug,ds,model);if(WCACHE[key])return WCACHE[key];
   const r=await fetch(`data/${ds}/w-${model}-${slug}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json();
   const L=j.layers.map(l=>({kind:l.kind,w:f16(l.w),b:f16(l.b),shape:l.shape}));
-  const W=model==="cnn"?{model,conv1:L[0],conv2:L[1],dense:L[2],output:L[3]}:{model,h1:L[0],h2:L[1],output:L[2]};
+  const W={model,conv1:L[0],conv2:L[1],dense:L[2],output:L[3]};
   W.ref=j.ref;WCACHE[key]=W;return W;}
 async function loadDS(ds){
   if(DSC[ds])return DSC[ds];
@@ -598,10 +679,8 @@ function dense(x,L,relu){const [I,O2]=L.shape,y=new Float32Array(O2);for(let o=0
   if(relu)for(let o=0;o<O2;o++)if(y[o]<0)y[o]=0;return y;}
 function forward(px,W,full=true){
   const g=G(),inp={d:px,h:g.H,w:g.H,c:g.C};let z,out;
-  if(W.model==="mlp"){   // Flatten keeps the channels-last order, so the pixel array is already the flattened vector
-    const h1=dense(px,W.h1,true),h2=dense(h1,W.h2,true);z=dense(h2,W.output,false);out={model:"mlp",inp,flat:px,h1,h2};}
-  else{const c1=conv(px,g.H,g.H,g.C,W.conv1),p1=pool(c1),c2=conv(p1.d,p1.h,p1.w,32,W.conv2),p2=pool(c2);
-    const h=dense(p2.d,W.dense,true);z=dense(h,W.output,false);out={model:"cnn",inp,c1,p1,c2,p2,h};}
+  const c1=conv(px,g.H,g.H,g.C,W.conv1),p1=pool(c1),c2=conv(p1.d,p1.h,p1.w,32,W.conv2),p2=pool(c2);
+  const h=dense(p2.d,W.dense,true);z=dense(h,W.output,false);out={model:"cnn",inp,c1,p1,c2,p2,h};
   const m=Math.max(...z),e=z.map(v=>Math.exp(v-m)),s=e.reduce((a,b)=>a+b,0);
   const prob=Array.from(e,v=>v/s);
   return full?{...out,prob}:{prob};}
@@ -650,7 +729,7 @@ let optSeq=0;
 async function setOpt(slug){
   const seq=++optSeq;S.opt=slug;
   document.querySelectorAll("#optList .optbtn").forEach(b=>b.setAttribute("aria-pressed",b.dataset.slug===slug?"true":"false"));
-  renderOptInfo();renderFacts();renderGallery();renderTraining();renderCompare();
+  renderOptInfo();renderFacts();renderCompare();
   const m=$("#optMsg");m.classList.remove("err");
   if(!WCACHE[wk(slug)]){m.textContent=`Loading ${optOf().name} weights…`;$("#flowWrap").classList.add("busy");}
   try{await loadW(slug);}catch(e){if(seq!==optSeq)return;$("#flowWrap").classList.remove("busy");
@@ -660,7 +739,7 @@ async function setOpt(slug){
   if(S.cur){S.cur.res=forward(curPx(),WCACHE[wk(slug)]);if(S.sel)closeDetail();renderFlow();renderCompare();}
 }
 function renderFacts(){const o=optOf();
-  $("#facts").innerHTML=`<div><dt>Parameters ${MODEL()}</dt><dd>${nf(D.models[S.model].params)}</dd></div><div><dt>Test accuracy (${MODEL()} + ${o.name})</dt><dd>${pct(o.acc,2)}</dd></div><div><dt>Test data</dt><dd>10,000 images</dd></div>`;}
+  $("#facts").innerHTML=`<div><dt>Parameters ${MODEL()}</dt><dd>${nf(D.models.cnn.params)}</dd></div><div><dt>Test accuracy (${MODEL()} + ${o.name})</dt><dd>${pct(o.acc,2)}</dd></div><div><dt>Test data</dt><dd>10,000 images</dd></div>`;}
 
 /* ---------- strip ---------- */
 function buildStrip(){const st=$("#strip");st.innerHTML="";
@@ -703,10 +782,9 @@ function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
   return m.sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>x[1]).sort((a,b)=>a-b);}
 function maxOf(t,chs){let m=0;for(const c of chs)for(let i=c;i<t.d.length;i+=t.c)if(t.d[i]>m)m=t.d[i];return m;}
 const dims=t=>`${t.h} × ${t.w} × ${t.c}`;
-function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
-  const cnn=r.model==="cnn";$("#chSeg").hidden=!cnn;fl.classList.toggle("mlp",!cnn);
+function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";const cnn=true;
   const cols=[{key:"inp",t:r.inp,name:"input",sub:dims(r.inp),chs:[...Array(r.inp.c).keys()],gray:true}];
-  if(cnn){const ch1=pickCh(r.c1),ch2=pickCh(r.c2);cols.push(
+  {const ch1=pickCh(r.c1),ch2=pickCh(r.c2);cols.push(
     {key:"c1",t:r.c1,name:"conv1 + ReLU",sub:dims(r.c1),chs:ch1},
     {key:"p1",t:r.p1,name:"max_pool1",sub:dims(r.p1),chs:ch1},
     {key:"c2",t:r.c2,name:"conv2 + ReLU",sub:dims(r.c2),chs:ch2},
@@ -726,17 +804,13 @@ function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerH
       if(col.gray){const t=document.createElement("div");t.className="chan";
         t.style.color=G().C===1?"var(--muted)":(dark?["#FF8A7A","#4ADE80","#6EA0FF"]:["#C0392B","#1E8449","#2563EB"])[c];t.textContent=CHN_CAP()[c];maps.append(t);}});
     el.append(maps);fl.append(el);colEls.push(el);});
-  if(cnn){const de=document.createElement("div");de.className="col dense";
+  {const de=document.createElement("div");de.className="col dense";
   de.innerHTML=`<div class="col-h"><b>dense + ReLU</b><small>128 units</small></div>`;
   const dm=document.createElement("div");dm.className="maps";const db=document.createElement("button");db.type="button";db.className="map";db.dataset.col="dense";
   db.setAttribute("aria-label","Dense, 128 units. Open details");const dc=document.createElement("canvas");
   const dmax=Math.max(...r.h);paint(dc,r.h,8,16,dmax,"ramp");db.append(dc);db.onclick=()=>openDense(dmax);
   db.onmouseenter=db.onfocus=()=>hot(db,true);db.onmouseleave=db.onblur=()=>hot(db,false);
   dm.append(db);de.append(dm);fl.append(de);colEls.push(de);}
-  else{const n=r.flat.length,H=G().H;
-    colEls.push(vecCol(fl,"flat","flatten",`${nf(n)} values`,r.flat,H,n/H,"Flatten. Open details"));
-    colEls.push(vecCol(fl,"h1","dense1 + ReLU","256 units",r.h1,16,16,"Dense1, 256 units. Open details"));
-    colEls.push(vecCol(fl,"h2","dense2 + ReLU","128 units",r.h2,8,16,"Dense2, 128 units. Open details"));}
   const oe=document.createElement("div");oe.className="col";
   oe.innerHTML=`<div class="col-h"><b>output (softmax)</b><small>10 classes</small></div>`;
   const om=document.createElement("div");om.className="out";
@@ -748,14 +822,6 @@ function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerH
   if(S.cur.truth===null)v.innerHTML=`<span class="tab unk">True label unknown</span><strong>Prediction: ${CLS[top]}</strong><span style="color:var(--muted)">confidence ${pct(r.prob[top])}, ${on}</span>`;
   else{const ok=top===S.cur.truth;v.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?"Match":"No match"}</span><strong>Prediction: ${CLS[top]}</strong><span style="color:var(--muted)">true ${CLS[S.cur.truth]}, confidence ${pct(r.prob[top])}, ${on}</span>`;}
   flowState={colEls,cnn};requestAnimationFrame(drawLinks);}
-/* one column holding a single vector (MLP layers, flatten), drawn as a small grid */
-function vecCol(fl,key,name,sub,vals,gw,gh,label){const el=document.createElement("div");el.className="col dense";
-  el.innerHTML=`<div class="col-h"><b>${name}</b><small>${sub}</small></div>`;
-  const m=document.createElement("div");m.className="maps";const b=document.createElement("button");b.type="button";b.className="map";b.dataset.col=key;
-  b.setAttribute("aria-label",label);const cv=document.createElement("canvas");let mx=0;for(const v of vals)if(v>mx)mx=v;
-  paint(cv,vals,gw,gh,mx,key==="flat"?"gray":"ramp");cv.style.width="52px";cv.style.height=Math.round(52*gh/gw)+"px";b.append(cv);
-  b.onclick=()=>openVec(key,mx);b.onmouseenter=b.onfocus=()=>hot(b,true);b.onmouseleave=b.onblur=()=>hot(b,false);
-  m.append(b);el.append(m);fl.append(el);return el;}
 function drawLinks(){if(!flowState)return;const fl=$("#flow"),svg=fl.querySelector("svg.links");if(!svg)return;const fr=fl.getBoundingClientRect();
   svg.innerHTML="";const pts=el=>[...el.querySelectorAll(".maps > .map, .out")].map(m=>{const b=m.getBoundingClientRect();return {el:m,l:b.left-fr.left,r:b.right-fr.left,y:b.top-fr.top+b.height/2};});
   const C=flowState.colEls.map(pts);
@@ -800,33 +866,12 @@ function openDense(mx){const r=S.cur.res,d=$("#detail");d.hidden=false;S.sel={co
    <button class="icon-btn" type="button" id="dClose" aria-label="Close details">${closeSvg}</button></div>
    <div class="stats"><div>Active units (&gt; 0)<b>${act} of 128</b></div><div>Maximum<b>${nf(mx,3)}</b></div></div></div>`;
   paint(d.querySelector("canvas"),r.h,8,16,mx,"ramp");d.querySelector("#dClose").onclick=closeDetail;}
-function openVec(key,mx){const r=S.cur.res,W=WCACHE[wk(S.opt)],d=$("#detail");d.hidden=false;S.sel={col:key};
-  document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.col===key?"true":"false"));
-  const g=G(),n=r.flat.length,vals=key==="flat"?r.flat:key==="h1"?r.h1:r.h2,[gw,gh]=key==="flat"?[g.H,n/g.H]:key==="h1"?[16,16]:[8,16];
-  const act=vals.filter(v=>v>0).length,run=MODEL()+" + "+optOf().name;
-  const T={flat:[`flatten, ${nf(n)} values`,`The ${g.H} × ${g.H} × ${g.C} image is flattened into one vector of ${nf(n)} numbers. From here on, pixel position no longer matters: neighbouring pixels are treated the same as pixels far apart. This is the main difference between an MLP and a CNN.`],
-    h1:[`dense1 + ReLU, 256 units (${run})`,`Each unit receives all ${nf(n)} input values (${nf(n)} × 256 + 256 = ${nf(n*256+256)} parameters, the largest layer in this MLP). Shown as a 16 × 16 grid.`],
-    h2:[`dense2 + ReLU, 128 units (${run})`,`Each unit receives the 256 values from dense1 (256 × 128 + 128 = 32,896 parameters). Shown as an 8 × 16 grid.`]}[key];
-  const big=Math.round(208*gh/gw)>320?[Math.round(320*gw/gh),320]:[208,Math.round(208*gh/gw)];
-  d.innerHTML=`<div class="detail-big"><canvas style="width:${big[0]}px;height:${big[1]}px"></canvas></div><div>
-   <div class="d-head"><div><h3>${T[0]}</h3><p>${T[1]}</p></div>
-   <button class="icon-btn" type="button" id="dClose" aria-label="Close details">${closeSvg}</button></div>
-   <div class="stats">${key==="flat"?"":`<div>Active units (&gt; 0)<b>${act} of ${vals.length}</b></div>`}<div>Maximum<b>${nf(mx,3)}</b></div></div><div id="kwrap"></div></div>`;
-  paint(d.querySelector("canvas"),vals,gw,gh,mx,key==="flat"?"gray":"ramp");
-  if(key==="h1"){let u=0;for(let i=1;i<vals.length;i++)if(vals[i]>vals[u])u=i;
-    const kw=d.querySelector("#kwrap"),C=g.C,H=g.H;let km=0;for(let i=0;i<n;i++)km=Math.max(km,Math.abs(W.h1.w[i*256+u]));
-    kw.innerHTML=`<p style="margin:0 0 6px;font-size:13px">Incoming weights of unit #${u}, the most active unit for this image, arranged back into the image shape. Red is negative, blue is positive: this is the pattern the unit "looks for" across the whole image at once.</p><div class="kernels"></div>`;
-    const kk=kw.querySelector(".kernels");
-    for(let c=0;c<C;c++){const v=new Float32Array(H*H);for(let p=0;p<H*H;p++)v[p]=W.h1.w[(p*C+c)*256+u];
-      const k=document.createElement("div");k.className="kern";const cv=document.createElement("canvas");paintDiv(cv,v,H,H,km);cv.style.width="96px";cv.style.height="96px";
-      const lab=document.createElement("span");lab.textContent=CHN()[c];k.append(cv,lab);kk.append(k);}}
-  d.querySelector("#dClose").onclick=closeDetail;}
 function closeDetail(){$("#detail").hidden=true;S.sel=null;document.querySelectorAll(".map[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed","false"));}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#detail").hidden)closeDetail();});
 
 /* ---------- compare all optimizers for current image ---------- */
 async function loadAll(){const b=$("#cmpBtn");b.disabled=true;b.textContent="Loading weights…";$("#cmpNote").textContent="Loading weights for all eight optimizers…";
-  const ds=S.ds,md=S.model,res=await Promise.allSettled(OPTS().map(o=>loadW(o.slug,ds,md)));if(ds!==S.ds||md!==S.model){b.disabled=false;return;}const fail=res.filter(r=>r.status==="rejected").length;
+  const ds=S.ds,res=await Promise.allSettled(OPTS().map(o=>loadW(o.slug,ds)));if(ds!==S.ds){b.disabled=false;return;}const fail=res.filter(r=>r.status==="rejected").length;
   S.cmpAll=true;b.disabled=false;
   if(fail){b.textContent="Retry loading";$("#cmpNote").textContent=`${fail} optimizer(s) failed to load. Press the button to try again.`;}
   else{b.hidden=true;$("#cmpNote").textContent="Click a card to use that optimizer across the whole dashboard.";}
@@ -843,122 +888,317 @@ function renderCompare(){const box=$("#crows");if(!S.cmpAll||!S.cur){box.innerHT
     b.setAttribute("aria-label",`${o.name}: prediction ${CLS[top]}, confidence ${pct(p[top])}. Use this optimizer`);
     b.onclick=()=>setOpt(o.slug);box.append(b);});}
 
+/* ---------- strings for the run-based sections (the build swaps this block for strings_en.js) ---------- */
+const L={
+  mHist:"Historical", mFull:"Controlled, full split", mBudget:"Controlled, small subset",
+  stShort:{historical:"historical 10 epochs",full:"full split",budget:"small subset"},
+  ft:o=>`fine-tune ${o} (warm-up Adam)`, fixed:(o,e)=>`${o}, stopped at epoch ${e}`, es:o=>`${o}, early stopping`,
+  seed:s=>`seed ${s}`, notRun:"not trained yet", noB:"No comparison",
+  where:{browser:"runs in your browser from 16-bit weights", export:"exported predictions (computed in Python, loaded from a file)"},
+  loadingRuns:"Loading the run list…", runErr:k=>`The artifacts for run ${k} failed to load. No substitute data is shown; choose that run again to retry.`,
+  expErr:"The run list failed to load, so results and model comparisons cannot be shown. Reload the page to try again.",
+  aLine:(lab,acc,f1)=>`<b>A</b>: ${lab}. Test accuracy <b>${acc}</b>, macro-F1 <b>${f1}</b> on 10,000 test images.`,
+  bLine:(lab,acc,f1)=>` <b>B</b>: ${lab}. Test accuracy <b>${acc}</b>, macro-F1 <b>${f1}</b>.`,
+  agreeLine:(a,b,c,d)=>` On the 10,000 test images: both right <b>${a}</b>, only A right <b>${b}</b>, only B right <b>${c}</b>, both wrong <b>${d}</b>.`,
+  classLine:(cls,ok,tot)=>` Class <b>${cls}</b> according to A: ${ok} right out of ${tot}.`,
+  galLine:(n,m)=>` The gallery uses a fixed set of 1,000 test images (100 per class): showing <b>${n}</b> of ${m} that match the filters.`,
+  predOnly:c=>` Only images A predicted as <b>${c}</b>.`, clrPred:"Clear the prediction filter",
+  same:" The comparison is the same run as A, so it is not shown.",
+  empty:"No examples for this combination of filters. Change the status, class, or comparison.",
+  cardA:"A predicted", ok:"Match", bad:"No match", okShort:"Right", badShort:"Wrong",
+  cardLab:(ok,t,p,c)=>`A ${ok?"right":"wrong"}. True ${t}, A predicted ${p}, confidence ${c}`, cardLabB:p=>`. B predicted ${p}`,
+  cardOpen:". Open in the network flow (historical CNN)", more:n=>`Show ${n} more examples`, id:i=>`test ID ${i}`,
+  metAcc:"Test accuracy", metF1:"Macro-F1",
+  cfgHead:["Configuration","Input","Training images","Seeds","Test accuracy","Macro-F1","Δ vs initial CNN","Best epoch / run"],
+  seedsOf:(n,m)=>n===m?`${n}`:`${n} of ${m}`, nRun:"none yet", nr:"not trained yet",
+  cfgNote:{full:"A fixed stratified 90/10 split of the official training set, the same for every model and seed. Checkpoints are chosen on validation macro-F1; the test set is used only for the final evaluation. Initial CNN = the Adam CNN stopped at epoch 10 on the same split and seeds (a paired baseline).",
+    budget:"A fixed stratified subset: 300 training and 150 validation images per class, drawn from the same split. It exists so EfficientNetV2B0 can be trained on a CPU. Full official test set (10,000 images). EfficientNet uses 96 × 96 input, ImageNet weights, and flip + rotation augmentation as in the reference repo; MLP and CNN use the native resolution without augmentation, so this architecture comparison changes more than one factor."},
+  delta:(m,s,n)=>n>1?`${m} ± ${s}`:m, deltaNone:"no matching seeds",
+  chartLab:(st,met)=>`${met} per configuration, ${st}. Dot = one seed, thick line = mean.`,
+  curveT:lab=>`Training curves: ${lab}`, warm:"warm-up", best:e=>`chosen: epoch ${e}`, last:"no checkpoint selection (last epoch used)",
+  trainL:"train", valL:"validation", accT:"Accuracy", lossT:"Loss", epoch:"epoch",
+  seedPick:"Seed", fitGap:"Train − validation at the chosen epoch", fitMin:"Lowest validation loss", fitAfter:(e,n)=>`epoch ${e}, then ${n} more epochs`,
+  fitStop:"Epochs run", fitSel:"Checkpoint", fitSelBest:e=>`epoch ${e} (highest validation macro-F1)`, fitSelLast:e=>`epoch ${e} (last)`, fitSelFixed:e=>`epoch ${e} (fixed)`,
+  points:v=>`${v} points`,
+  identical:n=>`${n.join(" and ")} produced identical curves and weights for this seed: at learning rate 6e-5, a weight decay of 1e-5 shrinks each weight by 6e-10 of its value per step, below float32 precision, so AdamW behaves exactly like Adam.`,
+  branchT:s=>`EfficientNet fine-tuning branches, seed ${s}: validation accuracy`, branchN:"Epochs 1 to 2 are the shared warm-up (Adam 0.001, frozen backbone) from the same checkpoint. Lines stop at different epochs because of early stopping.",
+  trainNote:"Training accuracy is measured during the epoch with dropout and augmentation on; validation is measured at the end of the epoch. The dashed vertical line marks the chosen checkpoint.",
+  pclsT:lab=>`Accuracy per class: ${lab}`, cmT:lab=>`Confusion matrix: ${lab}`,
+  pickRun:"Choose a configuration in the table to see its curves.", noneDone:"No run has finished for this experiment yet. The table below lists the planned runs.", loading:"Loading…",
+  histT:m=>`Historical optimizer sweep: ${m}, 10 epochs, seed 42`,
+  aWhere:"Model A", bWhere:"Model B",
+};
+
+const MNAME={mlp:"MLP",cnn:"CNN",effnet:"EfficientNetV2B0"};
+const EXPC={}, RUNC={};
+const fmtF1=v=>nf(v,3);
+function optName(slug){const o=D.models.cnn.opts.find(o=>o.slug===slug);return o?o.name:{adam:"Adam",adamw:"AdamW",nadam:"Nadam"}[slug]||slug;}
+function optPart(r){const m=/^(.*)-e(\d+)$/.exec(r.opt);
+  if(r.model==="effnet")return L.ft(optName(r.opt));
+  if(m)return L.fixed(optName(m[1]),+m[2]);
+  return r.study==="historical"?optName(r.opt):L.es(optName(r.opt));}
+const cfgLabel=r=>`${MNAME[r.model]} · ${optPart(r)}`;
+const runLabel=r=>`${cfgLabel(r)} · ${L.stShort[r.study]} · ${L.seed(r.seed)}`;
+const runWhere=r=>r.browser?L.where.browser:L.where.export;
+async function loadExp(ds=S.ds){if(EXPC[ds])return EXPC[ds];
+  const r=await fetch(`data/${ds}/experiments.json`);if(!r.ok)throw new Error(r.status);const x=await r.json();
+  x.byKey={};x.runs.forEach(r=>x.byKey[r.key]=r);EXPC[ds]=x;return x;}
+function u8(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+async function loadRun(key,ds=S.ds){const id=ds+"/"+key;if(RUNC[id])return RUNC[id];
+  const r=await fetch(`data/${ds}/runs/${key}.json`);if(!r.ok)throw new Error(r.status);const j=await r.json();
+  if(j.key!==key)throw new Error("key mismatch");
+  j.p=u8(j.preds);j.c=u8(j.conf);RUNC[id]=j;return j;}
+const EX=()=>EXPC[S.ds];
+
+/* ---------- run pickers (Test Results) ---------- */
+function fillRunSelect(sel,value,withNone){const X=EX();sel.innerHTML="";
+  if(withNone){const o=document.createElement("option");o.value="";o.textContent=L.noB;sel.append(o);}
+  for(const [st,name] of [["historical",L.mHist],["full",L.mFull],["budget",L.mBudget]]){
+    const rows=[...X.runs.filter(r=>r.study===st).map(r=>({r,done:true})),...X.planned.filter(p=>p.study===st).map(r=>({r,done:false}))];
+    if(!rows.length)continue;
+    rows.sort((a,b)=>cfgOrder(a.r)-cfgOrder(b.r)||(a.r.seed-b.r.seed));
+    const g=document.createElement("optgroup");g.label=name;
+    rows.forEach(({r,done})=>{const o=document.createElement("option");o.value=done?r.key:"";o.disabled=!done;
+      o.textContent=`${cfgLabel(r)} · ${L.seed(r.seed)}`+(done?"":` (${L.notRun})`);g.append(o);});
+    sel.append(g);}
+  sel.value=value;}
+const ORDER=["mlp-adam-e10","mlp-adam","cnn-adam-e10","cnn-adam","effnet-adam","effnet-adamw","effnet-nadam"];
+const HORDER=["sgd","rmsprop","adam","adamw","adagrad","nadam","adadelta","sgd-momentum"];
+function cfgOrder(r){const k=r.model+"-"+r.opt;const i=ORDER.indexOf(k);
+  return i>=0?i:(r.model==="cnn"?0:20)+HORDER.indexOf(r.opt);}
+function syncRunPickers(){if(!EX())return;fillRunSelect($("#selA"),S.runA,false);fillRunSelect($("#selB"),S.runB,true);
+  const a=EX().byKey[S.runA],b=EX().byKey[S.runB];
+  $("#whereA").textContent=a?runWhere(a):"";$("#whereB").textContent=b?runWhere(b):"";
+  $("#agreeRow").hidden=!b||S.runB===S.runA;}
+
 /* ---------- gallery ---------- */
 function buildClassChips(){const fc=$("#fClass");fc.innerHTML="";
   [-1,...CLS.keys()].forEach(i=>{const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.v=i;
     b.textContent=i<0?"All classes":CLS[i];b.onclick=()=>{S.cls=i;S.pred=null;S.shown=24;syncFilters();renderGallery();};fc.append(b);});}
 function buildFilters(){buildClassChips();
   $("#fStatus").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.status=b.dataset.v;S.shown=24;syncFilters();renderGallery();});
+  $("#fAgree").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.agree=b.dataset.v;S.shown=24;syncFilters();renderGallery();});
   $("#fSort").onchange=e=>{S.sort=e.target.value;renderGallery();};
-  const fc2=$("#fCmp");OPTS().forEach(o=>{const op=document.createElement("option");op.value=o.slug;op.textContent=o.name;fc2.append(op);});
-  fc2.onchange=e=>{S.cmp=e.target.value;if(!S.cmp){S.diff=false;$("#fDiff").checked=false;}
-    $("#fDiff").disabled=!S.cmp;$("#diffWrap").setAttribute("aria-disabled",S.cmp?"false":"true");S.shown=24;renderGallery();};
-  $("#fDiff").onchange=e=>{S.diff=e.target.checked;S.shown=24;renderGallery();};
+  $("#selA").onchange=e=>{S.runA=e.target.value;S.shown=24;syncRunPickers();renderGallery();};
+  $("#selB").onchange=e=>{S.runB=e.target.value;if(!S.runB)S.agree="all";S.shown=24;syncRunPickers();syncFilters();renderGallery();};
   syncFilters();}
 function syncFilters(){$("#fClass").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.v===S.cls?"true":"false"));
-  $("#fStatus").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.status?"true":"false"));}
-function renderGallery(){const o=optOf(),c2=S.cmp&&S.cmp!==S.opt?O(S.cmp):null;
-  let L=D.pool.map((g,k)=>({...g,k,p:o.pp[k],c:o.pc[k]}))
-    .filter(g=>(S.cls<0||g.t===S.cls)&&(S.status==="all"||(S.status==="ok")===(g.t===g.p))&&(S.pred==null||g.p===S.pred)
-      &&(!c2||!S.diff||((c2.pp[g.k]===g.t)!==(g.p===g.t))));
-  L.sort(S.sort==="hi"?(a,b)=>b.c-a.c:S.sort==="lo"?(a,b)=>a.c-b.c:(a,b)=>a.i-b.i);
-  const cm=o.cm;let tot,ok;
-  if(S.cls<0){tot=10000;ok=cm.reduce((s,r,i)=>s+r[i],0);}else{tot=cm[S.cls].reduce((a,b)=>a+b,0);ok=cm[S.cls][S.cls];}
-  const who=S.cls<0?"All classes":`Class <b>${CLS[S.cls]}</b>`;
-  const extra=S.pred!=null?` Only images predicted as <b>${CLS[S.pred]}</b>. <button class="chip" type="button" id="clrPred">Clear prediction filter</button>`:"";
-  const cmpTxt=S.cmp&&!c2?` The comparison optimizer is the selected one, so it is not shown.`:c2&&S.diff?` Only images whose status differs between <b>${o.name}</b> and <b>${c2.name}</b>.`:"";
-  $("#summary").innerHTML=`With <b>${MODEL()} + ${o.name}</b>, ${who.charAt(0).toLowerCase()+who.slice(1)}: <b>${nf(ok)}</b> correct and <b>${nf(tot-ok)}</b> incorrect out of ${nf(tot)} test images. Showing <b>${Math.min(S.shown,L.length)}</b> of ${L.length} examples for this filter.${cmpTxt}${extra}`;
-  const cp=$("#clrPred");if(cp)cp.onclick=()=>{S.pred=null;renderGallery();};
-  const g=$("#grid");g.innerHTML="";
-  if(!L.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1">No examples match this combination of filters. Change the status, class, or comparison.</div>`;$("#more").innerHTML="";return;}
-  L.slice(0,S.shown).forEach(it=>{const ok=it.t===it.p,b=document.createElement("button");b.type="button";b.className="card";
-    let lab=`${ok?"Match":"No match"}. True ${CLS[it.t]}, predicted ${CLS[it.p]}, confidence ${pct(it.c)} with ${o.name}`;
-    b.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?"Match":"No match"}</span>`;
-    const cv=document.createElement("canvas");drawTile(cv,it.k);b.append(cv);
-    b.insertAdjacentHTML("beforeend",`<dl><dt>True</dt><dd>${CLS[it.t]}</dd><dt>Predicted</dt><dd>${CLS[it.p]}</dd></dl>
+  $("#fStatus").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.status?"true":"false"));
+  $("#fAgree").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.agree?"true":"false"));}
+let galSeq=0;
+async function renderGallery(){const X=EX(),sum=$("#summary"),g=$("#grid");if(!X){return;}
+  const seq=++galSeq,ds=S.ds,a=X.byKey[S.runA],b=S.runB&&S.runB!==S.runA?X.byKey[S.runB]:null;
+  if(!a){sum.innerHTML=L.runErr(S.runA);g.innerHTML="";$("#more").innerHTML="";return;}
+  let A,B=null;
+  if(!RUNC[ds+"/"+a.key]||(b&&!RUNC[ds+"/"+b.key]))sum.textContent=L.loading;
+  try{A=await loadRun(a.key,ds);if(b)B=await loadRun(b.key,ds);}
+  catch(e){if(seq!==galSeq)return;const bad=!RUNC[ds+"/"+a.key]?a.key:b.key;sum.innerHTML=`<span style="color:var(--bad)">${L.runErr(bad)}</span>`;g.innerHTML="";$("#more").innerHTML="";return;}
+  if(seq!==galSeq||ds!==S.ds)return;
+  const ids=X.pool_ids;
+  let rows=D.pool.map((it,k)=>{const id=ids[k],p=A.p[id],q=B?B.p[id]:null;return {...it,k,id,p,c:A.c[id]/255,q};})
+    .filter(it=>(S.cls<0||it.t===S.cls)&&(S.status==="all"||(S.status==="ok")===(it.t===it.p))&&(S.pred==null||it.p===S.pred)
+      &&(!B||S.agree==="all"||agreeOf(it.t===it.p,it.q===it.t)===S.agree));
+  rows.sort(S.sort==="hi"?(x,y)=>y.c-x.c:S.sort==="lo"?(x,y)=>x.c-y.c:(x,y)=>x.id-y.id);
+  let txt=L.aLine(`<b>${runLabel(a)}</b>`,pct(A.acc,2),fmtF1(A.f1));
+  if(S.cls>=0){const r=A.cm[S.cls];txt+=L.classLine(CLS[S.cls],nf(r[S.cls]),nf(r.reduce((x,y)=>x+y,0)));}
+  if(B){txt+=L.bLine(`<b>${runLabel(b)}</b>`,pct(B.acc,2),fmtF1(B.f1));
+    const n=[0,0,0,0];const y=yTrue(A);for(let i=0;i<10000;i++){const ok1=A.p[i]===y[i],ok2=B.p[i]===y[i];n[ok1&&ok2?0:ok1?1:ok2?2:3]++;}
+    txt+=L.agreeLine(...n.map(v=>nf(v)));}
+  else if(S.runB&&S.runB===S.runA)txt+=L.same;
+  txt+=L.galLine(Math.min(S.shown,rows.length),rows.length);
+  if(S.pred!=null)txt+=L.predOnly(CLS[S.pred])+` <button class="chip" type="button" id="clrPred">${L.clrPred}</button>`;
+  sum.innerHTML=txt;const cp=$("#clrPred");if(cp)cp.onclick=()=>{S.pred=null;renderGallery();};
+  g.innerHTML="";
+  if(!rows.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1">${L.empty}</div>`;$("#more").innerHTML="";return;}
+  rows.slice(0,S.shown).forEach(it=>{const ok=it.t===it.p,el=document.createElement("button");el.type="button";el.className="card";
+    let lab=L.cardLab(ok,CLS[it.t],CLS[it.p],pct(it.c));
+    el.innerHTML=`<span class="tab ${ok?"ok":"bad"}">${ok?L.ok:L.bad}</span>`;
+    const cv=document.createElement("canvas");drawTile(cv,it.k);el.append(cv);
+    el.insertAdjacentHTML("beforeend",`<dl><dt>True</dt><dd>${CLS[it.t]}</dd><dt>${L.cardA}</dt><dd>${CLS[it.p]}</dd></dl>
       <div class="conf"><span class="bar"><i style="width:${(it.c*100).toFixed(1)}%"></i></span><span>${pct(it.c)}</span></div>`);
-    if(c2){const p2=c2.pp[it.k],ok2=p2===it.t;
-      b.insertAdjacentHTML("beforeend",`<div class="vs"><span>${c2.name}:</span><strong style="color:var(--ink);font-weight:500">${CLS[p2]}</strong><span class="tab ${ok2?"ok":"bad"}">${ok2?"Match":"No"}</span></div>`);
-      lab+=`. ${c2.name} predicts ${CLS[p2]}`;}
-    b.setAttribute("aria-label",lab+". Inspect its flow");
-    b.onclick=()=>{select({kind:"g",k:it.k});document.getElementById("alur").scrollIntoView();};g.append(b);});
-  $("#more").innerHTML=L.length>S.shown?`<button class="btn" type="button" id="moreBtn">Show ${Math.min(24,L.length-S.shown)} more examples</button>`:"";
+    if(B){const ok2=it.q===it.t;
+      el.insertAdjacentHTML("beforeend",`<div class="vs"><span>B:</span><strong style="color:var(--ink);font-weight:500">${CLS[it.q]}</strong><span class="tab ${ok2?"ok":"bad"}">${ok2?L.okShort:L.badShort}</span></div>`);
+      lab+=L.cardLabB(CLS[it.q]);}
+    el.insertAdjacentHTML("beforeend",`<span class="sid">${L.id(it.id)}</span>`);
+    el.setAttribute("aria-label",lab+". "+L.id(it.id)+L.cardOpen);
+    el.onclick=()=>{select({kind:"g",k:it.k});document.getElementById("alur").scrollIntoView();};g.append(el);});
+  $("#more").innerHTML=rows.length>S.shown?`<button class="btn" type="button" id="moreBtn">${L.more(Math.min(24,rows.length-S.shown))}</button>`:"";
   const mb=$("#moreBtn");if(mb)mb.onclick=()=>{S.shown+=24;renderGallery();};}
+const agreeOf=(a,b)=>a&&b?"both":a?"onlyA":b?"onlyB":"none";
+/* ground truth for all 10,000 test images by official index (the gallery pool only covers 1,000) */
+function yTrue(){return EX().y||(EX().y=u8(EX().labels));}
 
-/* ---------- training / optimizer comparison ---------- */
-function lineChart(series,title,key,w=420,h=210){
-  const all=series.flatMap(s=>s.v),lo=Math.min(...all),hi=Math.max(...all),pad=(hi-lo)*.08||.05,y0=lo-pad,y1=hi+pad;
-  const l=38,b=22,X=i=>l+i*(w-l-10)/9,Y=v=>14+(h-b-14)*(1-(v-y0)/(y1-y0));
+/* ---------- charts ---------- */
+function lineChart(series,title,key,w=420,h=210,opt={}){
+  const n=opt.n||Math.max(...series.map(s=>s.v.length)),all=series.flatMap(s=>s.v).filter(v=>v!=null&&isFinite(v));
+  const lo=Math.min(...all),hi=Math.max(...all),pad=(hi-lo)*.08||.05,y0=lo>=0?Math.max(0,lo-pad):lo-pad,y1=lo>=0&&hi<=1?Math.min(1,hi+pad):hi+pad;
+  const l=38,b=22,X=i=>l+(n>1?i*(w-l-10)/(n-1):(w-l-10)/2),Y=v=>14+(h-b-14)*(1-(v-y0)/(y1-y0));
   let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${title}"><text x="${l}" y="10" font-weight="600" style="fill:var(--ink);font-size:11px">${title}</text>`;
+  if(opt.warm){const x2=(X(opt.warm-1)+X(opt.warm))/2;s+=`<rect x="${l}" y="14" width="${Math.max(0,x2-l)}" height="${h-b-14}" fill="var(--sunken)"/><line x1="${x2}" x2="${x2}" y1="14" y2="${h-b}" stroke="var(--muted)" stroke-width="1"/><text x="${l+3}" y="${h-b-4}" style="font-size:10px">${L.warm}</text>`;}
   for(let g=0;g<=3;g++){const v=y0+(y1-y0)*g/3;s+=`<line x1="${l}" x2="${w-10}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${l-4}" y="${Y(v)+3}" text-anchor="end">${v.toFixed(2)}</text>`;}
-  [1,5,10].forEach(e=>s+=`<text x="${X(e-1)}" y="${h-6}" text-anchor="${e===1?"start":e===10?"end":"middle"}">${e===10?"epoch 10":e}</text>`);
-  series.filter(x=>!x.sel).concat(series.filter(x=>x.sel)).forEach(x=>{
-    s+=`<polyline fill="none" stroke="${x.color}" stroke-width="${x.sel?2.6:1.3}" ${x.dash?'stroke-dasharray="4 3"':""} opacity="${x.sel||x.solid?1:.75}" points="${x.v.map((v,i)=>X(i)+","+Y(v)).join(" ")}"/>`;
-    if(x.label){const lv=x.v.at(-1);s+=`<text x="${w-12}" y="${Y(lv)-5}" text-anchor="end" style="fill:${x.color};font-size:11px;font-weight:600">${x.label}</text>`;}});
+  const ticks=[...new Set([1,Math.round((n+1)/2),n])].filter(e=>e>=1&&e<=n);
+  ticks.forEach(e=>s+=`<text x="${X(e-1)}" y="${h-6}" text-anchor="${e===1?"start":e===n?"end":"middle"}">${e===n?L.epoch+" "+e:e}</text>`);
+  if(opt.best){const x=X(opt.best-1),r=x>w*.65;s+=`<line x1="${x}" x2="${x}" y1="14" y2="${h-b}" stroke="var(--ink)" stroke-dasharray="3 3" stroke-width="1"/><text x="${r?x-4:x+4}" y="26" text-anchor="${r?"end":"start"}" style="font-size:10px;fill:var(--ink)">${L.best(opt.best)}</text>`;}
+  series.filter(x=>!x.sel).concat(series.filter(x=>x.sel)).forEach(x=>{const pts=x.v.map((v,i)=>v==null?null:X(i)+","+Y(v)).filter(Boolean);
+    s+=`<polyline fill="none" stroke="${x.color}" stroke-width="${x.sel?2.6:1.3}" ${x.dash?'stroke-dasharray="4 3"':""} opacity="${x.sel||x.solid?1:.75}" points="${pts.join(" ")}"/>`;
+    if(opt.best&&x.dot&&x.v[opt.best-1]!=null)s+=`<circle cx="${X(opt.best-1)}" cy="${Y(x.v[opt.best-1])}" r="3.5" fill="${x.color}"/>`;
+    if(x.label){const li=x.v.length-1,lv=x.v[li];s+=`<text x="${Math.min(w-12,X(li)+4)}" y="${Y(lv)-5}" text-anchor="end" style="fill:${x.color};font-size:11px;font-weight:600">${x.label}</text>`;}});
   return s+"</svg>";}
-function renderTraining(){const o=optOf(),sorted=[...OPTS()].sort((a,b)=>b.acc-a.acc);
-  // summary table
-  let t=`<thead><tr><th scope="col">Optimizer</th><th scope="col">Test accuracy</th><th scope="col">Test loss</th><th scope="col">Best val</th><th scope="col">Train−val</th><th scope="col">Time</th></tr></thead><tbody>`;
-  sorted.forEach(x=>{const [bv,be]=bestVal(x),gap=x.hist.accuracy.at(-1)-x.hist.val_accuracy.at(-1);
-    t+=`<tr class="click${x.slug===S.opt?" sel":""}" data-slug="${x.slug}"><th scope="row"><button class="optrow-btn" type="button" data-slug="${x.slug}" aria-pressed="${x.slug===S.opt}">${x.name}</button></th>
-      <td>${pct(x.acc,2)}</td><td>${nf(x.loss,3)}</td><td>${pct(bv)} <span style="color:var(--muted)">(ep ${be})</span></td><td>${gap>=0?"+":"−"}${nf(Math.abs(gap)*100,1)}</td><td>${nf(x.time,0)} s</td></tr>`;});
-  $("#optTable").innerHTML=t+"</tbody>";
-  $("#optTable").querySelectorAll("tr.click").forEach(r=>r.onclick=e=>{setOpt(r.dataset.slug);});
-  // accuracy bars
-  const other=S.model==="cnn"?"mlp":"cnn",oth=s=>D.models[other].opts.find(x=>x.slug===s).acc;
-  $("#accNote").textContent=`Dashed line: ${other.toUpperCase()} with the same optimizer.`;
-  $("#accTitle").textContent=`Test accuracy, ${MODEL()}`;
-  const bx=$("#accBars");bx.innerHTML="";const mx=Math.max(...OPTS().map(x=>x.acc),...D.models[other].opts.map(x=>x.acc));
-  sorted.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.opt?"true":"false");
-    b.setAttribute("aria-label",`${x.name} test accuracy ${pct(x.acc)}. Select this optimizer`);
-    b.innerHTML=`<span>${x.name}</span><span class="bar" style="position:relative"><i style="width:${x.acc/mx*100}%"></i><span style="position:absolute;top:-3px;bottom:-3px;left:${Math.min(100,oth(x.slug)/mx*100)}%;border-left:2px dashed var(--muted)"></span></span><em>${pct(x.acc)}</em>`;
-    b.onclick=()=>setOpt(x.slug);bx.append(b);});
 
-  // overlay curves
-  const acc=css("--accent"),grey=css("--link");
-  const ser=k=>OPTS().map(x=>({v:x.hist[k],sel:x.slug===S.opt,color:x.slug===S.opt?acc:grey,label:x.slug===S.opt?x.name:""}));
-  $("#curves").innerHTML=lineChart(ser("val_accuracy"),"Validation accuracy")+lineChart(ser("val_loss"),"Validation loss");
-  const ok=$("#okey");ok.innerHTML="";
-  OPTS().forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.opt?"true":"false");
-    b.innerHTML=`<i></i>${x.name}`;b.onclick=()=>setOpt(x.slug);ok.append(b);});
-  // train vs val for selected
-  $("#trainTitle").textContent=`Train vs validation: ${MODEL()} + ${o.name}`;
-  const mut=css("--muted");
-  $("#tv").innerHTML=lineChart([{v:o.hist.accuracy,sel:true,color:acc,solid:true},{v:o.hist.val_accuracy,color:acc,dash:true,solid:true}],"Accuracy",280,180)
-    +lineChart([{v:o.hist.loss,sel:true,color:acc,solid:true},{v:o.hist.val_loss,color:acc,dash:true,solid:true}],"Loss",280,180);
-  // per class
-  $("#pclsTitle").textContent=`Per-class accuracy: ${MODEL()} + ${o.name}`;
-  const pc=$("#pcls");pc.innerHTML="";
-  o.cm.forEach((r,i)=>{const a=r[i]/r.reduce((x,y)=>x+y,0),b=document.createElement("button");b.type="button";
+/* ---------- Model & Optimizer Comparison ---------- */
+function configs(study){const X=EX(),m={};
+  X.runs.filter(r=>r.study===study).forEach(r=>{const k=r.model+"-"+r.opt;(m[k]=m[k]||{k,model:r.model,opt:r.opt,study,runs:[],planned:[]}).runs.push(r);});
+  X.planned.filter(p=>p.study===study).forEach(p=>{const k=p.model+"-"+p.opt;(m[k]=m[k]||{k,model:p.model,opt:p.opt,study,runs:[],planned:[]}).planned.push(p);});
+  return Object.values(m).sort((a,b)=>cfgOrder(a)-cfgOrder(b));}
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const sd=a=>a.length>1?Math.sqrt(a.reduce((s,x)=>s+(x-mean(a))**2,0)/(a.length-1)):0;
+function renderCfg(){const X=EX();if(!X)return;const met=S.metric==="acc"?"acc":"f1",C=configs(S.study);
+  document.querySelectorAll("#studySeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.study?"true":"false"));
+  document.querySelectorAll("#metricSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.metric?"true":"false"));
+  $("#cfgNote").textContent=L.cfgNote[S.study];
+  const base=C.find(c=>c.k==="cnn-adam-e10"),bs={};if(base)base.runs.forEach(r=>bs[r.seed]=r[met]);
+  const fmt=v=>met==="acc"?pct(v,2):fmtF1(v);
+  // chart: one row per configuration, a dot per seed and a bar up to the mean (HTML, so it reflows on small screens)
+  const done=C.filter(c=>c.runs.length),vals=done.flatMap(c=>c.runs.map(r=>r[met]));
+  const box=$("#cfgChart");
+  if(!vals.length)box.innerHTML=`<p class="note">${L.noneDone}</p>`;
+  else{let lo=Math.min(...vals),hi=Math.max(...vals);const pd=(hi-lo)*.12||.02;lo=Math.max(0,lo-pd);hi=Math.min(1,hi+pd);
+    const P=v=>(100*(v-lo)/(hi-lo)).toFixed(2);
+    let h=`<div class="dots" role="img" aria-label="${L.chartLab(L.stShort[S.study],S.metric==="acc"?L.metAcc:L.metF1)}">`;
+    C.forEach(c=>{const sel=c.runs.some(r=>r.key===S.detail),v=c.runs.map(r=>r[met]);
+      h+=`<div class="drow${sel?" sel":""}" aria-hidden="true"><span class="dl">${MNAME[c.model]} · ${optPart(c)}</span><span class="dt">`
+        +(v.length?`<i style="width:${P(mean(v))}%"></i>`+v.map(x=>`<b style="left:${P(x)}%"></b>`).join(""):`<span class="nr">${L.nr}</span>`)
+        +`</span><span class="dn">${v.length?fmt(mean(v))+` <small>n = ${v.length}</small>`:""}</span></div>`;});
+    h+=`<div class="drow axis" aria-hidden="true"><span class="dl"></span><span class="dt">${[0,1,2,3,4].map(g=>{const v=lo+(hi-lo)*g/4;return `<em style="left:${g*25}%">${met==="acc"?nf(v*100,0)+"%":v.toFixed(2)}</em>`;}).join("")}</span><span class="dn"></span></div>`;
+    box.innerHTML=h+"</div>";}
+  // table
+  let t=`<thead><tr>${L.cfgHead.map((h,i)=>`<th scope="col"${i?"":' style="text-align:left"'}>${h}</th>`).join("")}</tr></thead><tbody>`;
+  C.forEach(c=>{const R=c.runs,total=R.length+c.planned.length,sel=R.some(r=>r.key===S.detail);
+    const first=R[0]||c.planned[0];
+    if(!R.length){t+=`<tr><th scope="row">${MNAME[c.model]} · ${optPart(c)}</th><td colspan="7" style="text-align:left;color:var(--muted)">${L.nr} (0 / ${total} seed)</td></tr>`;return;}
+    const a=R.map(r=>r.acc),f=R.map(r=>r.f1),mv=R.map(r=>r[met]);
+    const pairs=R.filter(r=>bs[r.seed]!=null).map(r=>(r[met]-bs[r.seed])*100),md=pairs.length?mean(pairs):0;
+    const dtxt=c.k==="cnn-adam-e10"?"0":pairs.length?L.delta((md>=0?"+":"−")+nf(Math.abs(md),2),nf(sd(pairs),2),pairs.length):L.deltaNone;
+    const ep=R.map(r=>`${r.best_epoch??r.epochs_run}/${r.epochs_run}`).join(", ");
+    t+=`<tr class="click${sel?" sel":""}" data-k="${c.k}"><th scope="row"><button class="optrow-btn" type="button" data-k="${c.k}" aria-pressed="${sel}">${MNAME[c.model]} · ${optPart(c)}</button></th>
+      <td>${first.input??"?"} px</td><td>${nf(first.n_train??0)}</td><td>${L.seedsOf(R.length,total)}</td>
+      <td>${pct(mean(a),2)}${R.length>1?` <span style="color:var(--muted)">± ${nf(sd(a)*100,2)}</span>`:""}</td>
+      <td>${fmtF1(mean(f))}${R.length>1?` <span style="color:var(--muted)">± ${nf(sd(f),3)}</span>`:""}</td>
+      <td>${dtxt}</td><td>${ep}</td></tr>`;});
+  $("#cfgTable").innerHTML=t+"</tbody>";
+  $("#cfgTable").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>{const c=C.find(c=>c.k===r.dataset.k),cur=EX().byKey[S.detail];
+    const pick=c.runs.find(x=>cur&&x.seed===cur.seed)||c.runs[0];setDetail(pick.key);});
+  $("#seedTable").innerHTML=seedTable(C,met,fmt);}
+function seedTable(C,met,fmt){const seeds=[...new Set(C.flatMap(c=>[...c.runs,...c.planned].map(r=>r.seed)))].sort((a,b)=>a-b);
+  let t=`<thead><tr><th scope="col" style="text-align:left">${L.cfgHead[0]}</th>${seeds.map(s=>`<th scope="col">${L.seed(s)}</th>`).join("")}<th scope="col">${S.metric==="acc"?L.metAcc:L.metF1}</th></tr></thead><tbody>`;
+  C.forEach(c=>{const by={};c.runs.forEach(r=>by[r.seed]=r);
+    t+=`<tr><th scope="row">${MNAME[c.model]} · ${optPart(c)}</th>${seeds.map(s=>by[s]?`<td>${fmt(by[s][met])}</td>`:`<td style="color:var(--muted)">${c.planned.some(p=>p.seed===s)?L.nr:""}</td>`).join("")}<td><b>${c.runs.length?fmt(mean(c.runs.map(r=>r[met]))):""}</b></td></tr>`;});
+  return t+"</tbody>";}
+
+let detSeq=0;
+async function setDetail(key){S.detail=key;renderCfg();renderHist();await renderDetail();}
+async function renderDetail(){const X=EX();if(!X)return;const r=X.byKey[S.detail];const box=$("#runCurves");
+  if(!r){$("#runTitle").textContent=L.pickRun;box.innerHTML="";$("#seedSeg").innerHTML="";$("#fitStats").innerHTML="";$("#branchWrap").hidden=true;$("#pcls").innerHTML="";$("#cm").innerHTML="";return;}
+  const seq=++detSeq,ds=S.ds;$("#runTitle").textContent=L.curveT(runLabel(r));
+  // seed buttons for this configuration
+  const same=[...X.runs,...X.planned].filter(x=>x.study===r.study&&x.model===r.model&&x.opt===r.opt).sort((a,b)=>a.seed-b.seed);
+  const ss=$("#seedSeg");ss.innerHTML="";
+  same.forEach(x=>{const b=document.createElement("button");b.type="button";b.textContent=L.seed(x.seed)+(x.key?"":` (${L.nr})`);
+    b.disabled=!x.key;b.setAttribute("aria-pressed",x.key===r.key?"true":"false");if(x.key)b.onclick=()=>setDetail(x.key);ss.append(b);});
+  box.innerHTML=`<p class="note">${L.loading}</p>`;
+  let R;try{R=await loadRun(r.key,ds);}catch(e){if(seq!==detSeq)return;box.innerHTML=`<p class="note" style="color:var(--bad)">${L.runErr(r.key)}</p>`;return;}
+  if(seq!==detSeq||ds!==S.ds)return;
+  const h=R.history,acc=css("--accent"),warm=r.model==="effnet"?(r.warmup_epochs||2):0;
+  const o={best:r.best_epoch||null,warm,n:h.length};
+  box.innerHTML=lineChart([{v:h.map(e=>e.accuracy),color:acc,solid:true,sel:true,label:L.trainL},{v:h.map(e=>e.val_accuracy),color:acc,dash:true,solid:true,dot:true,label:L.valL}],L.accT,"",420,210,o)
+    +lineChart([{v:h.map(e=>e.loss),color:acc,solid:true,sel:true,label:L.trainL},{v:h.map(e=>e.val_loss),color:acc,dash:true,solid:true,dot:true,label:L.valL}],L.lossT,"",420,210,o);
+  // fit indicators read off the curves
+  const sel=(r.best_epoch||h.length)-1,gap=h[sel].accuracy-h[sel].val_accuracy;
+  const vl=h.map(e=>e.val_loss),mi=vl.indexOf(Math.min(...vl));
+  const selTxt=r.study==="historical"?L.fitSelLast(h.length):/-e\d+$/.test(r.opt)?L.fitSelFixed(r.best_epoch):L.fitSelBest(r.best_epoch);
+  $("#fitStats").innerHTML=`<div>${L.fitSel}<b>${selTxt}</b></div><div>${L.fitGap}<b>${gap>=0?"+":"−"}${L.points(nf(Math.abs(gap)*100,1))}</b></div>
+    <div>${L.fitMin}<b>${L.fitAfter(mi+1,h.length-mi-1)}</b></div><div>${L.fitStop}<b>${h.length}</b></div>`;
+  // the three EfficientNet branches of this seed
+  const bw=$("#branchWrap");
+  if(r.model==="effnet"){bw.hidden=false;$("#branchTitle").textContent=L.branchT(r.seed);$("#branchNote").textContent=L.branchN;
+    const sib=["adam","adamw","nadam"].map(o=>X.runs.find(x=>x.study===r.study&&x.model==="effnet"&&x.opt===o&&x.seed===r.seed)).filter(Boolean);
+    let S2;try{S2=await Promise.all(sib.map(x=>loadRun(x.key,ds)));}catch(e){S2=null;}
+    if(seq!==detSeq)return;
+    if(!S2){$("#branchCurves").innerHTML=`<p class="note" style="color:var(--bad)">${L.runErr("EfficientNet")}</p>`;}
+    else{const grey=css("--muted"),n=Math.max(...S2.map(x=>x.history.length));
+      // branches whose curves are identical share one label (AdamW with a tiny weight decay can equal Adam exactly)
+      const sig=x=>JSON.stringify(x.history.map(e=>[e.loss,e.val_accuracy])),groups={};S2.forEach((x,i)=>(groups[sig(x)]=groups[sig(x)]||[]).push(i));
+      const labelOf=i=>{const g=groups[sig(S2[i])];return g[0]===i?g.map(j=>optName(sib[j].opt)).join(" = "):"";};
+      $("#branchCurves").innerHTML=lineChart(S2.map((x,i)=>({v:x.history.map(e=>e.val_accuracy),sel:sib[i].key===r.key,color:sib[i].key===r.key?acc:grey,dash:sib[i].opt==="adamw",solid:true,label:labelOf(i)})),L.accT,"",1000,260,{warm,n});
+      const same=Object.values(groups).filter(g=>g.length>1);
+      $("#branchNote").textContent=L.branchN+(same.length?" "+same.map(g=>L.identical(g.map(j=>optName(sib[j].opt)))).join(" "):"");
+      const k=$("#branchKey");k.innerHTML="";sib.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.key===r.key?"true":"false");
+        b.innerHTML=`<i></i>${optName(x.opt)} · ${pct(x.acc,2)}`;b.onclick=()=>setDetail(x.key);k.append(b);});}}
+  else bw.hidden=true;
+  renderClassPanels(r,R);}
+function renderClassPanels(r,R){const lab=cfgLabel(r)+" · "+L.seed(r.seed);
+  $("#pclsTitle").textContent=L.pclsT(lab);const pc=$("#pcls");pc.innerHTML="";
+  R.cm.forEach((row,i)=>{const a=row[i]/row.reduce((x,y)=>x+y,0),b=document.createElement("button");b.type="button";
     b.setAttribute("aria-label",`${CLS[i]} accuracy ${pct(a)}. Show in gallery`);
     b.innerHTML=`<span>${CLS[i]}</span><span class="bar"><i style="width:${a*100}%"></i></span><em>${pct(a)}</em>`;
-    b.onclick=()=>{S.cls=i;S.status="all";S.pred=null;S.shown=24;syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};pc.append(b);});
-  // confusion matrix
-  $("#cmTitle").textContent=`Confusion matrix: ${MODEL()} + ${o.name}`;
-  const cmx=Math.max(...o.cm.map((r,i)=>r[i]));let ct=`<table class="cm"><thead><tr><th></th>${CLS.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>`;
+    b.onclick=()=>{S.runA=r.key;S.cls=i;S.status="all";S.pred=null;S.shown=24;syncRunPickers();syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};pc.append(b);});
+  $("#cmTitle").textContent=L.cmT(lab);
+  const acc=css("--accent"),cmx=Math.max(...R.cm.map((x,i)=>x[i]));let ct=`<table class="cm"><thead><tr><th></th>${CLS.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>`;
   const a1=hex(acc),z=hex(css("--surface")),bad=hex(css("--bad"));
-  o.cm.forEach((r,i)=>{ct+=`<tr><th scope="row" style="text-align:right">${CLS[i]}</th>`;
-    r.forEach((v,j)=>{const u=i===j?v/cmx:Math.min(1,v/150),e=i===j?a1:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u));
+  R.cm.forEach((row,i)=>{ct+=`<tr><th scope="row" style="text-align:right">${CLS[i]}</th>`;
+    row.forEach((v,j)=>{const u=i===j?v/cmx:Math.min(1,v/150),e=i===j?a1:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u));
       const dk=(0.299*c[0]+0.587*c[1]+0.114*c[2])<140,fg=dk?"#fff":"inherit";
       ct+=`<td style="background:rgb(${c})">${i!==j&&v>0?`<button type="button" data-t="${i}" data-p="${j}" aria-label="${v} ${CLS[i]} images predicted as ${CLS[j]}. Show examples" style="all:unset;cursor:pointer;display:block;width:100%;height:100%;color:${fg}">${v}</button>`:`<span style="color:${fg}">${v}</span>`}</td>`;});ct+="</tr>";});
   $("#cm").innerHTML=ct+"</tbody></table>";
   $("#cm").querySelectorAll("button").forEach(b=>{b.addEventListener("focus",()=>b.style.outline="2px solid var(--accent)");b.addEventListener("blur",()=>b.style.outline="");
-    b.onclick=()=>{S.cls=+b.dataset.t;S.pred=+b.dataset.p;S.status="bad";S.shown=24;syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};});
+    b.onclick=()=>{S.runA=r.key;S.cls=+b.dataset.t;S.pred=+b.dataset.p;S.status="bad";S.shown=24;syncRunPickers();syncFilters();renderGallery();document.getElementById("hasil").scrollIntoView();};});}
+
+/* ---------- historical optimizer sweep (10 epochs, seed 42) ---------- */
+const HOPTS=()=>D.models[S.hm].opts;
+const hOpt=()=>HOPTS().find(o=>o.slug===S.hopt);
+function pickHist(slug){S.hopt=slug;setDetail(`historical__${S.hm}-${slug}__s42`);}
+function renderHist(){const o=hOpt(),sorted=[...HOPTS()].sort((a,b)=>b.acc-a.acc),HM=S.hm.toUpperCase();
+  document.querySelectorAll("#hmSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.hm?"true":"false"));
+  $("#histTitle").textContent=L.histT(HM);
+  const onDetail=x=>S.detail===`historical__${S.hm}-${x.slug}__s42`;
+  let t=`<thead><tr><th scope="col">Optimizer</th><th scope="col">Test accuracy</th><th scope="col">Test loss</th><th scope="col">Best val</th><th scope="col">Train−val</th><th scope="col">Time</th></tr></thead><tbody>`;
+  sorted.forEach(x=>{const [bv,be]=bestVal(x),gap=x.hist.accuracy.at(-1)-x.hist.val_accuracy.at(-1);
+    t+=`<tr class="click${x.slug===S.hopt?" sel":""}" data-slug="${x.slug}"><th scope="row"><button class="optrow-btn" type="button" data-slug="${x.slug}" aria-pressed="${x.slug===S.hopt}">${x.name}</button></th>
+      <td>${pct(x.acc,2)}</td><td>${nf(x.loss,3)}</td><td>${pct(bv)} <span style="color:var(--muted)">(ep ${be})</span></td><td>${gap>=0?"+":"−"}${nf(Math.abs(gap)*100,1)}</td><td>${nf(x.time,0)} s</td></tr>`;});
+  $("#optTable").innerHTML=t+"</tbody>";
+  $("#optTable").querySelectorAll("tr.click").forEach(r=>r.onclick=()=>pickHist(r.dataset.slug));
+  const other=S.hm==="cnn"?"mlp":"cnn",oth=s=>D.models[other].opts.find(x=>x.slug===s).acc;
+  $("#accNote").textContent=`Dashed line: ${other.toUpperCase()} with the same optimizer.`;
+  $("#accTitle").textContent=`Test accuracy ${HM}`;
+  const bx=$("#accBars");bx.innerHTML="";const mx=Math.max(...HOPTS().map(x=>x.acc),...D.models[other].opts.map(x=>x.acc));
+  sorted.forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.hopt?"true":"false");
+    b.setAttribute("aria-label",`${x.name} test accuracy ${pct(x.acc)}. Select this optimizer`);
+    b.innerHTML=`<span>${x.name}</span><span class="bar" style="position:relative"><i style="width:${x.acc/mx*100}%"></i><span style="position:absolute;top:-3px;bottom:-3px;left:${Math.min(100,oth(x.slug)/mx*100)}%;border-left:2px dashed var(--muted)"></span></span><em>${pct(x.acc)}</em>`;
+    b.onclick=()=>pickHist(x.slug);bx.append(b);});
+  const acc=css("--accent"),grey=css("--link");
+  const ser=k=>HOPTS().map(x=>({v:x.hist[k],sel:x.slug===S.hopt,color:x.slug===S.hopt?acc:grey,label:x.slug===S.hopt?x.name:""}));
+  $("#curves").innerHTML=lineChart(ser("val_accuracy"),"Validation accuracy")+lineChart(ser("val_loss"),"Validation loss");
+  const ok=$("#okey");ok.innerHTML="";
+  HOPTS().forEach(x=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",x.slug===S.hopt?"true":"false");
+    b.innerHTML=`<i></i>${x.name}`;b.onclick=()=>pickHist(x.slug);ok.append(b);});
   // MLP vs CNN
-  const sl=S.opt;$("#mvcNote").textContent=`Both trained with ${o.name}, the selected optimizer. The selected dataset is marked in blue.`;
-  const row=(n,p,a)=>`<tr${n===MODEL()?' class="sel"':""}><th scope="row">${n}</th><td>${nf(p)}</td><td>${pct(a,2)}</td></tr>`;
+  const sl=S.hopt;$("#mvcNote").textContent=`Both trained with ${o.name}, the selected optimizer. The selected dataset is marked in blue.`;
+  const row=(n,p,a)=>`<tr${n===HM?' class="sel"':""}><th scope="row">${n}</th><td>${nf(p)}</td><td>${pct(a,2)}</td></tr>`;
   const gap=(a,b)=>`<tr><th scope="row">CNN − MLP</th><td></td><td class="${b>=a?"pos":""}">${b>=a?"+":"−"}${nf(Math.abs(b-a)*100,2)} pts</td></tr>`;
   let body="";
   for(const ds of DSLIST){const s=SUMMARY&&SUMMARY[ds.key];if(!s||!s.mlp||!s.mlp.acc)continue;
     body+=`<tr class="grp${ds.key===S.ds?" sel":""}"><td colspan="3">${s.title} (${s.shape.join(" × ")})</td></tr>${row("MLP",s.mlp.params,s.mlp.acc[sl])}${row("CNN",s.cnn.params,s.cnn.acc[sl])}${gap(s.mlp.acc[sl],s.cnn.acc[sl])}`;}
   $("#cmpTable").innerHTML=`<thead><tr><th scope="col">Model</th><th scope="col">Parameters</th><th scope="col">Test accuracy</th></tr></thead><tbody>${body}</tbody>`;}
+function renderTraining(){if(!EX())return;
+  if(!EX().byKey[S.detail]){const C=configs(S.study),c=C.find(c=>c.runs.length&&c.model==="effnet")||C.find(c=>c.runs.length&&c.k==="cnn-adam")||C.find(c=>c.runs.length);S.detail=c?c.runs[0].key:"";}
+  renderCfg();renderHist();renderDetail();}
 
 /* ---------- dataset control ---------- */
 const DSLIST=[{key:"cifar10"},{key:"fashion"}];
 function syncDS(){
   document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));
   const g=G();$("#heroTitle").textContent=`How ${S.model==="mlp"?"an":"a"} ${MODEL()} reads a ${g.H} × ${g.H} image`;
-  $("#heroLead").textContent=`${D.title}: ${nf(D.pool.length)} test images in the gallery, ${CLS.length} classes, input ${g.H} × ${g.H} × ${g.C}. The MLP and the CNN were each trained with eight optimizers from the same starting weights.`;
+  $("#heroLead").textContent=`${D.title}: ${nf(D.pool.length)} test examples in the gallery, ${CLS.length} classes, input ${g.H} × ${g.H} × ${g.C}. This flow runs the historical CNN in your browser, with eight optimizers from the same initial weights. MLP, CNN, and EfficientNetV2B0 results are in the results and comparison sections.`;
   $("#invWrap").hidden=g.C!==1;
   $("#stripMsg").classList.remove("err");
   $("#stripMsg").textContent=`Upload a JPG or PNG, or drag an image onto the + box. It is center-cropped to a square and resized to ${g.H} × ${g.H}`+(g.C===1?", converted to grayscale, and (if checked) color-inverted.":".");
@@ -976,38 +1216,49 @@ async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#dsMsg"
   $("#flowWrap").classList.remove("busy");m.textContent="";
   buildClassChips();syncFilters();syncDS();buildOptList();renderOptInfo();renderFacts();
   const keep=S.cur&&S.cur.kind==="u"?S.cur:{kind:"g",k:D.demo[9]};select(keep);
-  renderGallery();renderTraining();
-  if(S.cmpAll){S.cmpAll=false;loadAll();}else renderCompare();}
+  if(S.cmpAll){S.cmpAll=false;loadAll();}else renderCompare();
+  $("#grid").innerHTML="";$("#more").innerHTML="";$("#summary").textContent=L.loadingRuns;
+  let X;try{X=await loadExp(ds);}catch(e){if(seq!==dsSeq)return;$("#summary").innerHTML=`<span style="color:var(--bad)">${L.expErr}</span>`;$("#cfgNote").textContent=L.expErr;return;}
+  if(seq!==dsSeq)return;
+  // keep the same run identities when the other dataset has them; never substitute another run
+  if(!X.byKey[S.runA])S.runA="historical__cnn-adam__s42";if(S.runB&&!X.byKey[S.runB])S.runB="";
+  if(!X.byKey[S.detail])S.detail="";
+  syncRunPickers();renderGallery();renderTraining();}
 function syncDSButtons(){document.querySelectorAll("[data-ds]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ds===S.ds?"true":"false"));}
 document.querySelectorAll("[data-ds]").forEach(b=>b.onclick=()=>setDataset(b.dataset.ds));
 $("#fInv").addEventListener("change",e=>{S.inv=e.target.checked;if(S.cur&&S.cur.kind==="u")select(S.cur);else buildStrip();});
+document.querySelectorAll("#studySeg button").forEach(b=>b.onclick=()=>{S.study=b.dataset.v;const c=configs(S.study),cur=EX().byKey[S.detail];
+  const same=cur&&c.find(x=>x.model===cur.model&&x.opt===cur.opt&&x.runs.length);const pick=same||c.find(x=>x.model==="effnet"&&x.runs.length)||c.find(x=>x.runs.length);
+  if(pick)setDetail((pick.runs.find(r=>cur&&r.seed===cur.seed)||pick.runs[0]).key);else renderCfg();});
+document.querySelectorAll("#metricSeg button").forEach(b=>b.onclick=()=>{S.metric=b.dataset.v;renderCfg();});
+document.querySelectorAll("#hmSeg button").forEach(b=>b.onclick=()=>{S.hm=b.dataset.v;try{localStorage.setItem("cnn-model",S.hm);}catch(e){}pickHist(S.hopt);});
 
-/* ---------- model control ---------- */
-function syncModelButtons(m=S.model){document.querySelectorAll("[data-model]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.model===m?"true":"false"));}
-let mdSeq=0;
-async function setModel(m){if(m===S.model)return;const seq=++mdSeq,el=$("#mdMsg");el.classList.remove("err");
-  syncModelButtons(m);el.textContent=`Loading ${m.toUpperCase()}…`;$("#flowWrap").classList.add("busy");
-  try{await loadW(S.opt,S.ds,m);}catch(e){if(seq!==mdSeq)return;$("#flowWrap").classList.remove("busy");el.classList.add("err");
-    el.textContent=`Could not load the ${m.toUpperCase()} weights. Select that model again to retry.`;syncModelButtons();return;}
-  if(seq!==mdSeq)return;
-  S.model=m;try{localStorage.setItem("cnn-model",m);}catch(e){}
-  $("#flowWrap").classList.remove("busy");el.textContent="";S.sel=null;$("#detail").hidden=true;
-  syncDS();buildOptList();renderOptInfo();renderFacts();if(S.cur)select(S.cur);renderGallery();renderTraining();
-  if(S.cmpAll){S.cmpAll=false;loadAll();}else renderCompare();}
-document.querySelectorAll("[data-model]").forEach(b=>b.onclick=()=>setModel(b.dataset.model));
+/* ---------- sidebar: open by default on desktop, a drawer on mobile ---------- */
+const app=document.querySelector(".app"),MQ=matchMedia("(max-width:860px)");
+const sideOpen=()=>MQ.matches?app.classList.contains("drawer-open"):!app.classList.contains("rail-closed");
+function setSidebar(open,{focus=true,persist=true}={}){
+  const mob=MQ.matches,side=$("#sidebar"),btn=$("#menuBtn");
+  if(mob){app.classList.toggle("drawer-open",open);app.classList.remove("rail-closed");$("#scrim").hidden=!open;
+    $("#main").inert=open;$("#topbar").inert=open;side.inert=!open;
+    if(open)side.setAttribute("role","dialog"),side.setAttribute("aria-modal","true");else side.removeAttribute("role"),side.removeAttribute("aria-modal");}
+  else{app.classList.toggle("rail-closed",!open);app.classList.remove("drawer-open");$("#scrim").hidden=true;
+    $("#main").inert=false;$("#topbar").inert=false;side.inert=!open;side.removeAttribute("role");side.removeAttribute("aria-modal");
+    if(persist)try{localStorage.setItem("cnn-rail",open?"0":"1");}catch(e){}}
+  btn.setAttribute("aria-expanded",open?"true":"false");
+  const t=open?"Close the side menu":"Open the side menu";btn.setAttribute("aria-label",t);btn.title=t;
+  if(focus){if(open&&mob)$("#railClose").focus();else if(!open&&(side.contains(document.activeElement)||document.activeElement===document.body))btn.focus();}}
+$("#menuBtn").onclick=()=>setSidebar(!sideOpen());
+$("#railClose").onclick=()=>setSidebar(false);
+$("#scrim").onclick=()=>setSidebar(false);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&MQ.matches&&sideOpen()){e.preventDefault();setSidebar(false);}});
+document.querySelectorAll("#railNav a").forEach(a=>a.addEventListener("click",()=>{if(MQ.matches)setSidebar(false,{focus:false});}));
+function initSidebar(){let closed=false;try{closed=localStorage.getItem("cnn-rail")==="1";}catch(e){}
+  setSidebar(MQ.matches?false:!closed,{focus:false,persist:false});}
+MQ.addEventListener("change",initSidebar);
 
-/* ---------- sidebar toggle (desktop) ---------- */
-function setRail(collapsed){document.querySelector(".app").classList.toggle("rail-collapsed",collapsed);
-  const b=$("#railBtn");b.setAttribute("aria-expanded",collapsed?"false":"true");
-  const t=collapsed?"Expand sidebar":"Collapse sidebar";$("#railLbl").textContent=t;b.title=t;
-  try{localStorage.setItem("cnn-rail",collapsed?"1":"0");}catch(e){}
-  setTimeout(drawLinks,60);}
-$("#railBtn").onclick=()=>setRail(!document.querySelector(".app").classList.contains("rail-collapsed"));
-try{if(localStorage.getItem("cnn-rail")==="1")setRail(true);}catch(e){}
-
-/* ---------- theme + nav ---------- */
+/* ---------- theme (header, right) + nav ---------- */
 function setRamp(){$("#ramp").style.background=`linear-gradient(90deg,${css("--map0")},${css("--map1")},${css("--map2")})`;}
-function setTheme(t){document.documentElement.dataset.theme=t;$("#themeLbl").textContent=t==="dark"?"Light theme":"Dark theme";
+function setTheme(t){document.documentElement.dataset.theme=t;$("#themeBtn").setAttribute("aria-pressed",t==="dark"?"true":"false");
   try{localStorage.setItem("cnn-theme",t);}catch(e){}setRamp();
   if(D){buildStrip();renderFlow();renderTraining();renderGallery();renderCompare();}}
 $("#themeBtn").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
@@ -1016,20 +1267,27 @@ document.querySelectorAll(".flow-bar .seg button").forEach(b=>b.onclick=()=>{S.c
 $("#file").addEventListener("change",e=>{const f=e.target.files[0];if(f)handleFile(f);});
 $("#cmpBtn").onclick=loadAll;
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id));}),{rootMargin:"-40% 0px -55% 0px"});
-let rz;window.addEventListener("resize",()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(drawLinks);});
+/* the flow links are drawn from element positions, so redraw whenever the canvas changes width (window, sidebar) */
+let rz;new ResizeObserver(()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(drawLinks);}).observe($("#flowWrap"));
 
 /* ---------- boot ---------- */
 (async()=>{
+  initSidebar();
   let t="light";try{t=localStorage.getItem("cnn-theme")||t;}catch(e){}
-  document.documentElement.dataset.theme=t;$("#themeLbl").textContent=t==="dark"?"Light theme":"Dark theme";setRamp();
+  document.documentElement.dataset.theme=t;$("#themeBtn").setAttribute("aria-pressed",t==="dark"?"true":"false");setRamp();
   try{let d="cifar10";try{d=localStorage.getItem("cnn-dataset")||d;}catch(e){}if(!DSLIST.some(x=>x.key===d))d="cifar10";
-    try{const mm=localStorage.getItem("cnn-model");if(mm==="mlp"||mm==="cnn")S.model=mm;}catch(e){}
+    try{const mm=localStorage.getItem("cnn-model");if(mm==="mlp"||mm==="cnn")S.hm=mm;}catch(e){}
     S.ds=d;const [c]=await Promise.all([loadDS(d),loadW(S.opt,d)]);D=c.D;atlasCtx=c.atlasCtx;CLS=D.classes;
     try{const r=await fetch("data/summary.json");if(r.ok)SUMMARY=await r.json();}catch(e){}
   }catch(e){const b=$("#boot");b.classList.add("err");b.textContent="Model data could not be loaded. Reload the page. If it still fails, the data files are missing next to this page, or the page was opened as a local file instead of through a web server.";return;}
   $("#boot").remove();["alur","hasil","training"].forEach(id=>{$("#"+id).hidden=false;io.observe($("#"+id));});
-  buildOptList();renderOptInfo();renderFacts();buildFilters();syncDS();syncModelButtons();
-  select({kind:"g",k:D.demo[9]});renderGallery();renderTraining();
+  buildOptList();renderOptInfo();renderFacts();buildFilters();syncDS();
+  select({kind:"g",k:D.demo[9]});
+  // run index: small, loaded after the flow is on screen; predictions and curves load per run on demand
+  $("#summary").textContent=L.loadingRuns;
+  try{await loadExp(S.ds);}catch(e){$("#summary").innerHTML=`<span style="color:var(--bad)">${L.expErr}</span>`;$("#cfgNote").textContent=L.expErr;window.__ready=true;return;}
+  if(!EX().runs.some(r=>r.study===S.study))S.study=EX().runs.some(r=>r.study==="budget")?"budget":S.study;
+  syncRunPickers();renderGallery();renderTraining();
   window.__ready=true;
 })();
 </script>

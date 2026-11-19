@@ -1,0 +1,51 @@
+{
+ "study": "full",
+ "dataset": "cifar10",
+ "smoke": false,
+ "n_train": 45000,
+ "n_val": 5000,
+ "n_test": 10000,
+ "split_file": "experiments/splits/cifar10.json",
+ "split_sha256": {
+  "train": "7ec888cd36bd8133aeac8b0e5e4640d924a9279cc339e953754720039a344d44",
+  "val": "ac709c8440322e7870d2d23251d354b94456cf990704ac86c6bd6124ce0f118a"
+ },
+ "test_fingerprint": "e54a434ec35094516eacbaac0f2f9550358d985e9d1f71b47d41d333c15ba304",
+ "class_order": [
+  "airplane",
+  "automobile",
+  "bird",
+  "cat",
+  "deer",
+  "dog",
+  "frog",
+  "horse",
+  "ship",
+  "truck"
+ ],
+ "tuning_budget": "1 configuration per model (initial config, no search)",
+ "keras": "3.15.1",
+ "model": "mlp",
+ "optimizer": "adam",
+ "seed": 3,
+ "phase": "train",
+ "recipe": {
+  "batch_size": 128,
+  "max_epochs": 40,
+  "patience": 5,
+  "learning_rate": 0.001,
+  "snapshot_epoch": 10,
+  "input": "pixels / 255",
+  "augmentation": "none"
+ },
+ "status": "evaluated",
+ "started": "2026-11-19T10:19:23+00:00",
+ "init_weights_sha256": "ee7b2037844f477945ee729a2b6f425653c2da6ce5d9d7bfaa810f2831a35c91",
+ "params": 820874,
+ "train_seconds": 69.3,
+ "epochs_run": 28,
+ "best_epoch": 23,
+ "best_val_macro_f1": 0.48538,
+ "snapshot_epoch": 10,
+ "finished": "2026-11-19T10:20:33+00:00"
+}

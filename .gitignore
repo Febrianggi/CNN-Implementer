@@ -11,3 +11,8 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# experiment checkpoints: large, and not used by the dashboard (it reads the exported predictions)
+experiments/runs/**/*.weights.h5
+# interrupted runs moved aside by src/experiments.py
+experiments/runs/**/*.attempt-*/
