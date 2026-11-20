@@ -13,6 +13,7 @@ const nf = (v,d=0)=>v.toLocaleString(LOCALE,{minimumFractionDigits:d,maximumFrac
 const pct = (v,d=1)=>nf(v*100,d)+"%";
 const css = n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const hex = h=>{h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));};
+const cmFg = c=>{const l=c.map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return (0.2126*l[0]+0.7152*l[1]+0.0722*l[2])<0.179?"#fff":"#000";};
 const MNAME={mlp:"MLP",cnn:"CNN",effnet:"EfficientNetV2B0"};
 const MODELS=["mlp","cnn","effnet"];
 const EFF_PARAMS=5932122;     // model.count_params() in experiments/runs/budget/*/effnet-*/seed-*/run.json
@@ -115,13 +116,14 @@ function drawTile(cv,k){const s=G().H;cv.width=s;cv.height=s;const c=k%D.cols,r=
 function drawPx(cv,px){const {H:s,C}=G();cv.width=s;cv.height=s;const ctx=cv.getContext("2d"),im=ctx.createImageData(s,s);
   for(let i=0;i<s*s;i++){const r=px[i*C],g=px[i*C+(C>1?1:0)],b=px[i*C+(C>1?2:0)];im.data.set([r*255,g*255,b*255,255],i*4);}ctx.putImageData(im,0,0);}
 /* an upload keeps its 96 × 96 center crop; the model input is derived from it for the current dataset */
-function uploadPx(u){const {H:s,C}=G(),cv=document.createElement("canvas");cv.width=s;cv.height=s;const ctx=cv.getContext("2d");
+function uploadPx(u){if(u.px&&u.ds===S.ds)return u.px;   // sent from the image lab, already preprocessed
+  const {H:s,C}=G(),cv=document.createElement("canvas");cv.width=s;cv.height=s;const ctx=cv.getContext("2d");
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(u.src,0,0,s,s);
   const d=ctx.getImageData(0,0,s,s).data,px=new Float32Array(s*s*C);
   for(let i=0;i<s*s;i++){if(C===3){for(let c=0;c<3;c++)px[i*3+c]=d[i*4+c]/255;}
     else{const y=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;px[i]=S.inv?1-y:y;}}
   return px;}
-function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):uploadPx(S.uploads[S.cur.i]);}
+function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):S.cur.kind==="x"?S.cur.px:uploadPx(S.uploads[S.cur.i]);}   // "x": drawing, file or imported image from the input panel
 
 /* ---------- strip ---------- */
 function buildStrip(){const st=$("#strip");st.innerHTML="";
@@ -134,34 +136,22 @@ function buildStrip(){const st=$("#strip");st.innerHTML="";
     b.setAttribute("aria-pressed",on?"true":"false");b.append(cv,sp);b.onclick=()=>select(it);st.append(b);});
   const up=document.createElement("button");up.type="button";up.className="upload";
   up.innerHTML='<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg>Unggah';
-  up.setAttribute("aria-label","Unggah gambar sendiri");up.onclick=()=>$("#file").click();
+  up.setAttribute("aria-label","Unggah gambar sendiri");up.onclick=()=>{labMode("file");$("#labFileIn").click();};
   st.append(up);}
-function msg(t,err){const m=$("#stripMsg");m.textContent=t;m.classList.toggle("err",!!err);}
-async function handleFile(f){
-  if(!f.type.startsWith("image/")){msg("Berkas ini bukan gambar. Pilih JPG, PNG, atau WEBP.",true);return;}
-  msg("Membaca gambar…");
-  try{const url=URL.createObjectURL(f),img=new Image();
-    await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=url;});
-    const s=Math.min(img.naturalWidth,img.naturalHeight);if(!s)throw 0;
-    const cv=document.createElement("canvas");cv.width=96;cv.height=96;const ctx=cv.getContext("2d");
-    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
-    ctx.drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,96,96);URL.revokeObjectURL(url);
-    S.uploads.push({src:cv,name:f.name});select({kind:"u",i:S.uploads.length-1});
-    msg(`"${f.name}" diperkecil ke ${G().H} × ${G().H} dan diprediksi. Label aslinya tidak diketahui, jadi tidak ada status cocok.`);
-  }catch(e){msg("Gambar tidak bisa dibaca. Coba berkas lain atau simpan ulang sebagai JPG atau PNG.",true);}
-  $("#file").value="";}
+function handleFile(f){labFile(f);}
 
 /* ---------- flow ---------- */
 let flowState=null;
-function select(it){if(S.model==="effnet"){S.cur={...it,truth:it.kind==="g"?D.pool[it.k].t:null};S.sel=null;buildStrip();runEff();return;}const W=WCACHE[wk(S.opt)];if(!W)return;
-  const truth=it.kind==="g"?D.pool[it.k].t:null;
+const truthOf=it=>it.kind==="g"?D.pool[it.k].t:it.kind==="x"&&it.truth!=null?it.truth:null;
+function select(it){if(typeof labOnSelect==="function")labOnSelect(it);if(S.model==="effnet"){S.cur={...it,truth:truthOf(it)};S.sel=null;buildStrip();runEff();return;}const W=WCACHE[wk(S.opt)];if(!W)return;
+  const truth=truthOf(it);
   S.cur={...it,truth};S.cur.res=forward(curPx(),W);S.sel=null;$("#detail").hidden=true;buildStrip();renderFlow();renderCompare();}
 function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
   const m=[];for(let c=0;c<t.c;c++){let s=0;for(let i=c;i<t.d.length;i+=t.c)s+=t.d[i];m.push([s,c]);}
   return m.sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>x[1]).sort((a,b)=>a-b);}
 function maxOf(t,chs){let m=0;for(const c of chs)for(let i=c;i<t.d.length;i+=t.c)if(t.d[i]>m)m=t.d[i];return m;}
 const dims=t=>`${t.h} × ${t.w} × ${t.c}`;
-function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
+function renderFlow(){if(!S.cur||!S.cur.res)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
   const cnn=r.model==="cnn";$("#chSeg").hidden=!cnn;fl.classList.toggle("mlp",!cnn);
   const cols=[{key:"inp",t:r.inp,name:"input",sub:dims(r.inp),chs:[...Array(r.inp.c).keys()],gray:true}];
   if(cnn){const ch1=pickCh(r.c1),ch2=pickCh(r.c2);cols.push(
@@ -355,7 +345,7 @@ async function runEff(){if(S.model!=="effnet"||!S.cur)return;const seq=++effSeq,
     const sess=await effSession(ds,opt);ESESS[k].done=true;
     const x=new Float32Array(px.length);for(let i=0;i<px.length;i++)x[i]=px[i]*255;   // the model takes pixels 0..255 at the dataset's own size
     const out=await sess.run({[sess.inputNames[0]]:new ort.Tensor("float32",x,[1,g.H,g.H,g.C])});prob=Array.from(out[sess.outputNames[0]].data);}
-  catch(err){if(seq!==effSeq)return;panel.classList.remove("busy");note.classList.add("err");note.textContent=L.effErr;$("#effVerdict").innerHTML="";$("#effOut").innerHTML="";return;}
+  catch(err){if(seq!==effSeq)return;panel.classList.remove("busy");note.classList.add("err");note.textContent=window.CNN_OFFLINE?T.effOffline:L.effErr;$("#effVerdict").innerHTML="";$("#effOut").innerHTML="";return;}
   if(seq!==effSeq||ds!==S.ds||opt!==S.opt)return;
   panel.classList.remove("busy");
   const i=EFFINFO[ds][opt].same_as?EFFINFO[ds][EFFINFO[ds][opt].same_as]:EFFINFO[ds][opt];note.textContent=L.effNote(nf(i.agreement*100,2));
@@ -374,7 +364,7 @@ async function setPick(model,opt){
   try{localStorage.setItem("cnn-model",model);localStorage.setItem("cnn-opt",opt);}catch(e){}
   if(S.cmpB===curE().id)S.cmpB="";
   if(modelChanged)resetCompare();
-  renderPick();renderRank();syncFlowMode();syncCmpSelect();S.shown=24;renderGallery();renderTraining();
+  renderPick();renderRank();syncFlowMode();syncCmpSelect();S.shown=24;renderGallery();renderTraining();labOnPick();
   const m=$("#optMsg");m.classList.remove("err");m.textContent="";
   if(model==="effnet"){if(S.cur)runEff();else select({kind:"g",k:D.demo[9]});return;}
   if(!WCACHE[wk(opt)]){m.textContent=L.loadingW(label(curE()));$("#flowWrap").classList.add("busy");}
@@ -518,7 +508,7 @@ async function renderDetail(){const e=curE(),seq=++detSeq,ds=S.ds,lab=label(e);
   const h=e.hist,acc=css("--accent"),o={best:e.best,warm:e.warm,n:h.accuracy.length};
   const pair=(a,b)=>[{v:h[a],color:acc,solid:true,sel:true,label:L.trainL},{v:h[b],color:acc,dash:true,solid:true,dot:true,label:L.valL}];
   $("#runCurves").innerHTML=lineChart(pair("accuracy","val_accuracy"),L.accT,"",420,210,o)+lineChart(pair("loss","val_loss"),L.lossT,"",420,210,o);
-  renderClassPanels(R);renderOptSummary(es);renderCurves(es);renderMvc();}
+  renderClassPanels(R);renderOptSummary(es);renderCurves(es);await renderMvc();}
 function renderClassPanels(R){const pc=$("#pcls");pc.innerHTML="";
   R.cm.forEach((row,i)=>{const a=row[i]/row.reduce((x,y)=>x+y,0),b=document.createElement("button");b.type="button";
     b.setAttribute("aria-label",L.pcAria(CLS[i],pct(a)));
@@ -527,8 +517,7 @@ function renderClassPanels(R){const pc=$("#pcls");pc.innerHTML="";
   const acc=css("--accent"),cmx=Math.max(...R.cm.map((x,i)=>x[i]));let ct=`<table class="cm"><thead><tr><th></th>${CLS.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>`;
   const a1=hex(acc),z=hex(css("--surface")),bad=hex(css("--bad"));
   R.cm.forEach((row,i)=>{ct+=`<tr><th scope="row" style="text-align:right">${CLS[i]}</th>`;
-    row.forEach((v,j)=>{const u=i===j?v/cmx:Math.min(1,v/150),e=i===j?a1:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u));
-      const dk=(0.299*c[0]+0.587*c[1]+0.114*c[2])<140,fg=dk?"#fff":"inherit";
+    row.forEach((v,j)=>{const u=i===j?v/cmx:Math.min(1,v/150),e=i===j?a1:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u)),fg=cmFg(c);
       ct+=`<td style="background:rgb(${c})">${i!==j&&v>0?`<button type="button" data-t="${i}" data-p="${j}" aria-label="${L.cmAria(v,CLS[i],CLS[j])}" style="all:unset;cursor:pointer;display:block;width:100%;height:100%;color:${fg}">${v}</button>`:`<span style="color:${fg}">${v}</span>`}</td>`;});ct+="</tr>";});
   $("#cm").innerHTML=ct+"</tbody></table>";
   $("#cm").querySelectorAll("button").forEach(b=>{b.addEventListener("focus",()=>b.style.outline="2px solid var(--accent)");b.addEventListener("blur",()=>b.style.outline="");
@@ -565,16 +554,11 @@ async function renderMvc(){const seq=++mvcSeq,o=S.opt,e=curE();
 function renderTraining(){if(detailSeen)renderDetail();}
 /* curves and per-run files load only once the detail section is near the screen */
 let detailSeen=false;
-new IntersectionObserver((es,ob)=>{if(es.some(e=>e.isIntersecting)&&!detailSeen){detailSeen=true;ob.disconnect();if(D&&ENTC[S.ds])renderDetail();}},{rootMargin:"400px 0px"}).observe(document.getElementById("training"));
+const detailObs=new IntersectionObserver((es,ob)=>{if(es.some(e=>e.isIntersecting)&&!detailSeen){detailSeen=true;ob.disconnect();if(D&&ENTC[S.ds])renderDetail();}},{rootMargin:"400px 0px"});detailObs.observe(document.getElementById("training"));
 
 /* ---------- dataset control ---------- */
 const DSLIST=[{key:"cifar10"},{key:"fashion"}];
-function syncDS(){
-  const g=G();
-  $("#invWrap").hidden=g.C!==1;
-  $("#stripMsg").classList.remove("err");
-  $("#stripMsg").textContent=`Unggah JPG atau PNG, atau tarik gambar ke mana saja di halaman ini. Gambar dipotong persegi di tengah lalu diperkecil ke ${g.H} × ${g.H}`+(g.C===1?", diubah ke grayscale, dan (jika dicentang) dibalik warnanya.":".");
-}
+function syncDS(){}
 let dsSeq=0;
 async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#optMsg");m.classList.remove("err");
   const title=ds==="fashion"?"Fashion-MNIST":"CIFAR-10";
@@ -590,12 +574,10 @@ async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#optMsg
   $("#flowWrap").classList.remove("busy");m.textContent="";
   buildClassChips();syncFilters();syncDS();
   if(S.cmpAll){S.cmpAll=false;resetCompare();}
-  const keep=S.cur&&S.cur.kind==="u"?S.cur:{kind:"g",k:D.demo[9]};
-  S.cur=null;
+  labOnDataset();S.cur=null;
   await setPick(S.model,S.opt);
-  select(keep);}
+  if(!S.cur)select({kind:"g",k:D.demo[9]});}
 document.querySelectorAll("[data-ds]").forEach(b=>b.onclick=()=>setDataset(b.dataset.ds));
-$("#fInv").addEventListener("change",e=>{S.inv=e.target.checked;if(S.cur&&S.cur.kind==="u")select(S.cur);else buildStrip();});
 
 /* ---------- sidebar: open by default on desktop, a drawer on mobile ---------- */
 const app=document.querySelector(".app"),MQ=matchMedia("(max-width:860px)");
@@ -615,7 +597,11 @@ $("#menuBtn").onclick=()=>setSidebar(!sideOpen());
 $("#railClose").onclick=()=>setSidebar(false);
 $("#scrim").onclick=()=>setSidebar(false);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&MQ.matches&&sideOpen()){e.preventDefault();setSidebar(false);}});
-document.querySelectorAll("#railNav a").forEach(a=>a.addEventListener("click",()=>{if(MQ.matches)setSidebar(false,{focus:false});}));
+let navTarget="";
+document.querySelectorAll("#railNav a").forEach(a=>a.addEventListener("click",()=>{if(MQ.matches)setSidebar(false,{focus:false});
+  navTarget=a.getAttribute("href");
+  if(navTarget==="#evaluasi"&&!detailSeen&&D&&ENTC[S.ds]){detailSeen=true;detailObs.disconnect();
+    renderDetail().then(()=>{if(navTarget==="#evaluasi"&&location.hash==="#evaluasi"){document.getElementById("evaluasi").scrollIntoView({behavior:"auto"});syncNav();}});}}));
 function initSidebar(){let closed=false;try{closed=localStorage.getItem("cnn-rail")==="1";}catch(e){}
   setSidebar(MQ.matches?false:!closed,{focus:false,persist:false});}
 MQ.addEventListener("change",initSidebar);
@@ -624,13 +610,22 @@ MQ.addEventListener("change",initSidebar);
 function setRamp(){$("#ramp").style.background=`linear-gradient(90deg,${css("--map0")},${css("--map1")},${css("--map2")})`;}
 function setTheme(t){document.documentElement.dataset.theme=t;$("#themeBtn").setAttribute("aria-pressed",t==="dark"?"true":"false");
   try{localStorage.setItem("cnn-theme",t);}catch(e){}setRamp();
-  if(D&&ENTC[S.ds]){buildStrip();renderFlow();renderTraining();renderGallery();renderCompare();}}
+  if(D&&ENTC[S.ds]){buildStrip();renderFlow();renderTraining();renderGallery();renderCompare();labOnTheme();}}
 $("#themeBtn").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
 document.querySelectorAll(".flow-bar .seg button").forEach(b=>b.onclick=()=>{S.chMode=b.dataset.ch;
   document.querySelectorAll(".flow-bar .seg button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));closeDetail();renderFlow();});
-$("#file").addEventListener("change",e=>{const f=e.target.files[0];if(f)handleFile(f);});
 $("#cmpBtn").onclick=loadAll;
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id));}),{rootMargin:"-40% 0px -55% 0px"});
+const SECS=["akurasi","alur","hasil","training","evaluasi"];
+let navRaf=0;
+function syncNav(){navRaf=0;if(!D)return;
+  const atBottom=window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-8;
+  let id=SECS[0];
+  if(atBottom)id=SECS[SECS.length-1];
+  else{const cut=Math.max(120,window.innerHeight*0.35);
+    for(const s of SECS){const el=document.getElementById(s);if(el&&!el.hidden&&el.getBoundingClientRect().top<=cut)id=s;}}
+  document.querySelectorAll("#railNav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+id));}
+const qNav=()=>{if(!navRaf)navRaf=requestAnimationFrame(syncNav);};
+window.addEventListener("scroll",qNav,{passive:true});window.addEventListener("resize",qNav,{passive:true});window.addEventListener("hashchange",qNav);
 /* the flow links are drawn from element positions, so redraw whenever the canvas changes width (window, sidebar) */
 let rz;new ResizeObserver(()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(drawLinks);}).observe($("#flowWrap"));
 
@@ -643,7 +638,9 @@ document.addEventListener("dragover",ev=>{if(!hasFiles(ev))return;ev.preventDefa
 document.addEventListener("dragleave",ev=>{if(!hasFiles(ev))return;dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)setDropping(false);});
 document.addEventListener("drop",ev=>{if(!hasFiles(ev))return;ev.preventDefault();dragDepth=0;setDropping(false);
   const f=ev.dataTransfer.files[0];if(!f||!D)return;
-  handleFile(f);document.getElementById("alur").scrollIntoView();});
+  const tg=ev.target instanceof Element?ev.target:null;
+  if(tg&&tg.closest("#evaluasi")){const fs=[...ev.dataTransfer.files];if(fs.length===1&&/\.zip$/i.test(fs[0].name))impZip(fs[0]);else impList(fs.map(x=>({path:x.name,file:x})));return;}
+  labFile(f);document.getElementById("alur").scrollIntoView();});
 
 /* ---------- boot ---------- */
 (async()=>{
@@ -657,8 +654,10 @@ document.addEventListener("drop",ev=>{if(!hasFiles(ev))return;ev.preventDefault(
     if(S.model!=="effnet")await loadW(S.opt,d);
     try{const r=await fetch("data/summary.json");if(r.ok)SUMMARY=await r.json();}catch(e){}
   }catch(e){const b=$("#boot");b.classList.add("err");b.textContent="Data model gagal dimuat. Muat ulang halaman; kalau masih gagal, berkas data tidak ikut terunggah.";return;}
-  $("#boot").remove();["akurasi","alur","hasil","training"].forEach(id=>{$("#"+id).hidden=false;io.observe($("#"+id));});
+  $("#boot").remove();SECS.forEach(id=>{$("#"+id).hidden=false;});
   buildFilters();syncDS();
+  labInit();
   await setPick(S.model,S.opt);
+  syncNav();
   window.__ready=true;
 })();

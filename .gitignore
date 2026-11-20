@@ -16,3 +16,4 @@ Thumbs.db
 experiments/runs/**/*.weights.h5
 # interrupted runs moved aside by src/experiments.py
 experiments/runs/**/*.attempt-*/
+dashboard/dist/

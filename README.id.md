@@ -25,12 +25,16 @@ Tata letak tampilan jaringannya terinspirasi dari [CNN Explainer](https://polocl
 
 Semuanya dimulai dari bagian atas halaman: pilih **dataset** (CIFAR-10 atau Fashion-MNIST), lalu **model** (MLP, CNN, atau EfficientNetV2B0), lalu **optimizer**. Angka besar di samping tombol adalah akurasi uji model itu pada 10.000 citra uji, beserta peringkatnya di antara semua model yang sudah dilatih. Semua bagian di bawahnya mengikuti pilihan ini. Hanya model yang benar-benar sudah dilatih yang ditampilkan.
 
-Halaman ini punya empat bagian yang bisa dibuka dari sidebar. Header berisi dua tombol yang selalu ada di tempatnya: tombol menu di kiri membuka dan menutup sidebar, dan **Mode gelap** di kanan mengganti tema.
+Halaman ini punya lima bagian yang bisa dibuka dari sidebar. Header berisi dua tombol yang selalu ada di tempatnya: tombol menu di kiri membuka dan menutup sidebar, dan **Mode gelap** di kanan mengganti tema.
 
 1. **Akurasi.** Peringkat memuat ke-19 model yang sudah dilatih untuk dataset itu (8 MLP, 8 CNN, 3 EfficientNetV2B0) dalam satu skala. Klik baris untuk memilih model tersebut. Catatan di bawah peringkat menyebut cara tiap model dilatih, karena EfficientNetV2B0 di-fine-tune pada subset 3.000 citra dengan input 96 × 96, sedangkan MLP dan CNN memakai seluruh data latih.
-2. **Alur jaringan** menjalankan model terpilih di browser-mu. Pilih salah satu dari sepuluh thumbnail contoh, tekan **+** untuk mengunggah JPG atau PNG, atau tarik gambar ke mana saja di halaman. Untuk MLP dan CNN, baca alurnya dari kiri ke kanan: channel input, lalu feature map conv1 dan conv2 dengan max pooling untuk CNN (atau flatten dan dua layer dense untuk MLP), lalu probabilitas kelas. Klik kotak mana saja untuk memperbesarnya dan melihat bobot di baliknya. "Bandingkan semua optimizer" menampilkan prediksi tiap optimizer untuk gambar yang sedang dipilih. Untuk EfficientNetV2B0, bagian ini menampilkan kelas prediksi dan ke-10 probabilitasnya, tanpa feature map: modelnya diekspor ke ONNX dan dijalankan dengan ONNX Runtime Web, dan berkasnya (sekitar 12 MB) diunduh saat pertama kali dipakai.
-3. **Hasil uji** menampilkan prediksi model terpilih pada kumpulan tetap 1.000 citra uji (100 per kelas). Saring menurut status cocok dan kelas asli, dan bila perlu bandingkan dengan model kedua untuk menyaring *Keduanya benar*, *Hanya terpilih benar*, *Hanya pembanding benar*, atau *Keduanya salah*. Hitungan di baris ringkasan selalu memakai seluruh 10.000 citra uji.
+2. **Alur jaringan** diawali satu panel masukan. Pilih sumbernya: salah satu dari sepuluh *contoh bawaan* (citra uji, dipakai apa adanya), *gambar* buatanmu di kanvas (ukuran kuas bisa diatur, ada urungkan dan hapus), atau *unggah gambar* (tekan **+** atau tarik gambar ke mana saja di halaman). Gambar yang dibuka dari **Evaluasi data sendiri** juga tampil di sini, lengkap dengan nama berkas, labelnya, dan tombol *Kembali ke galeri* yang kembali ke halaman dan filter galeri yang sama. Untuk gambar buatan dan berkas, panel menampilkan gambar asli di samping masukan model yang sebenarnya, jadi efek prapemrosesan terlihat: grayscale dan inversi otomatis untuk Fashion-MNIST (objek terang di latar gelap, seperti data latihnya), crop ke objek dan centering yang bisa dimatikan, lalu resize. Gambar yang ukurannya sudah 28 × 28 atau 32 × 32 dipakai pikselnya apa adanya, sama seperti citra uji. Model terpilih lalu dijalankan pada masukan itu di bawah panel. Untuk MLP dan CNN, baca alurnya dari kiri ke kanan: channel input, feature map conv1 dan conv2 dengan max pooling untuk CNN (atau flatten dan dua layer dense untuk MLP), lalu probabilitas kelas. Klik kotak mana saja untuk memperbesarnya dan melihat bobot di baliknya. "Bandingkan semua optimizer" menampilkan prediksi tiap optimizer untuk masukan yang sama, dan *Unduh prediksi (.json)* menyimpan masukan, prapemrosesan, dan semua probabilitasnya. Untuk EfficientNetV2B0, bagian ini menampilkan kelas prediksi dan ke-10 probabilitasnya, tanpa feature map: modelnya dijalankan dengan ONNX Runtime Web, dan berkasnya (sekitar 12 MB) diunduh saat pertama kali dipakai.
+3. **Hasil uji resmi** menampilkan prediksi model terpilih pada kumpulan tetap 1.000 citra uji (100 per kelas). Saring menurut status cocok dan kelas asli, dan bila perlu bandingkan dengan model kedua untuk menyaring *Keduanya benar*, *Hanya terpilih benar*, *Hanya pembanding benar*, atau *Keduanya salah*. Hitungan di baris ringkasan selalu memakai seluruh 10.000 citra uji.
 4. **Detail model** menampilkan kurva training, akurasi per kelas, dan confusion matrix model terpilih, lalu ringkasan semua optimizer model itu beserta peringkat keseluruhannya, kurva validasi optimizer-optimizer tersebut, dan tabel yang membandingkan MLP, CNN, dan EfficientNetV2B0 di kedua dataset dengan optimizer terpilih. Klik kelas atau sel di luar diagonal untuk membuka gambarnya di galeri.
+
+5. **Evaluasi data sendiri** memuat gambar berlabel milikmu dari ZIP, folder, atau berkas lepas. Label dibaca dari `labels.csv` (kolom nama berkas dan kolom label berisi 0 sampai 9 atau nama kelas) atau dari nama folder seperti `0_T_shirt_top/`, `3/`, atau `cat/`. Pemeriksaan impor melaporkan gambar berlabel dan tanpa label, label yang tidak dikenal, baris CSV yang tidak cocok, dan berkas yang dilewati (batas: 3.000 gambar, 5 MB per gambar, 100 MB total). Setelah impor, jumlah gambar berlabel dan tombol *Jalankan evaluasi* ada di atas galeri; model pembanding dan prapemrosesan ada di *Opsi lanjutan*. *Jalankan evaluasi* mengklasifikasi setiap gambar berlabel di browser dan melaporkan akurasi, presisi makro, recall makro, F1 makro, tabel per kelas, dan confusion matrix, bisa juga dibandingkan dengan model kedua. Galeri bisa disaring per kelas (dan benar atau salah setelah evaluasi) dan dibuka per halaman; *Lihat di Alur jaringan* pada sebuah gambar membukanya di sana beserta labelnya. Angka-angka ini selalu diberi keterangan sebagai hasil pada sampel impor, terpisah dari benchmark resmi 10.000 citra uji. Prediksi per gambar dan metriknya bisa diunduh sebagai CSV.
+
+Berkas impor, unggahan, dan gambar buatanmu dibaca di browser dan tidak diunggah ke mana pun.
 
 Di layar lebar, sidebar terbuka secara bawaan dan konten melebar saat sidebar ditutup. Di ponsel, sidebar terbuka sebagai drawer; tutup dengan ×, Escape, ketukan di luar drawer, atau dengan memilih salah satu bagian. Tombol bahasa Inggris/Indonesia ada di bagian bawah sidebar.
 
@@ -41,6 +45,10 @@ Di layar lebar, sidebar terbuka secara bawaan dan konten melebar saat sidebar di
 | Alur jaringan (MLP) | Hasil uji dibandingkan dengan model lain |
 |---|---|
 | ![Alur jaringan MLP](docs/screenshots/id/mlp.png) | ![Galeri dengan pembanding](docs/screenshots/id/gallery.png) |
+
+| Panel masukan: gambar buatan, prapemrosesannya, dan feature map di bawahnya | Evaluasi langsung pada sampel impor |
+|---|---|
+| ![Panel masukan dan alur jaringan](docs/screenshots/id/lab.png) | ![Evaluasi langsung](docs/screenshots/id/evaluation.png) |
 
 | Detail model | Mode gelap, ponsel |
 |---|---|
@@ -121,7 +129,7 @@ Pengaturan sapuan historis: seed 42 (bobot awal identik), 10 epoch, batch 128, 1
 
 Sapuan historis di bawah membandingkan optimizer dengan satu seed dan tanpa pemilihan checkpoint. Eksperimen terkontrol menjawab pertanyaan arsitektur dan lama training dengan lebih benar: split yang sama untuk setiap model, tiga seed berpasangan, checkpoint dipilih dengan data validasi, dan test set baru dipakai di akhir.
 
-**Status.** Semua yang ada di bagian ini dilatih di CPU 2 core tanpa GPU. Run MLP dan CNN sudah lengkap (3 seed, kedua dataset, kedua anggaran data). EfficientNetV2B0 dengan resep penuh (224 px, seluruh split latih) **belum dijalankan**: satu epoch fine-tuning butuh sekitar satu jam di CPU itu, sedangkan rencananya butuh hingga 71 epoch per dataset dan seed. Sebagai gantinya, EfficientNet dijalankan pada subset kecil yang tetap dengan input 96 px: 1 seed di CIFAR-10 dan 3 seed di Fashion-MNIST. Dashboard mencantumkan run yang belum ada sebagai *belum dilatih*, dan perintah untuk menjalankannya ada di [Menjalankan sendiri](#menjalankan-ulang-eksperimen-terkontrol).
+**Status.** Semua yang ada di bagian ini dilatih di CPU 2 core tanpa GPU. Run MLP dan CNN sudah lengkap (3 seed, kedua dataset, kedua anggaran data). EfficientNetV2B0 dengan resep penuh (224 px, seluruh split latih) **belum dijalankan**: satu epoch fine-tuning butuh sekitar satu jam di CPU itu, sedangkan rencananya butuh hingga 71 epoch per dataset dan seed. Sebagai gantinya, EfficientNet dijalankan pada subset kecil yang tetap dengan input 96 px: 1 seed di CIFAR-10 dan 3 seed di Fashion-MNIST. Dashboard hanya menampilkan run yang sudah ada; perintah untuk menjalankannya ada di [Menjalankan sendiri](#menjalankan-ulang-eksperimen-terkontrol).
 
 ### Protokol
 
@@ -250,7 +258,7 @@ Sitasi:
 ├── dashboard/
 │   ├── index.html              dashboard (bahasa Inggris), dibangun dari dashboard/src
 │   ├── index.id.html           dashboard (bahasa Indonesia), dibangun dari dashboard/src
-│   ├── src/                    sumber halaman: head, CSS, markup, app.js, teks Inggris, build.py
+│   ├── src/                    sumber halaman: head, CSS, markup, app.js, teks Inggris, build.py; lab.js untuk panel masukan, impor, dan evaluasi
 │   └── data/
 │       ├── summary.json        akurasi MLP vs CNN historis untuk kedua dataset
 │       └── <dataset>/          data.json, w-<model>-<optimizer>.json (sapuan historis),
@@ -289,6 +297,8 @@ python -m http.server 8000
 Lalu buka http://localhost:8000/index.id.html (Indonesia) atau http://localhost:8000 (Inggris).
 
 Kedua halaman itu dihasilkan dari sumbernya. Setelah mengubah apa pun di `dashboard/src/`, bangun ulang dengan `python dashboard/src/build.py`; skrip berhenti bila ada teks Inggris yang tidak lagi cocok dengan sumber berbahasa Indonesia.
+
+Untuk salinan yang bisa dibuka langsung dari disk, tanpa web server atau internet, jalankan `python dashboard/src/build.py --offline` (tambahkan `--dataset fashion` atau `--dataset cifar10` untuk berkas yang lebih kecil). Hasilnya `dashboard/dist/cnn-explorer-offline.html` dan `.id.html` dengan data, bobot MLP dan CNN, serta berkas run tertanam di dalamnya (sekitar 41 MB untuk kedua dataset, 12,5 MB untuk Fashion-MNIST saja). EfficientNetV2B0 butuh ONNX Runtime Web dari CDN, jadi salinan offline menampilkan hasilnya tetapi tidak bisa menjalankannya. Folder `dashboard/dist/` diabaikan git dan tidak ikut situs GitHub Pages.
 
 ### Menayangkan salinanmu sendiri dengan GitHub Pages
 

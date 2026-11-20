@@ -232,6 +232,113 @@ tr.grp td{color:var(--muted);font-size:13px;padding-top:14px;text-align:left}
   .curves{grid-template-columns:1fr}
   .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));padding:14px;gap:10px}
 }
+
+/* Input panel of the network flow (examples, drawing, file, imported image), imported datasets, live evaluation. Same tokens as the rest of the page: one blue accent for
+   selection and the model's top class, green/red only for right/wrong, surfaces and lines unchanged. */
+.in-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
+.in-grid>*{min-width:0}
+#inPanel{padding:18px}
+#inPanel .strip{margin-top:0}
+.in-prep{border-left:1px solid var(--line);padding-left:24px}
+.in-prep #labExNote{margin-top:0}
+.pv{max-height:230px}
+.imp,.ev,.gal{padding:18px;min-width:0}
+.ev,.gal{margin-top:16px}
+.gal h3{font-size:16px}
+.lab-src{margin-top:14px}
+.draw-box{display:flex;justify-content:center;background:var(--sunken);border-radius:var(--r-tile);padding:12px}
+#labCanvas{width:280px;max-width:100%;aspect-ratio:1;border-radius:6px;border:1px solid var(--line);touch-action:none;cursor:crosshair;display:block}
+.draw-tools{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:12px}
+.rng{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.rng b{font-weight:500;color:var(--ink);min-width:44px;font-variant-numeric:tabular-nums}
+.rng input[type=range]{accent-color:var(--accent);width:130px}
+.rng input[type=color]{width:40px;height:32px;border:1px solid var(--line);border-radius:6px;padding:2px;background:var(--surface)}
+.btn.sm{min-height:36px;padding:7px 12px;font-size:13px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+:root[data-theme="dark"] .btn.primary{color:#0A1222}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled:hover{border-color:var(--line)}
+.lab-drop{border:1.5px dashed var(--link);border-radius:var(--r-tile);padding:26px 16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:var(--muted);font-size:13px}
+.lab-drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.fname{color:var(--ink)}.fname.err{color:var(--bad)}
+.prep{display:flex;flex-direction:column;gap:2px}
+.ctl{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.ctl select{color:var(--ink);max-width:100%}
+.prep .ctl{flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.check.sm{font-size:12px;color:var(--muted)}
+.prev2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.prev2 figure{margin:0}
+.prev2 figcaption{font-size:12px;color:var(--muted);margin-bottom:6px}
+.pv{position:relative;background:var(--sunken);border-radius:var(--r-tile);aspect-ratio:1;display:grid;place-items:center;overflow:hidden}
+.pv canvas{max-width:100%;max-height:100%;display:block}
+#labInput{width:70%;height:auto;aspect-ratio:1}
+canvas.pix,img.pix{image-rendering:pixelated}
+.pv-empty{position:absolute;font-size:13px;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted);margin-top:8px;max-width:80ch;overflow-wrap:anywhere}
+.hint.err,.hint.warn{color:var(--bad)}
+.lab-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.tblw{overflow-x:auto;margin-top:10px}
+.tbl{border-collapse:collapse;font-size:13px;width:100%}
+.tbl th,.tbl td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.tbl thead th{font-weight:500;color:var(--muted);font-size:12px}
+.tbl td small{color:var(--muted);margin-left:4px}
+.tbl tr.sel th,.tbl tr.sel td{background:var(--accent-soft)}
+.imp-bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.imp-bar .lab-acts{margin-top:0}
+.rep{background:var(--sunken);border-radius:var(--r-tile);padding:10px 14px;font-size:13px;margin-top:12px}
+.rep ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.rep li.ok{color:var(--ok)}.rep li.warn{color:var(--bad)}
+#galCls{margin-top:14px}
+#galCls small{color:var(--muted);margin-left:2px}
+.ctrl-line{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:13px}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin-top:14px}
+.icard{border:1px solid var(--line);border-radius:var(--r-tile);background:var(--surface);padding:8px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0}
+.icard:hover{border-color:var(--accent)}
+.icard img{width:100%;aspect-ratio:1;object-fit:contain;background:var(--sunken);border-radius:4px}
+.icard .nm{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icard .lb{font-size:13px;font-weight:500}
+.icard .lb i{font-style:normal;color:var(--muted);font-weight:400}
+.icard .tab{align-self:flex-start;font-size:11px;padding:1px 6px}
+.pager{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:14px;font-size:13px;color:var(--muted)}
+.ev h3{font-size:16px}
+.ev-ctl{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:12px}
+.ev-ctl .ctl{flex:0 1 320px}
+.ev-ready{font-size:14px;margin-top:6px}
+.adv{margin-top:14px;font-size:13px}
+.adv summary{cursor:pointer;color:var(--muted);padding:6px 0}
+.adv summary:hover{color:var(--ink)}
+.adv .ev-ctl{margin-top:4px}
+.from-ev{background:var(--sunken);border-radius:var(--r-tile);padding:12px 14px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.from-ev .hint{margin:0}
+.from-ev p{margin:0;font-size:14px;overflow-wrap:anywhere}
+.from-ev-nm span{color:var(--muted);font-size:13px}
+.from-ev i{font-style:normal;color:var(--muted)}
+.from-ev .btn{margin-top:6px}
+.icard .act{font-size:11px;color:var(--muted);margin-top:auto;padding-top:2px}
+.icard:hover .act,.icard:focus-visible .act{color:var(--accent)}
+.ev-ctl .lab-acts{margin-top:0}
+.evprog{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}
+.evprog .bar{flex:1;height:8px;background:var(--sunken);border-radius:4px;overflow:hidden}
+.evprog .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.badge-sample{display:inline-block;margin-top:14px;font-size:13px;font-weight:600;color:var(--ink);background:var(--accent-soft);border-left:3px solid var(--accent);padding:6px 10px;border-radius:4px}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:12px}
+.kpi-leg{font-size:13px;margin-top:10px;color:var(--ink)}
+.kpi-leg span,.kpi-leg em{color:var(--muted);font-style:normal}
+.kpi{border:1px solid var(--line);border-radius:var(--r-tile);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi b{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi em{font-style:normal;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ev-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;margin-top:16px}
+.ev-grid>div{min-width:0}
+.ev-grid h4,.agree h4{font-size:14px;margin:0 0 6px}
+.ev-grid h4 small{font-weight:400;color:var(--muted)}
+.agree{margin-top:16px}
+.agree ul{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.cmb{all:unset;cursor:pointer;display:block;width:100%;height:100%;line-height:30px}
+.cmb:focus-visible{outline:2px solid currentColor;outline-offset:-2px}
+@media (max-width:1100px){.in-grid,.ev-grid{grid-template-columns:1fr}.in-prep{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:16px}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ev-ctl .ctl{flex:1 1 100%}#inPanel,.imp,.ev,.gal{padding:14px}.igrid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}}
 </style>
 <style>
 /* picker: dataset -> model -> optimizer, with the selected result as the focal number */
@@ -386,8 +493,9 @@ main section{scroll-margin-top:76px}
     <nav class="nav" id="railNav" aria-label="Page sections">
       <a href="#akurasi" class="on"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h9M2 9h14M2 14h6"/></svg><span class="lbl">Accuracy</span></a>
       <a href="#alur"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="5" width="4" height="8" rx="1"/><rect x="7" y="3" width="4" height="12" rx="1"/><rect x="12.5" y="6.5" width="4" height="5" rx="1"/></svg><span class="lbl">Network flow</span></a>
-      <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg><span class="lbl">Test results</span></a>
+      <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg><span class="lbl">Official test results</span></a>
       <a href="#training"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 15.5h15M3 12l4-4 3 3 5-6"/></svg><span class="lbl">Model details</span></a>
+      <a href="#evaluasi"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 5.5h5l1.5 2H16v7.5H2z"/><path d="M6 11.5l2 1.8 4-4"/></svg><span class="lbl">Evaluate your own data</span></a>
     </nav>
     <div class="rail-ds">
       <p id="lblDsRail">Dataset</p>
@@ -443,12 +551,7 @@ main section{scroll-margin-top:76px}
     <section id="alur" hidden>
       <div class="sec-head"><h2 id="heroTitle">How a CNN reads a 32 × 32 image</h2></div>
       <div id="flowArea">
-        <div>
-          <div class="strip" id="strip" role="group" aria-label="Choose an image to inspect"></div>
-          <input type="file" id="file" accept="image/*" class="sr" tabindex="-1">
-          <p class="strip-msg" id="stripMsg" aria-live="polite"></p>
-          <label class="check" id="invWrap" hidden><input type="checkbox" id="fInv" checked> Invert uploaded images (Fashion-MNIST shows light items on a black background)</label>
-        </div>
+        <div class="panel" id="inPanel"></div>
 
         <div class="panel eff-pred" id="effPanel" hidden>
           <div class="flow-bar"><div class="verdict-line" id="effVerdict" aria-live="polite"></div></div>
@@ -563,6 +666,7 @@ main section{scroll-margin-top:76px}
         </div>
       </div>
     </section>
+    <section id="evaluasi" hidden></section>
   </main>
   </div>
   <div class="scrim" id="scrim" hidden></div>
@@ -585,6 +689,7 @@ const nf = (v,d=0)=>v.toLocaleString(LOCALE,{minimumFractionDigits:d,maximumFrac
 const pct = (v,d=1)=>nf(v*100,d)+"%";
 const css = n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const hex = h=>{h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));};
+const cmFg = c=>{const l=c.map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return (0.2126*l[0]+0.7152*l[1]+0.0722*l[2])<0.179?"#fff":"#000";};
 const MNAME={mlp:"MLP",cnn:"CNN",effnet:"EfficientNetV2B0"};
 const MODELS=["mlp","cnn","effnet"];
 const EFF_PARAMS=5932122;     // model.count_params() in experiments/runs/budget/*/effnet-*/seed-*/run.json
@@ -687,13 +792,14 @@ function drawTile(cv,k){const s=G().H;cv.width=s;cv.height=s;const c=k%D.cols,r=
 function drawPx(cv,px){const {H:s,C}=G();cv.width=s;cv.height=s;const ctx=cv.getContext("2d"),im=ctx.createImageData(s,s);
   for(let i=0;i<s*s;i++){const r=px[i*C],g=px[i*C+(C>1?1:0)],b=px[i*C+(C>1?2:0)];im.data.set([r*255,g*255,b*255,255],i*4);}ctx.putImageData(im,0,0);}
 /* an upload keeps its 96 × 96 center crop; the model input is derived from it for the current dataset */
-function uploadPx(u){const {H:s,C}=G(),cv=document.createElement("canvas");cv.width=s;cv.height=s;const ctx=cv.getContext("2d");
+function uploadPx(u){if(u.px&&u.ds===S.ds)return u.px;   // sent from the image lab, already preprocessed
+  const {H:s,C}=G(),cv=document.createElement("canvas");cv.width=s;cv.height=s;const ctx=cv.getContext("2d");
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(u.src,0,0,s,s);
   const d=ctx.getImageData(0,0,s,s).data,px=new Float32Array(s*s*C);
   for(let i=0;i<s*s;i++){if(C===3){for(let c=0;c<3;c++)px[i*3+c]=d[i*4+c]/255;}
     else{const y=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;px[i]=S.inv?1-y:y;}}
   return px;}
-function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):uploadPx(S.uploads[S.cur.i]);}
+function curPx(){return S.cur.kind==="g"?tilePixels(S.cur.k):S.cur.kind==="x"?S.cur.px:uploadPx(S.uploads[S.cur.i]);}   // "x": drawing, file or imported image from the input panel
 
 /* ---------- strip ---------- */
 function buildStrip(){const st=$("#strip");st.innerHTML="";
@@ -706,34 +812,22 @@ function buildStrip(){const st=$("#strip");st.innerHTML="";
     b.setAttribute("aria-pressed",on?"true":"false");b.append(cv,sp);b.onclick=()=>select(it);st.append(b);});
   const up=document.createElement("button");up.type="button";up.className="upload";
   up.innerHTML='<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg>Upload';
-  up.setAttribute("aria-label","Upload your own image");up.onclick=()=>$("#file").click();
+  up.setAttribute("aria-label","Upload your own image");up.onclick=()=>{labMode("file");$("#labFileIn").click();};
   st.append(up);}
-function msg(t,err){const m=$("#stripMsg");m.textContent=t;m.classList.toggle("err",!!err);}
-async function handleFile(f){
-  if(!f.type.startsWith("image/")){msg("This file is not an image. Choose a JPG, PNG, or WEBP file.",true);return;}
-  msg("Reading image…");
-  try{const url=URL.createObjectURL(f),img=new Image();
-    await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=url;});
-    const s=Math.min(img.naturalWidth,img.naturalHeight);if(!s)throw 0;
-    const cv=document.createElement("canvas");cv.width=96;cv.height=96;const ctx=cv.getContext("2d");
-    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
-    ctx.drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,96,96);URL.revokeObjectURL(url);
-    S.uploads.push({src:cv,name:f.name});select({kind:"u",i:S.uploads.length-1});
-    msg(`"${f.name}" was resized to ${G().H} × ${G().H} and classified. Its true label is unknown, so it has no match status.`);
-  }catch(e){msg("The image could not be read. Try another file or re-save it as JPG or PNG.",true);}
-  $("#file").value="";}
+function handleFile(f){labFile(f);}
 
 /* ---------- flow ---------- */
 let flowState=null;
-function select(it){if(S.model==="effnet"){S.cur={...it,truth:it.kind==="g"?D.pool[it.k].t:null};S.sel=null;buildStrip();runEff();return;}const W=WCACHE[wk(S.opt)];if(!W)return;
-  const truth=it.kind==="g"?D.pool[it.k].t:null;
+const truthOf=it=>it.kind==="g"?D.pool[it.k].t:it.kind==="x"&&it.truth!=null?it.truth:null;
+function select(it){if(typeof labOnSelect==="function")labOnSelect(it);if(S.model==="effnet"){S.cur={...it,truth:truthOf(it)};S.sel=null;buildStrip();runEff();return;}const W=WCACHE[wk(S.opt)];if(!W)return;
+  const truth=truthOf(it);
   S.cur={...it,truth};S.cur.res=forward(curPx(),W);S.sel=null;$("#detail").hidden=true;buildStrip();renderFlow();renderCompare();}
 function pickCh(t,n=8){if(S.chMode==="first")return [...Array(n).keys()];
   const m=[];for(let c=0;c<t.c;c++){let s=0;for(let i=c;i<t.d.length;i+=t.c)s+=t.d[i];m.push([s,c]);}
   return m.sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>x[1]).sort((a,b)=>a-b);}
 function maxOf(t,chs){let m=0;for(const c of chs)for(let i=c;i<t.d.length;i+=t.c)if(t.d[i]>m)m=t.d[i];return m;}
 const dims=t=>`${t.h} × ${t.w} × ${t.c}`;
-function renderFlow(){if(!S.cur)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
+function renderFlow(){if(!S.cur||!S.cur.res)return;const r=S.cur.res,fl=$("#flow");fl.innerHTML="";
   const cnn=r.model==="cnn";$("#chSeg").hidden=!cnn;fl.classList.toggle("mlp",!cnn);
   const cols=[{key:"inp",t:r.inp,name:"input",sub:dims(r.inp),chs:[...Array(r.inp.c).keys()],gray:true}];
   if(cnn){const ch1=pickCh(r.c1),ch2=pickCh(r.c2);cols.push(
@@ -927,7 +1021,7 @@ async function runEff(){if(S.model!=="effnet"||!S.cur)return;const seq=++effSeq,
     const sess=await effSession(ds,opt);ESESS[k].done=true;
     const x=new Float32Array(px.length);for(let i=0;i<px.length;i++)x[i]=px[i]*255;   // the model takes pixels 0..255 at the dataset's own size
     const out=await sess.run({[sess.inputNames[0]]:new ort.Tensor("float32",x,[1,g.H,g.H,g.C])});prob=Array.from(out[sess.outputNames[0]].data);}
-  catch(err){if(seq!==effSeq)return;panel.classList.remove("busy");note.classList.add("err");note.textContent=L.effErr;$("#effVerdict").innerHTML="";$("#effOut").innerHTML="";return;}
+  catch(err){if(seq!==effSeq)return;panel.classList.remove("busy");note.classList.add("err");note.textContent=window.CNN_OFFLINE?T.effOffline:L.effErr;$("#effVerdict").innerHTML="";$("#effOut").innerHTML="";return;}
   if(seq!==effSeq||ds!==S.ds||opt!==S.opt)return;
   panel.classList.remove("busy");
   const i=EFFINFO[ds][opt].same_as?EFFINFO[ds][EFFINFO[ds][opt].same_as]:EFFINFO[ds][opt];note.textContent=L.effNote(nf(i.agreement*100,2));
@@ -946,7 +1040,7 @@ async function setPick(model,opt){
   try{localStorage.setItem("cnn-model",model);localStorage.setItem("cnn-opt",opt);}catch(e){}
   if(S.cmpB===curE().id)S.cmpB="";
   if(modelChanged)resetCompare();
-  renderPick();renderRank();syncFlowMode();syncCmpSelect();S.shown=24;renderGallery();renderTraining();
+  renderPick();renderRank();syncFlowMode();syncCmpSelect();S.shown=24;renderGallery();renderTraining();labOnPick();
   const m=$("#optMsg");m.classList.remove("err");m.textContent="";
   if(model==="effnet"){if(S.cur)runEff();else select({kind:"g",k:D.demo[9]});return;}
   if(!WCACHE[wk(opt)]){m.textContent=L.loadingW(label(curE()));$("#flowWrap").classList.add("busy");}
@@ -1090,7 +1184,7 @@ async function renderDetail(){const e=curE(),seq=++detSeq,ds=S.ds,lab=label(e);
   const h=e.hist,acc=css("--accent"),o={best:e.best,warm:e.warm,n:h.accuracy.length};
   const pair=(a,b)=>[{v:h[a],color:acc,solid:true,sel:true,label:L.trainL},{v:h[b],color:acc,dash:true,solid:true,dot:true,label:L.valL}];
   $("#runCurves").innerHTML=lineChart(pair("accuracy","val_accuracy"),L.accT,"",420,210,o)+lineChart(pair("loss","val_loss"),L.lossT,"",420,210,o);
-  renderClassPanels(R);renderOptSummary(es);renderCurves(es);renderMvc();}
+  renderClassPanels(R);renderOptSummary(es);renderCurves(es);await renderMvc();}
 function renderClassPanels(R){const pc=$("#pcls");pc.innerHTML="";
   R.cm.forEach((row,i)=>{const a=row[i]/row.reduce((x,y)=>x+y,0),b=document.createElement("button");b.type="button";
     b.setAttribute("aria-label",L.pcAria(CLS[i],pct(a)));
@@ -1099,8 +1193,7 @@ function renderClassPanels(R){const pc=$("#pcls");pc.innerHTML="";
   const acc=css("--accent"),cmx=Math.max(...R.cm.map((x,i)=>x[i]));let ct=`<table class="cm"><thead><tr><th></th>${CLS.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>`;
   const a1=hex(acc),z=hex(css("--surface")),bad=hex(css("--bad"));
   R.cm.forEach((row,i)=>{ct+=`<tr><th scope="row" style="text-align:right">${CLS[i]}</th>`;
-    row.forEach((v,j)=>{const u=i===j?v/cmx:Math.min(1,v/150),e=i===j?a1:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u));
-      const dk=(0.299*c[0]+0.587*c[1]+0.114*c[2])<140,fg=dk?"#fff":"inherit";
+    row.forEach((v,j)=>{const u=i===j?v/cmx:Math.min(1,v/150),e=i===j?a1:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u)),fg=cmFg(c);
       ct+=`<td style="background:rgb(${c})">${i!==j&&v>0?`<button type="button" data-t="${i}" data-p="${j}" aria-label="${L.cmAria(v,CLS[i],CLS[j])}" style="all:unset;cursor:pointer;display:block;width:100%;height:100%;color:${fg}">${v}</button>`:`<span style="color:${fg}">${v}</span>`}</td>`;});ct+="</tr>";});
   $("#cm").innerHTML=ct+"</tbody></table>";
   $("#cm").querySelectorAll("button").forEach(b=>{b.addEventListener("focus",()=>b.style.outline="2px solid var(--accent)");b.addEventListener("blur",()=>b.style.outline="");
@@ -1137,16 +1230,11 @@ async function renderMvc(){const seq=++mvcSeq,o=S.opt,e=curE();
 function renderTraining(){if(detailSeen)renderDetail();}
 /* curves and per-run files load only once the detail section is near the screen */
 let detailSeen=false;
-new IntersectionObserver((es,ob)=>{if(es.some(e=>e.isIntersecting)&&!detailSeen){detailSeen=true;ob.disconnect();if(D&&ENTC[S.ds])renderDetail();}},{rootMargin:"400px 0px"}).observe(document.getElementById("training"));
+const detailObs=new IntersectionObserver((es,ob)=>{if(es.some(e=>e.isIntersecting)&&!detailSeen){detailSeen=true;ob.disconnect();if(D&&ENTC[S.ds])renderDetail();}},{rootMargin:"400px 0px"});detailObs.observe(document.getElementById("training"));
 
 /* ---------- dataset control ---------- */
 const DSLIST=[{key:"cifar10"},{key:"fashion"}];
-function syncDS(){
-  const g=G();
-  $("#invWrap").hidden=g.C!==1;
-  $("#stripMsg").classList.remove("err");
-  $("#stripMsg").textContent=`Upload a JPG or PNG, or drag an image anywhere onto this page. It is center-cropped to a square and resized to ${g.H} × ${g.H}`+(g.C===1?", converted to grayscale, and (if checked) color-inverted.":".");
-}
+function syncDS(){}
 let dsSeq=0;
 async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#optMsg");m.classList.remove("err");
   const title=ds==="fashion"?"Fashion-MNIST":"CIFAR-10";
@@ -1162,12 +1250,10 @@ async function setDataset(ds){if(ds===S.ds)return;const seq=++dsSeq,m=$("#optMsg
   $("#flowWrap").classList.remove("busy");m.textContent="";
   buildClassChips();syncFilters();syncDS();
   if(S.cmpAll){S.cmpAll=false;resetCompare();}
-  const keep=S.cur&&S.cur.kind==="u"?S.cur:{kind:"g",k:D.demo[9]};
-  S.cur=null;
+  labOnDataset();S.cur=null;
   await setPick(S.model,S.opt);
-  select(keep);}
+  if(!S.cur)select({kind:"g",k:D.demo[9]});}
 document.querySelectorAll("[data-ds]").forEach(b=>b.onclick=()=>setDataset(b.dataset.ds));
-$("#fInv").addEventListener("change",e=>{S.inv=e.target.checked;if(S.cur&&S.cur.kind==="u")select(S.cur);else buildStrip();});
 
 /* ---------- sidebar: open by default on desktop, a drawer on mobile ---------- */
 const app=document.querySelector(".app"),MQ=matchMedia("(max-width:860px)");
@@ -1187,7 +1273,11 @@ $("#menuBtn").onclick=()=>setSidebar(!sideOpen());
 $("#railClose").onclick=()=>setSidebar(false);
 $("#scrim").onclick=()=>setSidebar(false);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&MQ.matches&&sideOpen()){e.preventDefault();setSidebar(false);}});
-document.querySelectorAll("#railNav a").forEach(a=>a.addEventListener("click",()=>{if(MQ.matches)setSidebar(false,{focus:false});}));
+let navTarget="";
+document.querySelectorAll("#railNav a").forEach(a=>a.addEventListener("click",()=>{if(MQ.matches)setSidebar(false,{focus:false});
+  navTarget=a.getAttribute("href");
+  if(navTarget==="#evaluasi"&&!detailSeen&&D&&ENTC[S.ds]){detailSeen=true;detailObs.disconnect();
+    renderDetail().then(()=>{if(navTarget==="#evaluasi"&&location.hash==="#evaluasi"){document.getElementById("evaluasi").scrollIntoView({behavior:"auto"});syncNav();}});}}));
 function initSidebar(){let closed=false;try{closed=localStorage.getItem("cnn-rail")==="1";}catch(e){}
   setSidebar(MQ.matches?false:!closed,{focus:false,persist:false});}
 MQ.addEventListener("change",initSidebar);
@@ -1196,13 +1286,22 @@ MQ.addEventListener("change",initSidebar);
 function setRamp(){$("#ramp").style.background=`linear-gradient(90deg,${css("--map0")},${css("--map1")},${css("--map2")})`;}
 function setTheme(t){document.documentElement.dataset.theme=t;$("#themeBtn").setAttribute("aria-pressed",t==="dark"?"true":"false");
   try{localStorage.setItem("cnn-theme",t);}catch(e){}setRamp();
-  if(D&&ENTC[S.ds]){buildStrip();renderFlow();renderTraining();renderGallery();renderCompare();}}
+  if(D&&ENTC[S.ds]){buildStrip();renderFlow();renderTraining();renderGallery();renderCompare();labOnTheme();}}
 $("#themeBtn").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
 document.querySelectorAll(".flow-bar .seg button").forEach(b=>b.onclick=()=>{S.chMode=b.dataset.ch;
   document.querySelectorAll(".flow-bar .seg button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));closeDetail();renderFlow();});
-$("#file").addEventListener("change",e=>{const f=e.target.files[0];if(f)handleFile(f);});
 $("#cmpBtn").onclick=loadAll;
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id));}),{rootMargin:"-40% 0px -55% 0px"});
+const SECS=["akurasi","alur","hasil","training","evaluasi"];
+let navRaf=0;
+function syncNav(){navRaf=0;if(!D)return;
+  const atBottom=window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-8;
+  let id=SECS[0];
+  if(atBottom)id=SECS[SECS.length-1];
+  else{const cut=Math.max(120,window.innerHeight*0.35);
+    for(const s of SECS){const el=document.getElementById(s);if(el&&!el.hidden&&el.getBoundingClientRect().top<=cut)id=s;}}
+  document.querySelectorAll("#railNav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+id));}
+const qNav=()=>{if(!navRaf)navRaf=requestAnimationFrame(syncNav);};
+window.addEventListener("scroll",qNav,{passive:true});window.addEventListener("resize",qNav,{passive:true});window.addEventListener("hashchange",qNav);
 /* the flow links are drawn from element positions, so redraw whenever the canvas changes width (window, sidebar) */
 let rz;new ResizeObserver(()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(drawLinks);}).observe($("#flowWrap"));
 
@@ -1215,7 +1314,9 @@ document.addEventListener("dragover",ev=>{if(!hasFiles(ev))return;ev.preventDefa
 document.addEventListener("dragleave",ev=>{if(!hasFiles(ev))return;dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)setDropping(false);});
 document.addEventListener("drop",ev=>{if(!hasFiles(ev))return;ev.preventDefault();dragDepth=0;setDropping(false);
   const f=ev.dataTransfer.files[0];if(!f||!D)return;
-  handleFile(f);document.getElementById("alur").scrollIntoView();});
+  const tg=ev.target instanceof Element?ev.target:null;
+  if(tg&&tg.closest("#evaluasi")){const fs=[...ev.dataTransfer.files];if(fs.length===1&&/\.zip$/i.test(fs[0].name))impZip(fs[0]);else impList(fs.map(x=>({path:x.name,file:x})));return;}
+  labFile(f);document.getElementById("alur").scrollIntoView();});
 
 /* ---------- boot ---------- */
 (async()=>{
@@ -1229,11 +1330,503 @@ document.addEventListener("drop",ev=>{if(!hasFiles(ev))return;ev.preventDefault(
     if(S.model!=="effnet")await loadW(S.opt,d);
     try{const r=await fetch("data/summary.json");if(r.ok)SUMMARY=await r.json();}catch(e){}
   }catch(e){const b=$("#boot");b.classList.add("err");b.textContent="Model data could not be loaded. Reload the page. If it still fails, the data files are missing next to this page, or the page was opened as a local file instead of through a web server.";return;}
-  $("#boot").remove();["akurasi","alur","hasil","training"].forEach(id=>{$("#"+id).hidden=false;io.observe($("#"+id));});
+  $("#boot").remove();SECS.forEach(id=>{$("#"+id).hidden=false;});
   buildFilters();syncDS();
+  labInit();
   await setPick(S.model,S.opt);
+  syncNav();
   window.__ready=true;
 })();
+
+/* ======================================================================================
+   Input panel of the network flow (drawing, file, imported image), imported datasets and live evaluation.
+   Everything here runs on the models the page already has: forward() for MLP and CNN
+   (16-bit weights from w-<model>-<opt>.json) and the ONNX session for EfficientNetV2B0.
+   Imported files never leave the browser. Metrics on imported files are computed here and are
+   always labelled as sample metrics, never mixed with the official 10,000-image test results.
+   ====================================================================================== */
+const T={
+  srcDraw:"Draw", srcFile:"Upload image",
+  brush:"Brush", color:"Color", clear:"Clear canvas", undo:"Undo",
+  drawHintGray:"Draw a light object on a black background, like a Fashion-MNIST image.",
+  drawHintRgb:"Draw in color on a white background. Sketches are outside the CIFAR-10 training distribution, so treat the prediction as an experiment.",
+  pickFile:"Choose an image", dropHere:"or drop an image on this box", fileTypes:"PNG, JPG, or WEBP, up to 10 MB",
+  bg:"Background", bgAuto:"Automatic, from the image border", bgDark:"Light object, dark background", bgLight:"Dark object, light background (inverted)",
+  crop:"Crop empty margins and center the object", exact:H=>`Use pixels as they are when the image is already ${H} × ${H} (like the test data)`,
+  original:"Original image", modelIn:H=>`Model input, ${H} × ${H}`, emptySrc:"No image yet",
+  infoExact:H=>`Already ${H} × ${H}: pixels are used as they are, without inversion or cropping.`,
+  infoInv:"Colors inverted (the image border is light).", infoNoInv:"Colors not inverted.",
+  infoCrop:(w,h)=>`Object cropped (${w} × ${h} px) and centered.`, infoNoCrop:"Whole image, no crop.",
+  infoGray:"Converted to grayscale.",
+  effFail:"EfficientNetV2B0 could not be loaded. Check your internet connection, or choose MLP or CNN.",
+  effOffline:"EfficientNetV2B0 is not available in the offline version. Choose MLP or CNN.", saveJson:"Download prediction (.json)",
+  srcGroup:"Image source", srcEx:"Built-in examples", stripAria:"Choose a test image to inspect", exHint:"Ten images from the test set, one per class.",
+  exNote:"Test images are used as they are, without preprocessing. Choose Draw or Upload image to try another image.",
+  waitSrc:"No image yet. The network flow below still shows the previous image.", badFile:"Choose a PNG, JPG, or WEBP file of up to 10 MB.",
+  dsTitle:"Evaluate your own data", dsLead:"Import your own labelled images, browse them, and measure the models directly in your browser.",
+  impZip:"Import ZIP", impFolder:"Import folder", impFiles:"Import files", impClear:"Clear",
+  impFormat:(cls)=>`Labels come from labels.csv (columns filename and label, where label is 0 to 9 or a class name) or from folder names, for example 0_${cls[0].replace(/[^A-Za-z0-9]+/g,"_")}/ or ${cls[1].replace(/[^A-Za-z0-9]+/g,"_")}/. Up to 3,000 images, 5 MB per image, 100 MB in total. Files stay on your device.`,
+  impEmpty:"No images imported for this dataset yet.",
+  impReading:"Reading files…", impUnzip:"Extracting the ZIP in your browser…",
+  impDone:(n,l)=>`${n} images loaded, ${l} labelled.`,
+  impNoImg:"No usable PNG, JPG, or WEBP images found.",
+  zipBad:"This file is not a valid ZIP.", zip64:"ZIP64 is not supported. Recompress as a regular ZIP or import it as a folder.",
+  zipMethod:m=>`ZIP compression method ${m} is not supported (only stored and deflate).`,
+  zipNoInflate:"This browser cannot extract ZIP files. Import the folder instead.",
+  zipBig:"The ZIP is larger than 200 MB.", tooMany:"More than 3,000 images; only the first 3,000 were loaded.",
+  repTitle:"Import check",
+  repLabeled:n=>`${n} labelled`, repUnl:n=>`${n} without a label (shown, not evaluated)`,
+  repBadLbl:(n,ex)=>`${n} labels not known for this dataset, for example ${ex}`,
+  repSkipType:n=>`${n} ${n==="1"?"file":"files"} skipped (not an image)`, repSkipBig:n=>`${n} ${n==="1"?"image":"images"} skipped (larger than 5 MB)`,
+  repSkipTotal:"The rest was skipped because the total exceeds 100 MB",
+  repCsv:(f,n,u)=>`${f}: ${n} rows read, ${u} do not match any file`, repCsvCols:f=>`${f}: no filename or label column found`,
+  repOther:t=>`Many labels match the ${t} classes. Switch the dataset above if the images come from ${t}.`,
+  repSize:(n,H)=>`${n} images are ${H} × ${H}`,
+  galEmpty:"No images match this filter.", allCls:"All classes", unl:"No label", stAll:"All", stOk:"Right", stBad:"Wrong",
+  cellFilter:(t,p)=>`Filter: label ${t}, predicted ${p}`, clrFilter:"Clear filter",
+  galCount:(a,b,n)=>`${a}–${b} of ${n}`, prev:"Previous", next:"Next", openLab:"View in Network flow",
+  evTitle:"Live evaluation", modelA:"Model", modelB:"Compare with", none:"None",
+  prepMode:"Preprocessing", prepBench:"Like the test data: resize only", prepLab:"Use the input panel settings",
+  run:"Run evaluation", cancel:"Cancel", needLabels:"Import labelled images first to run an evaluation.",
+  progress:(a,b)=>`Processing ${a} of ${b} images…`, cancelled:"Evaluation cancelled.",
+  evFail:"Evaluation failed: ", decodeFail:n=>`${n} images could not be read and were skipped.`,
+  sampleBadge:n=>`Results on ${n} imported images. These are not official benchmark results.`,
+  legA:"(large numbers)", legB:"(small numbers)", kAcc:"Accuracy", kP:"Macro precision", kR:"Macro recall", kF:"Macro F1", kN:"Images evaluated",
+  benchRef:a=>`Official benchmark for this model: ${a} on the 10,000 test images.`,
+  macroNote:"Macro averages are taken over the classes present in the imported labels. A class that is never predicted gets precision 0.",
+  perCls:"Per class", clsHead:["Class","Precision","Recall","F1","Count"],
+  cmTitle:"Confusion matrix", cmNote:"Rows are labels, columns are predictions. Click a cell to show those images in the gallery.",
+  agree:"Agreement between the two models", agBoth:"Both right", agA:"Only the first model right", agB:"Only the comparison right", agNone:"Both wrong",
+  csvRows:"Download per-image predictions (.csv)", csvMetrics:"Download metrics (.csv)",
+  stale:"The data or model changed since the last evaluation. Run it again to update.",
+  fromEval:"Image from Evaluate your own data", truthLbl:"Label", backGal:"Back to the gallery",
+  ready:n=>`${n} labelled images ready to evaluate`, adv:"Advanced options", galTitle:"Imported images",
+};
+
+const LAB={mode:"ex",brush:18,color:"#1D4ED8",inv:"auto",crop:true,exact:true,src:null,srcW:0,srcH:0,srcName:"",truth:null,pre:null,lastG:null,strokes:[]};
+const IMP={};        // dataset key -> {items:[{path,name,blob,url,label,bytes}], report}
+const IMPJOB={};     // dataset key -> latest import/clear sequence number
+const EVAL={};       // dataset key -> last evaluation result
+const LIM={files:3000,img:5*1024*1024,total:100*1024*1024,zip:200*1024*1024,dim:4096,upload:10*1024*1024};
+const GV={cls:-1,st:"all",cell:null,page:0,per:40};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=(v,d=1)=>pct(v,d);
+const entById=id=>E().find(e=>e.id===id);
+const isOffline=()=>!!window.CNN_OFFLINE;
+
+/* ---------- preprocessing ----------
+   Benchmark images (already H × H) keep their pixels. Everything else: grayscale and optional
+   inversion for Fashion-MNIST (light object on black, as in the training data), optional crop to
+   the object, then resize. Returns the model input in [0, 1], channels last. */
+function borderMean(v,w,h,ch=1,c=0){const t=Math.max(1,Math.floor(Math.min(w,h)*.07));let s=0,n=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(x<t||y<t||x>=w-t||y>=h-t){s+=v[(y*w+x)*ch+c];n++;}return s/Math.max(1,n);}
+function prep(src,sw,sh,o){const {H,C}=G();
+  if(o.exact&&sw===H&&sh===H){const cv=document.createElement("canvas");cv.width=H;cv.height=H;const x=cv.getContext("2d",{willReadFrequently:true});
+    x.imageSmoothingEnabled=false;x.drawImage(src,0,0);const d=x.getImageData(0,0,H,H).data,px=new Float32Array(H*H*C);
+    for(let i=0;i<H*H;i++){if(C===3){for(let c=0;c<3;c++)px[i*3+c]=d[i*4+c]/255;}
+      else{const r=d[i*4],g=d[i*4+1],b=d[i*4+2];px[i]=(r===g&&g===b?r:0.299*r+0.587*g+0.114*b)/255;}}
+    return {px,exact:true,invert:false,box:null,sw,sh};}
+  const sc=Math.min(1,256/Math.max(sw,sh)),w=Math.max(1,Math.round(sw*sc)),h=Math.max(1,Math.round(sh*sc));
+  const wc=document.createElement("canvas");wc.width=w;wc.height=h;const wx=wc.getContext("2d",{willReadFrequently:true});
+  wx.fillStyle=o.fill||"#fff";wx.fillRect(0,0,w,h);wx.imageSmoothingEnabled=true;wx.imageSmoothingQuality="high";wx.drawImage(src,0,0,w,h);
+  const im=wx.getImageData(0,0,w,h),d=im.data,n=w*h;let invert=false,mask=new Uint8Array(n),fillCol="#000";
+  if(C===1){const g=new Float32Array(n);for(let i=0;i<n;i++)g[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
+    invert=o.inv==="light"||(o.inv==="auto"&&borderMean(g,w,h)>127);
+    for(let i=0;i<n;i++){const v=invert?255-g[i]:g[i];d[i*4]=d[i*4+1]=d[i*4+2]=v;d[i*4+3]=255;mask[i]=v>35?1:0;}
+    wx.putImageData(im,0,0);}
+  else{const rgb=new Float32Array(n*3);for(let i=0;i<n;i++)for(let c=0;c<3;c++)rgb[i*3+c]=d[i*4+c];
+    const bm=[0,1,2].map(c=>borderMean(rgb,w,h,3,c));fillCol=`rgb(${bm.map(Math.round)})`;
+    for(let i=0;i<n;i++){const dd=Math.abs(d[i*4]-bm[0])+Math.abs(d[i*4+1]-bm[1])+Math.abs(d[i*4+2]-bm[2]);mask[i]=dd>60?1:0;}}
+  let box={x:0,y:0,w,h},cropped=false;
+  if(o.crop){let x0=w,y0=h,x1=-1,y1=-1,cnt=0;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(mask[y*w+x]){cnt++;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+    if(cnt>0&&cnt<n*.92){const p=Math.max(1,Math.round(.07*Math.max(x1-x0+1,y1-y0+1)));
+      const l=Math.max(0,x0-p),t=Math.max(0,y0-p),r=Math.min(w,x1+1+p),b=Math.min(h,y1+1+p);box={x:l,y:t,w:r-l,h:b-t};cropped=true;}}
+  const oc=document.createElement("canvas");oc.width=H;oc.height=H;const ox=oc.getContext("2d",{willReadFrequently:true});
+  ox.imageSmoothingEnabled=true;ox.imageSmoothingQuality="high";
+  if(C===1){ox.fillStyle="#000";ox.fillRect(0,0,H,H);const room=cropped?H-4:H,f=Math.min(room/box.w,room/box.h),dw=box.w*f,dh=box.h*f;
+    ox.drawImage(wc,box.x,box.y,box.w,box.h,(H-dw)/2,(H-dh)/2,dw,dh);}
+  else{let side,cx,cy;if(cropped){side=Math.max(box.w,box.h);cx=box.x+box.w/2;cy=box.y+box.h/2;}else{side=Math.min(w,h);cx=w/2;cy=h/2;}
+    ox.fillStyle=fillCol;ox.fillRect(0,0,H,H);const f=H/side;ox.drawImage(wc,0,0,w,h,(0-(cx-side/2))*f,(0-(cy-side/2))*f,w*f,h*f);
+    box={x:Math.max(0,cx-side/2),y:Math.max(0,cy-side/2),w:Math.min(side,w),h:Math.min(side,h)};}
+  const od=ox.getImageData(0,0,H,H).data,px=new Float32Array(H*H*C);
+  for(let i=0;i<H*H;i++){if(C===3){for(let c=0;c<3;c++)px[i*3+c]=od[i*4+c]/255;}else px[i]=od[i*4]/255;}
+  return {px,exact:false,invert,cropped,box:{x:box.x/w,y:box.y/h,w:box.w/w,h:box.h/h},bw:Math.round(box.w/sc),bh:Math.round(box.h/sc),gray:C===1,sw,sh};}
+
+/* ---------- inference on any trained entry, in batches ---------- */
+async function predictBatch(e,pxs,ds=S.ds){
+  if(e.browser){const W=await loadW(e.opt,ds,e.model);return pxs.map(p=>forward(p,W,false).prob);}
+  if(isOffline())throw new Error("offline");
+  const sess=await effSession(ds,e.opt),{H,C}=G(),n=pxs.length,sz=H*H*C,x=new Float32Array(n*sz);
+  pxs.forEach((p,i)=>{for(let j=0;j<sz;j++)x[i*sz+j]=p[j]*255;});
+  const out=await sess.run({[sess.inputNames[0]]:new ort.Tensor("float32",x,[n,H,H,C])}),d=out[sess.outputNames[0]].data;
+  return [...Array(n)].map((_,i)=>Array.from(d.slice(i*10,i*10+10)));}
+const argmax=a=>{let k=0;for(let i=1;i<a.length;i++)if(a[i]>a[k])k=i;return k;};
+function modelOptions(sel,withNone){sel.innerHTML="";if(withNone){const o=document.createElement("option");o.value="";o.textContent=T.none;sel.append(o);}
+  MODELS.forEach(m=>{const es=ofModel(m);if(!es.length)return;const g=document.createElement("optgroup");g.label=MNAME[m];
+    es.forEach(e=>{const o=document.createElement("option");o.value=e.id;o.textContent=`${label(e)} (${pct(e.acc,2)})`;g.append(o);});sel.append(g);});}
+
+/* ---------- input panel markup (top of the network flow) and the imported-dataset section ---------- */
+function labMount(){
+  $("#inPanel").innerHTML=`<div class="in-grid">
+    <div class="in-src">
+      <div class="seg" role="group" aria-label="${T.srcGroup}" id="labSrc">
+        <button type="button" data-m="ex">${T.srcEx}</button><button type="button" data-m="draw">${T.srcDraw}</button><button type="button" data-m="file">${T.srcFile}</button></div>
+      <div id="labEx" class="lab-src"><div class="strip" id="strip" role="group" aria-label="${T.stripAria}"></div><p class="hint">${T.exHint}</p></div>
+      <div id="labDraw" class="lab-src" hidden>
+        <div class="draw-box"><canvas id="labCanvas" width="280" height="280" aria-label="${T.srcDraw}"></canvas></div>
+        <div class="draw-tools">
+          <label class="rng">${T.brush} <input type="range" id="labBrush" min="4" max="40" value="${LAB.brush}"><b id="labBrushV">${LAB.brush} px</b></label>
+          <label class="rng" id="labColorWrap">${T.color} <input type="color" id="labColor" value="${LAB.color}"></label>
+          <button type="button" class="btn sm" id="labUndo">${T.undo}</button><button type="button" class="btn sm" id="labClear">${T.clear}</button></div>
+        <p class="hint" id="labDrawHint"></p></div>
+      <div id="labFile" class="lab-src" hidden>
+        <div class="lab-drop" id="labDrop"><button type="button" class="btn" id="labPick">${T.pickFile}</button><span>${T.dropHere}</span><small>${T.fileTypes}</small><small id="labFileName" class="fname"></small></div>
+        <input type="file" id="labFileIn" accept="image/png,image/jpeg,image/webp" class="sr" tabindex="-1"></div>
+      <div id="labImport" class="lab-src" hidden><div class="from-ev"><span class="hint">${T.fromEval}</span>
+        <p class="from-ev-nm"><b id="labImpName"></b> <span id="labImpSize"></span></p><p id="labImpLbl"></p>
+        <button type="button" class="btn sm" id="labBack">${T.backGal}</button></div></div>
+    </div>
+    <div class="in-prep">
+      <p class="hint" id="labExNote">${T.exNote}</p>
+      <div id="labPrep">
+        <div class="prep">
+          <label class="ctl" id="labBgWrap"><span>${T.bg}</span><select id="labBg"><option value="auto">${T.bgAuto}</option><option value="dark">${T.bgDark}</option><option value="light">${T.bgLight}</option></select></label>
+          <label class="check"><input type="checkbox" id="labCrop"> ${T.crop}</label>
+          <label class="check"><input type="checkbox" id="labExact"> <span id="labExactT"></span></label></div>
+        <div class="prev2"><figure><figcaption>${T.original}</figcaption><div class="pv"><canvas id="labOrig"></canvas><span class="pv-empty" id="labOrigE">${T.emptySrc}</span></div></figure>
+          <figure><figcaption id="labInT"></figcaption><div class="pv"><canvas id="labInput" class="pix"></canvas></div></figure></div>
+        <p class="hint" id="labInfo" aria-live="polite"></p>
+      </div>
+      <div class="lab-acts"><button type="button" class="btn sm" id="labJson">${T.saveJson}</button></div>
+    </div>
+  </div>`;
+  $("#evaluasi").innerHTML=`<div class="sec-head"><div><h2>${T.dsTitle}</h2><p>${T.dsLead}</p></div></div>
+  <div class="panel imp">
+    <div class="imp-bar"><div class="lab-acts"><button type="button" class="btn sm primary" id="impZip">${T.impZip}</button><button type="button" class="btn sm" id="impFolder">${T.impFolder}</button>
+      <button type="button" class="btn sm" id="impFiles">${T.impFiles}</button><button type="button" class="btn sm" id="impClear">${T.impClear}</button></div>
+      <input type="file" id="impZipIn" accept=".zip,application/zip" class="sr" tabindex="-1"><input type="file" id="impFolderIn" webkitdirectory directory multiple class="sr" tabindex="-1">
+      <input type="file" id="impFilesIn" multiple accept="image/png,image/jpeg,image/webp,.csv,text/csv" class="sr" tabindex="-1"></div>
+    <p class="hint" id="impFormat"></p>
+    <p class="hint" id="impMsg" aria-live="polite"></p>
+    <div id="impReport"></div>
+  </div>
+  <div class="panel ev" id="evPanel" hidden>
+    <h3>${T.evTitle}</h3>
+    <p class="ev-ready" id="evReady"></p>
+    <div class="ev-ctl">
+      <label class="ctl"><span>${T.modelA}</span><select id="evA"></select></label>
+      <div class="lab-acts"><button type="button" class="btn primary" id="evRun">${T.run}</button><button type="button" class="btn" id="evCancel" hidden>${T.cancel}</button></div></div>
+    <details class="adv"><summary>${T.adv}</summary><div class="ev-ctl">
+      <label class="ctl"><span>${T.modelB}</span><select id="evB"></select></label>
+      <label class="ctl"><span>${T.prepMode}</span><select id="evPrep"><option value="bench">${T.prepBench}</option><option value="lab">${T.prepLab}</option></select></label></div></details>
+    <div class="evprog" id="evProg" hidden><span class="bar"><i id="evBar"></i></span><span id="evProgT"></span></div>
+    <p class="hint" id="evMsg" aria-live="polite"></p>
+    <div id="evOut"></div>
+  </div>
+  <div class="panel gal" id="galPanel" hidden>
+    <h3>${T.galTitle}</h3>
+    <div class="chips" id="galCls" role="group" aria-label="${T.galTitle}"></div>
+    <div class="ctrl-line"><div class="seg" id="galSt" role="group" hidden><button type="button" data-v="all">${T.stAll}</button><button type="button" data-v="ok">${T.stOk}</button><button type="button" data-v="bad">${T.stBad}</button></div><span id="galCell"></span></div>
+    <div class="igrid" id="galGrid"></div>
+    <div class="pager" id="galPager"></div>
+  </div>`;
+  labWire();}
+
+/* ---------- input panel behaviour: every source ends in select({kind:"x", px}) so the flow below shows it ---------- */
+let drawCtx=null,drawing=false,lastPt=null;
+function labCanvasReset(){const cv=$("#labCanvas");drawCtx=cv.getContext("2d");const {C}=G();
+  drawCtx.fillStyle=C===1?"#000":"#fff";drawCtx.fillRect(0,0,cv.width,cv.height);LAB.strokes=[];}
+function labWire(){
+  $("#labSrc").querySelectorAll("button").forEach(b=>b.onclick=()=>labMode(b.dataset.m));
+  const cv=$("#labCanvas");
+  const pt=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+  const stroke=(a,b)=>{const {C}=G();drawCtx.strokeStyle=C===1?"#fff":LAB.color;drawCtx.lineWidth=LAB.brush;drawCtx.lineCap="round";drawCtx.lineJoin="round";
+    drawCtx.beginPath();drawCtx.moveTo(a[0],a[1]);drawCtx.lineTo(b[0],b[1]);drawCtx.stroke();};
+  cv.addEventListener("pointerdown",e=>{e.preventDefault();cv.setPointerCapture(e.pointerId);drawing=true;
+    LAB.strokes.push(drawCtx.getImageData(0,0,cv.width,cv.height));if(LAB.strokes.length>20)LAB.strokes.shift();lastPt=pt(e);stroke(lastPt,lastPt);labDrawn(false);});
+  cv.addEventListener("pointermove",e=>{if(!drawing)return;const p=pt(e);stroke(lastPt,p);lastPt=p;labDrawn(false);});
+  const end=()=>{if(!drawing)return;drawing=false;labDrawn(true);};
+  cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+  $("#labBrush").oninput=e=>{LAB.brush=+e.target.value;$("#labBrushV").textContent=LAB.brush+" px";};
+  $("#labColor").oninput=e=>{LAB.color=e.target.value;};
+  $("#labClear").onclick=()=>{labCanvasReset();LAB.src=null;labRun();};
+  $("#labUndo").onclick=()=>{const s=LAB.strokes.pop();if(s){drawCtx.putImageData(s,0,0);if(!LAB.strokes.length)LAB.src=null;labRun();}};
+  $("#labPick").onclick=()=>$("#labFileIn").click();
+  $("#labFileIn").onchange=e=>{const f=e.target.files[0];if(f)labFile(f);e.target.value="";};
+  const dz=$("#labDrop");["dragenter","dragover"].forEach(t=>dz.addEventListener(t,ev=>{ev.preventDefault();dz.classList.add("over");}));
+  ["dragleave","drop"].forEach(t=>dz.addEventListener(t,()=>dz.classList.remove("over")));
+  $("#labBg").onchange=e=>{LAB.inv=e.target.value;labRun();};
+  $("#labCrop").onchange=e=>{LAB.crop=e.target.checked;labRun();};
+  $("#labExact").onchange=e=>{LAB.exact=e.target.checked;labRun();};
+  $("#labJson").onclick=labJson;$("#labBack").onclick=labBack;
+  $("#impZip").onclick=()=>$("#impZipIn").click();$("#impFolder").onclick=()=>$("#impFolderIn").click();$("#impFiles").onclick=()=>$("#impFilesIn").click();
+  $("#impZipIn").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await impZip(f);};
+  $("#impFolderIn").onchange=async e=>{const fs=[...e.target.files];e.target.value="";if(fs.length)await impList(fs.map(f=>({path:f.webkitRelativePath||f.name,file:f})));};
+  $("#impFilesIn").onchange=async e=>{const fs=[...e.target.files];e.target.value="";if(fs.length)await impList(fs.map(f=>({path:f.name,file:f})));};
+  $("#impClear").onclick=()=>{IMPJOB[S.ds]=(IMPJOB[S.ds]||0)+1;impDrop(S.ds);$("#impMsg").textContent="";$("#impMsg").classList.remove("err");$("#evMsg").textContent="";$("#evMsg").classList.remove("err");renderImport();};
+  $("#galSt").querySelectorAll("button").forEach(b=>b.onclick=()=>{GV.st=b.dataset.v;GV.page=0;renderGal();});
+  $("#evRun").onclick=runEval;$("#evCancel").onclick=()=>{EVJOB.cancel=true;};
+  ["evA","evB","evPrep"].forEach(id=>$("#"+id).onchange=()=>renderEval());}
+let drawT=0;
+function labDrawn(final){if(LAB.mode!=="draw")return;LAB.srcName="sketch";LAB.truth=null;
+  LAB.src=$("#labCanvas");LAB.srcW=280;LAB.srcH=280;clearTimeout(drawT);drawT=setTimeout(labRun,final?0:120);}
+function labShow(m){LAB.mode=m;$("#labSrc").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m?"true":"false"));
+  $("#labEx").hidden=m!=="ex";$("#labDraw").hidden=m!=="draw";$("#labFile").hidden=m!=="file";$("#labImport").hidden=m!=="import";
+  $("#labPrep").hidden=m==="ex";$("#labExNote").hidden=m!=="ex";}
+function labMode(m){labShow(m);
+  if(m==="ex"){LAB.src=null;LAB.pre=null;select(S.cur&&S.cur.kind==="g"?S.cur:{kind:"g",k:LAB.lastG??D.demo[9]});return;}
+  if(m==="draw"){LAB.src=LAB.strokes.length?$("#labCanvas"):null;LAB.srcW=LAB.srcH=280;LAB.srcName="sketch";LAB.truth=null;}
+  else if(m==="file"){LAB.src=LAB.file?LAB.file.img:null;if(LAB.file){LAB.srcW=LAB.file.w;LAB.srcH=LAB.file.h;LAB.srcName=LAB.file.name;}LAB.truth=null;}
+  else{LAB.src=LAB.imp?LAB.imp.img:null;if(LAB.imp){LAB.srcW=LAB.imp.w;LAB.srcH=LAB.imp.h;LAB.srcName=LAB.imp.path;LAB.truth=LAB.imp.label;}}
+  labRun();}
+async function decodeImage(blob){if(blob.size>LIM.upload*20)throw new Error("size");
+  const bm=await createImageBitmap(blob);if(!bm.width||!bm.height||bm.width>LIM.dim||bm.height>LIM.dim){bm.close&&bm.close();throw new Error("dim");}return bm;}
+async function labFile(f){if(LAB.mode!=="file")labShow("file");const m=$("#labFileName");
+  if(!/^image\/(png|jpeg|webp)$/.test(f.type)||f.size>LIM.upload){m.textContent=T.badFile;m.classList.add("err");return;}
+  try{const bm=await decodeImage(f);LAB.file={img:bm,w:bm.width,h:bm.height,name:f.name};m.classList.remove("err");m.textContent=`${f.name} (${bm.width} × ${bm.height})`;labMode("file");}
+  catch(e){m.textContent=T.badFile;m.classList.add("err");}}
+/* an imported image opened from the gallery: its name and label stay visible above the flow, with a way back to the same gallery view */
+async function labFromImport(it,i){try{const bm=await decodeImage(it.blob);LAB.imp&&LAB.imp.img&&LAB.imp.img.close&&LAB.imp.img.close();
+    LAB.imp={img:bm,w:bm.width,h:bm.height,path:it.path,label:it.label,i};
+    $("#labImpName").textContent=it.name;$("#labImpName").title=it.path;$("#labImpSize").textContent=`${bm.width} × ${bm.height}`;
+    $("#labImpLbl").innerHTML=`${T.truthLbl}: ${it.label==null?`<i>${T.unl}</i>`:`<b>${esc(CLS[it.label])}</b>`}`;
+    labMode("import");document.getElementById("alur").scrollIntoView();$("#labBack").focus({preventScroll:true});}
+  catch(e){$("#impMsg").textContent=T.decodeFail(1);}}
+/* the gallery filters (GV) are not touched by the flow, so going back shows the same page and filter */
+function labBack(){const c=LAB.imp&&$("#galGrid").querySelector(`[data-i="${LAB.imp.i}"]`);
+  if(c){c.scrollIntoView({block:"center"});c.focus({preventScroll:true});}else $("#galPanel").scrollIntoView();}
+function labOpts(){const {C}=G();return {inv:C===1?LAB.inv:"none",crop:LAB.crop,exact:LAB.exact,fill:LAB.mode==="draw"?(C===1?"#000":"#fff"):"#fff"};}
+function labRun(){if(LAB.mode==="ex")return;const {H,C}=G(),oc=$("#labOrig"),ic=$("#labInput");
+  $("#labExactT").textContent=T.exact(H);$("#labInT").textContent=T.modelIn(H);$("#labBgWrap").hidden=C!==1;$("#labColorWrap").hidden=C===1;
+  $("#labDrawHint").textContent=C===1?T.drawHintGray:T.drawHintRgb;
+  if(!LAB.src){$("#labOrigE").hidden=false;oc.width=oc.height=1;ic.width=ic.height=H;ic.getContext("2d").clearRect(0,0,H,H);$("#labInfo").textContent=T.waitSrc;LAB.pre=null;return;}
+  $("#labOrigE").hidden=true;
+  const p=prep(LAB.src,LAB.srcW,LAB.srcH,labOpts());LAB.pre=p;
+  const s=Math.min(1,320/Math.max(LAB.srcW,LAB.srcH));oc.width=Math.max(1,Math.round(LAB.srcW*s));oc.height=Math.max(1,Math.round(LAB.srcH*s));
+  const ox=oc.getContext("2d");ox.imageSmoothingEnabled=LAB.srcW>oc.width;ox.drawImage(LAB.src,0,0,oc.width,oc.height);oc.classList.toggle("pix",LAB.srcW<=64);
+  if(p.box&&p.cropped){ox.strokeStyle=css("--accent");ox.lineWidth=2;ox.setLineDash([6,4]);ox.strokeRect(p.box.x*oc.width+1,p.box.y*oc.height+1,p.box.w*oc.width-2,p.box.h*oc.height-2);}
+  drawPx(ic,p.px);
+  const info=p.exact?[T.infoExact(H)]:[...(C===1?[T.infoGray,p.invert?T.infoInv:T.infoNoInv]:[]),p.cropped?T.infoCrop(p.bw,p.bh):T.infoNoCrop];
+  $("#labInfo").textContent=info.join(" ");
+  select({kind:"x",px:p.px,truth:LAB.truth,name:LAB.srcName});}
+function download(name,text,type){const a=document.createElement("a"),u=URL.createObjectURL(new Blob([text],{type}));a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}
+const stamp=()=>new Date().toISOString().replace(/[:.]/g,"-").slice(0,19);
+/* the prediction of the image shown in the flow, with the model that is selected at the top of the page */
+async function labJson(){if(!S.cur)return;const {H,C}=G(),e=curE(),ds=S.ds,b=$("#labJson");b.disabled=true;
+  let px,prob;try{px=S.model==="effnet"?await effPx(ds):curPx();[prob]=await predictBatch(e,[px],ds);}catch(err){b.disabled=false;return;}
+  b.disabled=false;const top=argmax(prob),g=S.cur.kind==="g",p=g?null:LAB.pre,o=labOpts();
+  const input=g?{source:"test example",test_id:EXPC[ds].pool_ids[S.cur.k],original_size:[H,H],label:CLS[S.cur.truth],preprocessing:{exact_pixels:true}}
+    :{source:LAB.mode,name:LAB.srcName,original_size:p?[p.sw,p.sh]:null,label:S.cur.truth==null?null:CLS[S.cur.truth],
+      preprocessing:!p||p.exact?{exact_pixels:true}:{grayscale:C===1,background:o.inv,inverted:p.invert,crop_to_object:o.crop,cropped:!!p.cropped,crop_box_fraction:p.cropped?p.box:null}};
+  input.model_input_0_255=Array.from(px,v=>Math.round(v*255));
+  const out={app:"CNN Explorer",created:new Date().toISOString(),dataset:{key:ds,title:D.title,classes:CLS,input_shape:[H,H,C]},
+    model:{id:e.id,architecture:MNAME[e.model],optimizer:e.name,parameters:e.params,seed:e.seed,official_test_accuracy:e.acc,
+      engine:e.browser?"JavaScript forward pass, 16-bit weights":"ONNX Runtime Web, 16-bit weights"},input,
+    prediction:{class_id:top,class:CLS[top],confidence:prob[top],correct:S.cur.truth==null?null:top===S.cur.truth,probabilities:Object.fromEntries(CLS.map((c,i)=>[c,prob[i]]))}};
+  download(`prediction-${ds}-${e.id}-${stamp()}.json`,JSON.stringify(out,null,1),"application/json");}
+
+/* ---------- import: ZIP (stored and deflate, read locally), folders and loose files ---------- */
+async function unzip(file){if(file.size>LIM.zip)throw new Error(T.zipBig);
+  const buf=await file.arrayBuffer(),dv=new DataView(buf),b=new Uint8Array(buf);let end=-1;
+  for(let i=b.length-22;i>=Math.max(0,b.length-65557);i--)if(dv.getUint32(i,true)===0x06054b50){end=i;break;}
+  if(end<0)throw new Error(T.zipBad);
+  const count=dv.getUint16(end+10,true),start=dv.getUint32(end+16,true);if(count===0xffff||start===0xffffffff)throw new Error(T.zip64);
+  const dec=new TextDecoder("utf-8"),out=[];let p=start;
+  for(let i=0;i<count;i++){if(p+46>b.length||dv.getUint32(p,true)!==0x02014b50)throw new Error(T.zipBad);
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),size=dv.getUint32(p+24,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),off=dv.getUint32(p+42,true);
+    const name=dec.decode(b.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+    if(name.endsWith("/"))continue;
+    out.push({path:name,size,read:async()=>{if(off+30>b.length||dv.getUint32(off,true)!==0x04034b50)throw new Error(T.zipBad);
+      const s=off+30+dv.getUint16(off+26,true)+dv.getUint16(off+28,true);if(s+csize>b.length)throw new Error(T.zipBad);
+      const comp=b.slice(s,s+csize);if(method===0)return comp;
+      if(method!==8)throw new Error(T.zipMethod(method));if(typeof DecompressionStream==="undefined")throw new Error(T.zipNoInflate);
+      const raw=new Uint8Array(await new Response(new Blob([comp]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+      if(raw.length!==size)throw new Error(T.zipBad);return raw;}});}
+  return out;}
+const IMG_RE=/\.(png|jpe?g|webp)$/i,MIME={png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",webp:"image/webp"};
+const hidden=p=>p.split("/").some(s=>s.startsWith(".")||s==="__MACOSX");
+const norm=s=>String(s).toLowerCase().replace(/[^a-z0-9]/g,"");
+function classIndex(ds){const cls=DSC[ds].D.classes,m=new Map();cls.forEach((c,i)=>{m.set(norm(c),i);});
+  if(ds==="fashion"){[["tshirt",0],["top",0],["tshirttop",0],["boot",9],["ankleboots",9]].forEach(([k,v])=>m.set(k,v));}
+  else{[["plane",0],["car",1],["auto",1]].forEach(([k,v])=>m.set(k,v));}return m;}
+function parseLabel(v,idx){const s=String(v).trim();if(/^\d+$/.test(s)){const n=+s;return n>=0&&n<10?n:undefined;}const n=idx.get(norm(s));return n===undefined?undefined:n;}
+function folderLabel(path,idx){const seg=path.split("/").slice(0,-1).reverse();
+  for(const s of seg){const m=s.match(/^(\d{1,2})(?:[ _\-.](.*))?$/);if(m){const n=+m[1];if(n<10)return n;}const k=idx.get(norm(s));if(k!==undefined)return k;}return null;}
+function readCsv(txt){txt=txt.replace(/^﻿/,"");const first=txt.split(/\r?\n/)[0]||"",dl=[",",";","\t"].sort((a,b)=>first.split(b).length-first.split(a).length)[0];
+  const rows=[];let row=[],cur="",q=false;
+  for(let i=0;i<txt.length;i++){const ch=txt[i];
+    if(q){if(ch==='"'){if(txt[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+    else if(ch==='"')q=true;else if(ch===dl){row.push(cur);cur="";}else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&txt[i+1]==="\n")i++;row.push(cur);rows.push(row);row=[];cur="";}else cur+=ch;}
+  if(cur||row.length){row.push(cur);rows.push(row);}return rows.filter(r=>r.some(c=>c.trim()!==""));}
+function csvMap(name,txt,idx,rep){const rows=readCsv(txt);if(!rows.length)return null;const h=rows[0].map(c=>norm(c));
+  const fi=["filename","file","path","image","img","name","filepath","imagepath"].map(k=>h.indexOf(k)).find(i=>i>=0),
+        li=["labelid","label","classid","class","classname","target","y","category"].map(k=>h.indexOf(k)).find(i=>i>=0);
+  if(fi===undefined||li===undefined){rep.csv.push(T.repCsvCols(name));return null;}
+  const base=name.includes("/")?name.slice(0,name.lastIndexOf("/")+1):"",m=new Map();
+  for(const r of rows.slice(1)){if(r.length<=Math.max(fi,li))continue;m.set(r[fi].trim().replace(/\\/g,"/").replace(/^\.\//,""),{v:r[li],used:false,base});}
+  return {name,m};}
+function impDrop(ds){if(EVJOB.busy&&ds===S.ds)EVJOB.cancel=true;const st=IMP[ds];if(st)st.items.forEach(it=>URL.revokeObjectURL(it.url));
+  delete IMP[ds];delete EVAL[ds];
+  if(ds===S.ds){GV.cls=-1;GV.st="all";GV.cell=null;GV.page=0;
+    if(LAB.imp){LAB.imp.img&&LAB.imp.img.close&&LAB.imp.img.close();LAB.imp=null;if(LAB.mode==="import")labMode("ex");}}}
+/* entries: [{path, size, read() -> Uint8Array|Blob}] */
+async function impEntries(entries,ds=S.ds,tok){if(tok==null)tok=IMPJOB[ds]=(IMPJOB[ds]||0)+1;
+  const idx=classIndex(ds),other=ds==="fashion"?"cifar10":"fashion",oidx=DSC[other]?classIndex(other):null;
+  const rep={skipType:0,skipBig:0,skipTotal:false,csv:[],bad:[],other:0,many:false,exact:0};
+  entries=entries.map(e=>({...e,path:e.path.replace(/\\/g,"/")})).filter(e=>!hidden(e.path));
+  const csvs=entries.filter(e=>/\.csv$/i.test(e.path)),maps=[];
+  for(const c of csvs.sort((a,b)=>a.path.split("/").length-b.path.split("/").length)){try{const raw=await c.read();if(tok!==IMPJOB[ds])return;
+    const txt=typeof raw==="string"?raw:new TextDecoder().decode(raw instanceof Blob?new Uint8Array(await raw.arrayBuffer()):raw);
+    const mm=csvMap(c.path,txt,idx,rep);if(mm)maps.push(mm);}catch(e){rep.csv.push(c.path+": "+e.message);}}
+  if(tok!==IMPJOB[ds])return;
+  let imgs=entries.filter(e=>IMG_RE.test(e.path));rep.skipType=entries.length-imgs.length-csvs.length;
+  imgs.sort((a,b)=>a.path.localeCompare(b.path,undefined,{numeric:true}));
+  if(imgs.length>LIM.files){rep.many=true;imgs=imgs.slice(0,LIM.files);}
+  const items=[];let total=0;
+  for(const e of imgs){if(e.size>LIM.img){rep.skipBig++;continue;}if(total+e.size>LIM.total){rep.skipTotal=true;break;}
+    let raw;try{raw=await e.read();}catch(err){rep.csv.push(e.path+": "+err.message);continue;}
+    if(tok!==IMPJOB[ds]){items.forEach(it=>URL.revokeObjectURL(it.url));return;}
+    const ext=e.path.split(".").pop().toLowerCase(),blob=raw instanceof Blob?raw:new Blob([raw],{type:MIME[ext]});total+=blob.size;
+    let lab=null,src=null;
+    for(const mp of maps){const rel=mp.name.includes("/")&&e.path.startsWith(mp.name.slice(0,mp.name.lastIndexOf("/")+1))?e.path.slice(mp.name.lastIndexOf("/")+1):e.path;
+      const hit=mp.m.get(rel)||mp.m.get(e.path)||mp.m.get(e.path.split("/").pop());if(hit){hit.used=true;src=hit.v;break;}}
+    if(src!=null){const v=parseLabel(src,idx);if(v===undefined){rep.bad.push(String(src));if(oidx&&parseLabel(src,oidx)!==undefined&&!/^\d+$/.test(String(src).trim()))rep.other++;}else lab=v;}
+    else{lab=folderLabel(e.path,idx);if(lab==null&&oidx&&folderLabel(e.path,oidx)!=null&&!/(^|\/)\d/.test(e.path))rep.other++;}
+    items.push({path:e.path,name:e.path.split("/").pop(),blob,url:URL.createObjectURL(blob),label:lab,bytes:blob.size});}
+  if(tok!==IMPJOB[ds]){items.forEach(it=>URL.revokeObjectURL(it.url));return;}
+  impDrop(ds);
+  rep.csvRows=maps.map(mp=>[mp.name,mp.m.size,[...mp.m.values()].filter(v=>!v.used).length]);
+  IMP[ds]={items,report:rep};
+  // read sizes in the background, to count benchmark-sized images
+  const H=DSC[ds].D.shape[0];Promise.all(items.slice(0,600).map(async it=>{try{const b=await createImageBitmap(it.blob);it.w=b.width;it.h=b.height;b.close&&b.close();}catch(e){it.broken=true;}}))
+    .then(()=>{if(IMP[ds]&&IMP[ds].items===items){rep.exact=items.filter(it=>it.w===H&&it.h===H).length;rep.sized=Math.min(items.length,600);if(ds===S.ds)renderReport();}});
+  if(ds===S.ds){renderImport();$("#impMsg").classList.remove("err");$("#impMsg").textContent=items.length?T.impDone(nf(items.length),nf(items.filter(i=>i.label!=null).length)):T.impNoImg;}}
+async function impZip(f){const ds=S.ds,tok=IMPJOB[ds]=(IMPJOB[ds]||0)+1;$("#impMsg").classList.remove("err");$("#impMsg").textContent=T.impUnzip;
+  let entries;try{entries=await unzip(f);}catch(e){if(ds===S.ds&&tok===IMPJOB[ds]){$("#impMsg").textContent=e.message||T.zipBad;$("#impMsg").classList.add("err");}return;}
+  if(tok!==IMPJOB[ds])return;await impEntries(entries,ds,tok);}
+async function impList(list){const ds=S.ds,tok=IMPJOB[ds]=(IMPJOB[ds]||0)+1;$("#impMsg").classList.remove("err");$("#impMsg").textContent=T.impReading;
+  await impEntries(list.map(({path,file})=>({path,size:file.size,read:async()=>/\.csv$/i.test(path)?await file.text():file})),ds,tok);}
+
+/* ---------- gallery ---------- */
+function renderImport(){$("#impFormat").textContent=T.impFormat(CLS);renderReport();renderGal();renderEval();}
+function renderReport(){const st=IMP[S.ds],box=$("#impReport");if(!st){box.innerHTML=`<p class="hint">${T.impEmpty}</p>`;return;}const r=st.report,it=st.items,{H}=G();
+  const nl=it.filter(i=>i.label!=null).length,li=[`<li class="ok">${T.repLabeled(nf(nl))}</li>`];
+  if(it.length-nl)li.push(`<li>${T.repUnl(nf(it.length-nl))}</li>`);
+  if(r.bad.length)li.push(`<li class="warn">${T.repBadLbl(nf(r.bad.length),esc([...new Set(r.bad)].slice(0,3).join(", ")))}</li>`);
+  if(r.other>Math.max(3,it.length*.2))li.push(`<li class="warn">${T.repOther(S.ds==="fashion"?"CIFAR-10":"Fashion-MNIST")}</li>`);
+  r.csvRows&&r.csvRows.forEach(([f,n,u])=>li.push(`<li${u?' class="warn"':""}>${esc(T.repCsv(f,nf(n),nf(u)))}</li>`));
+  r.csv.forEach(c=>li.push(`<li class="warn">${esc(c)}</li>`));
+  if(r.skipType)li.push(`<li>${T.repSkipType(nf(r.skipType))}</li>`);if(r.skipBig)li.push(`<li class="warn">${T.repSkipBig(nf(r.skipBig))}</li>`);
+  if(r.skipTotal)li.push(`<li class="warn">${T.repSkipTotal}</li>`);if(r.many)li.push(`<li class="warn">${T.tooMany}</li>`);
+  if(r.sized)li.push(`<li>${T.repSize(nf(r.exact),H)}${r.sized<it.length?` (${nf(r.sized)})`:""}</li>`);
+  box.innerHTML=`<div class="rep"><b>${T.repTitle}</b><ul>${li.join("")}</ul></div>`;}
+function galRows(){const st=IMP[S.ds];if(!st)return [];const ev=EVAL[S.ds],byPath=ev&&!ev.stale?ev.byIdx:null;
+  return st.items.map((it,i)=>({it,i,r:byPath?byPath[i]:null})).filter(({it,r})=>{
+    if(GV.cls===-2&&it.label!=null)return false;if(GV.cls>=0&&it.label!==GV.cls)return false;
+    if(GV.cell){if(!r||it.label!==GV.cell[0]||r.pa!==GV.cell[1])return false;}
+    if(GV.st!=="all"){if(!r)return false;if((GV.st==="ok")!==(r.pa===it.label))return false;}return true;});}
+function renderGal(){const st=IMP[S.ds],cls=$("#galCls"),grid=$("#galGrid"),pg=$("#galPager");
+  $("#galPanel").hidden=!(st&&st.items.length);
+  if(!st||!st.items.length){cls.innerHTML="";grid.innerHTML="";pg.innerHTML="";$("#galSt").hidden=true;$("#galCell").innerHTML="";return;}
+  const cnt=new Array(10).fill(0);let unl=0;st.items.forEach(it=>it.label==null?unl++:cnt[it.label]++);
+  const chip=(v,txt)=>`<button type="button" class="chip" data-v="${v}" aria-pressed="${GV.cls===v}">${txt}</button>`;
+  cls.innerHTML=chip(-1,`${T.allCls} <small>${nf(st.items.length)}</small>`)+CLS.map((c,i)=>cnt[i]?chip(i,`${esc(c)} <small>${nf(cnt[i])}</small>`):"").join("")+(unl?chip(-2,`${T.unl} <small>${nf(unl)}</small>`):"");
+  cls.querySelectorAll("button").forEach(b=>b.onclick=()=>{GV.cls=+b.dataset.v;GV.cell=null;GV.page=0;renderGal();});
+  const ev=EVAL[S.ds];$("#galSt").hidden=!(ev&&!ev.stale);$("#galSt").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===GV.st?"true":"false"));
+  $("#galCell").innerHTML=GV.cell?`${T.cellFilter(esc(CLS[GV.cell[0]]),esc(CLS[GV.cell[1]]))} <button type="button" class="chip" id="galCellX">${T.clrFilter}</button>`:"";
+  const x=$("#galCellX");if(x)x.onclick=()=>{GV.cell=null;renderGal();};
+  const rows=galRows(),pages=Math.max(1,Math.ceil(rows.length/GV.per));GV.page=Math.min(GV.page,pages-1);const a=GV.page*GV.per,sl=rows.slice(a,a+GV.per);
+  grid.innerHTML=sl.length?"":`<div class="empty">${T.galEmpty}</div>`;
+  sl.forEach(({it,i,r})=>{const b=document.createElement("button");b.type="button";b.className="icard";b.dataset.i=i;
+    const small=it.w&&it.w<=64;b.innerHTML=`<img src="${it.url}" alt="" loading="lazy"${small?' class="pix"':""}>
+      <span class="nm" title="${esc(it.path)}">${esc(it.name)}</span><span class="lb">${it.label==null?`<i>${T.unl}</i>`:esc(CLS[it.label])}</span>
+      ${r?`<span class="tab ${r.pa===it.label?"ok":"bad"}">${esc(CLS[r.pa])}</span>`:""}<span class="act">${T.openLab}</span>`;
+    b.setAttribute("aria-label",`${it.name}, ${it.label==null?T.unl:CLS[it.label]}${r?`, ${CLS[r.pa]}`:""}. ${T.openLab}`);
+    b.onclick=()=>labFromImport(it,i);grid.append(b);});
+  pg.innerHTML=rows.length>GV.per?`<button type="button" class="btn sm" id="pgP"${GV.page?"":" disabled"}>${T.prev}</button><span>${T.galCount(nf(a+1),nf(Math.min(a+GV.per,rows.length)),nf(rows.length))}</span><button type="button" class="btn sm" id="pgN"${GV.page<pages-1?"":" disabled"}>${T.next}</button>`:(rows.length?`<span>${T.galCount(nf(1),nf(rows.length),nf(rows.length))}</span>`:"");
+  const pp=$("#pgP"),pn=$("#pgN");if(pp)pp.onclick=()=>{GV.page--;renderGal();};if(pn)pn.onclick=()=>{GV.page++;renderGal();};}
+
+/* ---------- live evaluation ---------- */
+const EVJOB={cancel:false,busy:false};
+function metricsOf(rows,key){const K=10,cm=[...Array(K)].map(()=>new Array(K).fill(0));let ok=0;
+  rows.forEach(r=>{cm[r.label][r[key]]++;if(r.label===r[key])ok++;});
+  const per=cm.map((row,k)=>{const tp=row[k],sup=row.reduce((a,b)=>a+b,0),pr=cm.reduce((a,rr)=>a+rr[k],0),p=pr?tp/pr:0,rc=sup?tp/sup:0;return {p,r:rc,f:p+rc?2*p*rc/(p+rc):0,sup,pred:pr};});
+  const pres=per.filter(x=>x.sup>0),m=k=>pres.reduce((a,x)=>a+x[k],0)/Math.max(1,pres.length);
+  return {n:rows.length,acc:rows.length?ok/rows.length:0,mp:m("p"),mr:m("r"),mf:m("f"),per,cm};}
+function evPrepOpts(){return $("#evPrep").value==="lab"?{...labOpts(),fill:"#fff"}:{inv:"none",crop:false,exact:true,fill:"#fff"};}
+async function runEval(){const st=IMP[S.ds],msgEl=$("#evMsg");msgEl.classList.remove("err");
+  if(!st||!st.items.some(i=>i.label!=null)){msgEl.textContent=T.needLabels;return;}
+  if(EVJOB.busy)return;const ds=S.ds,A=entById($("#evA").value),B=entById($("#evB").value)||null,prepMode=$("#evPrep").value,opts=evPrepOpts();
+  const items=st.items.map((it,i)=>({it,i})).filter(x=>x.it.label!=null);
+  EVJOB.busy=true;EVJOB.cancel=false;$("#evRun").disabled=true;$("#evCancel").hidden=false;$("#evProg").hidden=false;msgEl.textContent="";
+  if((!A.browser||(B&&!B.browser))&&isOffline()){msgEl.textContent=T.effOffline;msgEl.classList.add("err");EVJOB.busy=false;$("#evRun").disabled=false;$("#evCancel").hidden=true;$("#evProg").hidden=true;return;}
+  const rows=[];let broken=0;const bs=A.browser&&(!B||B.browser)?64:24;
+  try{for(let s=0;s<items.length;s+=bs){if(EVJOB.cancel||ds!==S.ds)break;
+      $("#evBar").style.width=(s/items.length*100).toFixed(1)+"%";$("#evProgT").textContent=T.progress(nf(s),nf(items.length));
+      const chunk=items.slice(s,s+bs),ok=[],pxs=[];
+      for(const x of chunk){try{const bm=await decodeImage(x.it.blob);x.it.w=bm.width;x.it.h=bm.height;pxs.push(prep(bm,bm.width,bm.height,opts).px);ok.push(x);bm.close&&bm.close();}catch(e){broken++;x.it.broken=true;}}
+      if(!ok.length)continue;
+      const pa=await predictBatch(A,pxs,ds),pb=B?await predictBatch(B,pxs,ds):null;
+      ok.forEach((x,j)=>{const ta=argmax(pa[j]),r={i:x.i,path:x.it.path,label:x.it.label,pa:ta,ca:pa[j][ta],probA:pa[j]};
+        if(pb){const tb=argmax(pb[j]);r.pb=tb;r.cb=pb[j][tb];}rows.push(r);});
+      await new Promise(r=>setTimeout(r,0));}}
+  catch(err){msgEl.textContent=T.evFail+(err&&err.message==="offline"?T.effOffline:(!A.browser||(B&&!B.browser))?T.effFail:(err.message||err));msgEl.classList.add("err");}
+  EVJOB.busy=false;$("#evRun").disabled=false;$("#evCancel").hidden=true;$("#evProg").hidden=true;
+  if(EVJOB.cancel){msgEl.textContent=T.cancelled;return;}if(ds!==S.ds||!rows.length){renderEval();return;}
+  const byIdx={};rows.forEach(r=>byIdx[r.i]=r);
+  EVAL[ds]={A,B,prepMode,rows,byIdx,mA:metricsOf(rows,"pa"),mB:B?metricsOf(rows,"pb"):null,broken,n:items.length,stale:false};
+  if(broken)msgEl.textContent=T.decodeFail(nf(broken));
+  GV.st="all";GV.cell=null;renderEval();renderGal();}
+function cmTable(m,clickable){const acc=hex(css("--accent")),bad=hex(css("--bad")),z=hex(css("--surface")),mx=Math.max(1,...m.cm.map((r,i)=>r[i])),mo=Math.max(1,...m.cm.flatMap((r,i)=>r.filter((_,j)=>j!==i)));
+  let t=`<table class="cm"><thead><tr><th></th>${CLS.map(c=>`<th scope="col">${esc(c)}</th>`).join("")}</tr></thead><tbody>`;
+  m.cm.forEach((row,i)=>{t+=`<tr><th scope="row" style="text-align:right">${esc(CLS[i])}</th>`;row.forEach((v,j)=>{const u=v?(i===j?v/mx:.15+.85*v/mo):0,e=i===j?acc:bad,c=[0,1,2].map(k=>Math.round(z[k]+(e[k]-z[k])*u)),fg=cmFg(c);
+    t+=`<td style="background:rgb(${c});color:${fg}">${clickable&&v?`<button type="button" class="cmb" data-t="${i}" data-p="${j}" aria-label="${v}: ${esc(CLS[i])} → ${esc(CLS[j])}">${v}</button>`:v}</td>`;});t+="</tr>";});
+  return t+"</tbody></table>";}
+function renderEval(){const out=$("#evOut");if(!out)return;const ev=EVAL[S.ds],st=IMP[S.ds];
+  ["evA","evB"].forEach((id,k)=>{const sel=$("#"+id),v=sel.value;modelOptions(sel,k===1);sel.value=entById(v)?v:(k?"":(ev?ev.A.id:curE().id));});
+  if(ev&&!ev.stale&&($("#evA").value!==ev.A.id||($("#evB").value||null)!==(ev.B?ev.B.id:null)||$("#evPrep").value!==ev.prepMode))ev.dirty=true;else if(ev)ev.dirty=false;
+  const nl=st?st.items.filter(i=>i.label!=null).length:0;$("#evPanel").hidden=!(st&&st.items.length);
+  $("#evReady").textContent=nl?T.ready(nf(nl)):T.needLabels;
+  $("#evRun").disabled=EVJOB.busy||!nl;
+  if(!ev){out.innerHTML="";return;}
+  const {mA,mB,A,B}=ev,k=(lab,a,b)=>`<div class="kpi"><span>${lab}</span><b>${a}</b>${b!=null?`<em>${b}</em>`:""}</div>`;
+  const hdr=B?`<p class="kpi-leg"><b>${esc(label(A))}</b> <span>${T.legA}</span> · <em>${esc(label(B))}</em> <span>${T.legB}</span></p>`:"";
+  let ag="";if(B){const n=[0,0,0,0];ev.rows.forEach(r=>{const a=r.pa===r.label,b=r.pb===r.label;n[a&&b?0:a?1:b?2:3]++;});
+    ag=`<div class="agree"><h4>${T.agree}</h4><ul><li>${T.agBoth} <b>${nf(n[0])}</b></li><li>${T.agA} <b>${nf(n[1])}</b></li><li>${T.agB} <b>${nf(n[2])}</b></li><li>${T.agNone} <b>${nf(n[3])}</b></li></ul></div>`;}
+  const clsRows=mA.per.map((x,i)=>x.sup||x.pred?`<tr><th scope="row">${esc(CLS[i])}</th><td>${fmt(x.p)}${mB?` <small>${fmt(mB.per[i].p)}</small>`:""}</td><td>${fmt(x.r)}${mB?` <small>${fmt(mB.per[i].r)}</small>`:""}</td><td>${fmt(x.f)}${mB?` <small>${fmt(mB.per[i].f)}</small>`:""}</td><td>${nf(x.sup)}</td></tr>`:"").join("");
+  out.innerHTML=`${ev.dirty?`<p class="hint warn">${T.stale}</p>`:""}<p class="badge-sample">${T.sampleBadge(nf(mA.n))}</p>
+    ${hdr}<div class="kpis">${k(T.kAcc,fmt(mA.acc,2),mB&&fmt(mB.acc,2))}${k(T.kP,fmt(mA.mp,2),mB&&fmt(mB.mp,2))}${k(T.kR,fmt(mA.mr,2),mB&&fmt(mB.mr,2))}${k(T.kF,fmt(mA.mf,2),mB&&fmt(mB.mf,2))}${k(T.kN,nf(mA.n),null)}</div>
+    <p class="hint">${T.benchRef(pct(A.acc,2))}${B?" "+esc(label(B))+": "+pct(B.acc,2)+".":""} ${T.macroNote}</p>
+    <div class="ev-grid"><div><h4>${T.perCls}${B?` <small>(${esc(label(A))} / ${esc(label(B))})</small>`:""}</h4><div class="tblw"><table class="tbl"><thead><tr>${T.clsHead.map(h=>`<th scope="col">${h}</th>`).join("")}</tr></thead><tbody>${clsRows}</tbody></table></div>${ag}</div>
+      <div><h4>${T.cmTitle}: ${esc(label(A))}</h4><p class="hint">${T.cmNote}</p><div class="cm-scroll">${cmTable(mA,true)}</div></div></div>
+    <div class="lab-acts"><button type="button" class="btn sm" id="evCsv">${T.csvRows}</button><button type="button" class="btn sm" id="evCsvM">${T.csvMetrics}</button></div>`;
+  out.querySelectorAll(".cmb").forEach(b=>b.onclick=()=>{GV.cell=[+b.dataset.t,+b.dataset.p];GV.cls=-1;GV.st="all";GV.page=0;renderGal();$("#galGrid").scrollIntoView({block:"nearest"});});
+  $("#evCsv").onclick=()=>evCsvRows(ev);$("#evCsvM").onclick=()=>evCsvMetrics(ev);}
+const csvCell=v=>{const s=v==null?"":String(v);return /[",\n;]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;};
+const csvText=rows=>rows.map(r=>r.map(csvCell).join(",")).join("\n")+"\n";
+function evCsvRows(ev){const h=["file","label_id","label",`pred_id_${ev.A.id}`,`pred_${ev.A.id}`,`confidence_${ev.A.id}`,`correct_${ev.A.id}`];
+  if(ev.B)h.push(`pred_id_${ev.B.id}`,`pred_${ev.B.id}`,`confidence_${ev.B.id}`,`correct_${ev.B.id}`);CLS.forEach(c=>h.push(`prob_${ev.A.id}_${c}`));
+  const rows=ev.rows.map(r=>{const o=[r.path,r.label,CLS[r.label],r.pa,CLS[r.pa],r.ca.toFixed(6),r.pa===r.label?1:0];
+    if(ev.B)o.push(r.pb,CLS[r.pb],r.cb.toFixed(6),r.pb===r.label?1:0);r.probA.forEach(p=>o.push(p.toFixed(6)));return o;});
+  download(`evaluation-${S.ds}-${ev.A.id}${ev.B?"-vs-"+ev.B.id:""}-${stamp()}.csv`,csvText([h,...rows]),"text/csv");}
+function evCsvMetrics(ev){const rows=[["scope","model","dataset","preprocessing","n_images","class","precision","recall","f1","support","accuracy","official_test_accuracy"]];
+  for(const [e,m] of [[ev.A,ev.mA],...(ev.B?[[ev.B,ev.mB]]:[])]){
+    rows.push(["imported_sample_macro",e.id,S.ds,ev.prepMode,m.n,"",m.mp.toFixed(6),m.mr.toFixed(6),m.mf.toFixed(6),m.n,m.acc.toFixed(6),e.acc]);
+    m.per.forEach((x,i)=>{if(x.sup||x.pred)rows.push(["imported_sample_class",e.id,S.ds,ev.prepMode,m.n,CLS[i],x.p.toFixed(6),x.r.toFixed(6),x.f.toFixed(6),x.sup,"",""]);});}
+  download(`metrics-${S.ds}-${ev.A.id}${ev.B?"-vs-"+ev.B.id:""}-${stamp()}.csv`,csvText(rows),"text/csv");}
+
+/* ---------- hooks used by the rest of the page ---------- */
+function labInit(){labMount();labCanvasReset();labShow("ex");$("#labBg").value=LAB.inv;$("#labCrop").checked=LAB.crop;$("#labExact").checked=LAB.exact;renderImport();}
+/* after a dataset change the flow shows a test example again; drawings and files belong to the previous input size */
+function labOnDataset(){LAB.file&&LAB.file.img&&LAB.file.img.close&&LAB.file.img.close();LAB.imp&&LAB.imp.img&&LAB.imp.img.close&&LAB.imp.img.close();
+  LAB.file=null;LAB.imp=null;LAB.pre=null;LAB.src=null;LAB.lastG=null;$("#labFileName").textContent="";
+  $("#evMsg").textContent="";$("#evMsg").classList.remove("err");
+  const st=IMP[S.ds];$("#impMsg").classList.remove("err");
+  $("#impMsg").textContent=st&&st.items.length?T.impDone(nf(st.items.length),nf(st.items.filter(i=>i.label!=null).length)):"";
+  labCanvasReset();labShow("ex");GV.cls=-1;GV.cell=null;GV.st="all";GV.page=0;renderImport();}
+function labOnPick(){if($("#evA"))renderEval();}
+function labOnTheme(){if($("#evA"))renderEval();}
+function labOnSelect(it){if(it.kind==="g"){LAB.lastG=it.k;if(LAB.mode!=="ex"&&$("#labSrc"))labShow("ex");}}
 </script>
 </body>
 </html>

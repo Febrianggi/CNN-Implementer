@@ -151,8 +151,9 @@ main section{scroll-margin-top:76px}
     <nav class="nav" id="railNav" aria-label="Bagian halaman">
       <a href="#akurasi" class="on"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h9M2 9h14M2 14h6"/></svg><span class="lbl">Akurasi</span></a>
       <a href="#alur"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="5" width="4" height="8" rx="1"/><rect x="7" y="3" width="4" height="12" rx="1"/><rect x="12.5" y="6.5" width="4" height="5" rx="1"/></svg><span class="lbl">Alur jaringan</span></a>
-      <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg><span class="lbl">Hasil uji</span></a>
+      <a href="#hasil"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="6" height="6" rx="1"/><rect x="10.5" y="1.5" width="6" height="6" rx="1"/><rect x="1.5" y="10.5" width="6" height="6" rx="1"/><rect x="10.5" y="10.5" width="6" height="6" rx="1"/></svg><span class="lbl">Hasil uji resmi</span></a>
       <a href="#training"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 15.5h15M3 12l4-4 3 3 5-6"/></svg><span class="lbl">Detail model</span></a>
+      <a href="#evaluasi"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 5.5h5l1.5 2H16v7.5H2z"/><path d="M6 11.5l2 1.8 4-4"/></svg><span class="lbl">Evaluasi data sendiri</span></a>
     </nav>
     <div class="rail-ds">
       <p id="lblDsRail">Dataset</p>
@@ -208,12 +209,7 @@ main section{scroll-margin-top:76px}
     <section id="alur" hidden>
       <div class="sec-head"><h2 id="heroTitle">Bagaimana CNN membaca gambar 32 × 32</h2></div>
       <div id="flowArea">
-        <div>
-          <div class="strip" id="strip" role="group" aria-label="Pilih gambar untuk diperiksa"></div>
-          <input type="file" id="file" accept="image/*" class="sr" tabindex="-1">
-          <p class="strip-msg" id="stripMsg" aria-live="polite"></p>
-          <label class="check" id="invWrap" hidden><input type="checkbox" id="fInv" checked> Balik warna gambar unggahan (Fashion-MNIST memakai benda terang di latar hitam)</label>
-        </div>
+        <div class="panel" id="inPanel"></div>
 
         <div class="panel eff-pred" id="effPanel" hidden>
           <div class="flow-bar"><div class="verdict-line" id="effVerdict" aria-live="polite"></div></div>
@@ -328,6 +324,7 @@ main section{scroll-margin-top:76px}
         </div>
       </div>
     </section>
+    <section id="evaluasi" hidden></section>
   </main>
   </div>
   <div class="scrim" id="scrim" hidden></div>

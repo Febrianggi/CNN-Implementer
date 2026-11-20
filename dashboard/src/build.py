@@ -4,6 +4,10 @@
   the same page with the EN pairs below      ->  ../index.html    (English, default)
 
 Run from anywhere:  python dashboard/src/build.py
+Optional single-file offline copy (not used by GitHub Pages, written to dashboard/dist/, which git ignores):
+    python dashboard/src/build.py --offline [--dataset fashion|cifar10|all]
+It embeds the dataset files, the MLP/CNN weights and the run files into one HTML page, so it opens from disk
+without a web server or internet. EfficientNetV2B0 needs ONNX Runtime Web from a CDN and is left out of it.
 Every Indonesian string in app.js / body.html that the visitor can see needs an (ID, EN) pair here;
 the build stops if a pair no longer matches the source, and prints Indonesian-looking words left on
 the English page.
@@ -15,6 +19,7 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE.parent
 
 P = [
+('<span class="lbl">Evaluasi data sendiri</span>', '<span class="lbl">Evaluate your own data</span>'),
 ('<p>Lepaskan gambar di mana saja untuk diperiksa</p>', '<p>Drop the image anywhere to inspect it</p>'),
 ('aria-label="Tutup menu samping" title="Tutup menu samping"', 'aria-label="Close the side menu" title="Close the side menu"'),
 ('"Tutup menu samping":"Buka menu samping"', '"Close the side menu":"Open the side menu"'),
@@ -30,7 +35,6 @@ P = [
 ('<span>English</span><b class="lang-short">EN</b>', '<span>Bahasa Indonesia</span><b class="lang-short">ID</b>'),
 ('Memuat data uji dan hasil training…', 'Loading test data and training results…'),
 ('Bagaimana CNN membaca gambar 32 × 32', 'How a CNN reads a 32 × 32 image'),
-('aria-label="Pilih gambar untuk diperiksa"', 'aria-label="Choose an image to inspect"'),
 ('aria-label="Channel yang ditampilkan"', 'aria-label="Channels shown"'),
 ('>8 paling aktif<', '>8 most active<'),
 ('>Channel #0 sampai #7<', '>Channels #0 to #7<'),
@@ -57,9 +61,6 @@ P = [
 ('"Periksa gambar unggahan "+', '"Inspect uploaded image "+'),
 ("</svg>Unggah';", "</svg>Upload';"),
 ('"Unggah gambar sendiri"', '"Upload your own image"'),
-('"Berkas ini bukan gambar. Pilih JPG, PNG, atau WEBP."', '"This file is not an image. Choose a JPG, PNG, or WEBP file."'),
-('msg("Membaca gambar…")', 'msg("Reading image…")'),
-('"Gambar tidak bisa dibaca. Coba berkas lain atau simpan ulang sebagai JPG atau PNG."', '"The image could not be read. Try another file or re-save it as JPG or PNG."'),
 ('["merah","hijau","biru"]', '["red","green","blue"]'),
 ('["Merah","Hijau","Biru"]', '["Red","Green","Blue"]'),
 ('. Buka detail`', '. Open details`'),
@@ -85,9 +86,6 @@ P = [
 ('"Loss validasi"', '"Validation loss"'),
 ('"Data model gagal dimuat. Muat ulang halaman; kalau masih gagal, berkas data tidak ikut terunggah."', '"Model data could not be loaded. Reload the page. If it still fails, the data files are missing next to this page, or the page was opened as a local file instead of through a web server."'),
 ('<title>CNN Explorer: dataset dan optimizer</title>', '<title>CNN Explorer: datasets and optimizers</title>'),
-('`Unggah JPG atau PNG, atau tarik gambar ke mana saja di halaman ini. Gambar dipotong persegi di tengah lalu diperkecil ke ${g.H} × ${g.H}`+(g.C===1?", diubah ke grayscale, dan (jika dicentang) dibalik warnanya.":".")', '`Upload a JPG or PNG, or drag an image anywhere onto this page. It is center-cropped to a square and resized to ${g.H} × ${g.H}`+(g.C===1?", converted to grayscale, and (if checked) color-inverted.":".")'),
-('> Balik warna gambar unggahan (Fashion-MNIST memakai benda terang di latar hitam)<', '> Invert uploaded images (Fashion-MNIST shows light items on a black background)<'),
-('`"${f.name}" diperkecil ke ${G().H} × ${G().H} dan diprediksi. Label aslinya tidak diketahui, jadi tidak ada status cocok.`', '`"${f.name}" was resized to ${G().H} × ${G().H} and classified. Its true label is unknown, so it has no match status.`'),
 ('["abu-abu"]', '["gray"]'),
 ('["Abu-abu"]', '["Gray"]'),
 ('`Channel ${CHN()[c]} dari gambar input, nilai piksel 0 sampai 1. `', '`The ${CHN()[c]} channel of the input image, pixel values from 0 to 1. `'),
@@ -99,7 +97,7 @@ P = [
 ('`Max pooling 2 × 2 dari conv2 #${c}: ${G().c2} × ${G().c2} menjadi ${G().p2} × ${G().p2} (baris dan kolom terakhir terbuang). Hasil ${G().p2} × ${G().p2} × 64 di-flatten menjadi ${nf(G().flat)} nilai untuk layer dense.`', '`2 × 2 max pooling of conv2 #${c}: ${G().c2} × ${G().c2} becomes ${G().p2} × ${G().p2} (the last row and column are dropped). The ${G().p2} × ${G().p2} × 64 output is flattened into ${nf(G().flat)} values for the dense layer.`'),
 ('<h3>dense + ReLU, 128 unit (${optOf().name})</h3><p>Setiap unit menerima ke-${nf(G().flat)} nilai hasil flatten (${nf(G().flat)} × 128 + 128 = ${nf(G().flat*128+128)} parameter, layer terbesar di CNN ini). Ditampilkan sebagai grid 8 × 16. Dropout 0,3 hanya aktif saat training, jadi tidak terlihat di sini.</p>', '<h3>dense + ReLU, 128 units (${optOf().name})</h3><p>Each unit receives all ${nf(G().flat)} flattened values (${nf(G().flat)} × 128 + 128 = ${nf(G().flat*128+128)} parameters, the largest layer in this CNN). Shown as an 8 × 16 grid. Dropout 0.3 is only active during training, so it does not appear here.</p>'),
 ('</svg><span class="lbl">Alur jaringan</span></a>', '</svg><span class="lbl">Network flow</span></a>'),
-('</svg><span class="lbl">Hasil uji</span></a>', '</svg><span class="lbl">Test results</span></a>'),
+('</svg><span class="lbl">Hasil uji resmi</span></a>', '</svg><span class="lbl">Official test results</span></a>'),
 ('Label asli tidak diketahui</span><strong>Prediksi: ${CLS[top]}</strong><span style="color:var(--muted)">keyakinan ${pct(r.prob[top])}, ${on}', 'True label unknown</span><strong>Prediction: ${CLS[top]}</strong><span style="color:var(--muted)">confidence ${pct(r.prob[top])}, ${on}'),
 ('<strong>Prediksi: ${CLS[top]}</strong><span style="color:var(--muted)">asli ${CLS[S.cur.truth]}, keyakinan ${pct(r.prob[top])}, ${on}', '<strong>Prediction: ${CLS[top]}</strong><span style="color:var(--muted)">true ${CLS[S.cur.truth]}, confidence ${pct(r.prob[top])}, ${on}'),
 ('`Bagaimana ${MODEL()} membaca gambar ${g.H} × ${g.H}`', '`How ${S.model==="mlp"?"an":"a"} ${MODEL()} reads a ${g.H} × ${g.H} image`'),
@@ -133,8 +131,9 @@ P = [
 
 
 def build():
-    ID = ((HERE / "head.html").read_text(encoding="utf-8") + "<style>" + (HERE / "base.css").read_text(encoding="utf-8") + "</style>\n"
-          + (HERE / "body.html").read_text(encoding="utf-8") + "\n<script>\n" + (HERE / "app.js").read_text(encoding="utf-8") + "</script>\n</body>\n</html>\n")
+    src = lambda n: (HERE / n).read_text(encoding="utf-8")
+    ID = (src("head.html") + "<style>" + src("base.css") + src("lab.css") + "</style>\n"
+          + src("body.html") + "\n<script>\n" + src("app.js") + src("lab.js") + "</script>\n</body>\n</html>\n")
     ID = ID.replace("/*L:ID*/", "").replace("/*L:END*/", "") if False else ID
     missing = [old for old, new in P if old not in ID]
     assert not missing, "not found:\n" + "\n".join(m[:90] for m in missing)
@@ -144,6 +143,11 @@ def build():
     keys = lambda js: re.findall(r"^\s*([A-Za-z]\w*):", js, flags=re.M)
     assert keys(ID[start:end]) == keys(en_obj), "strings_en.js keys differ from the L object in app.js"
     EN = ID[:start] + en_obj + ID[end:]
+    # the image lab and live evaluation keep their strings in a second object (lab.js / strings_lab_en.js)
+    start, end = EN.index("/*T:ID*/"), EN.index("/*T:END*/") + len("/*T:END*/")
+    en_lab = (HERE / "strings_lab_en.js").read_text(encoding="utf-8").strip()
+    assert keys(EN[start:end]) == keys(en_lab), "strings_lab_en.js keys differ from the T object in lab.js"
+    EN = EN[:start] + en_lab + EN[end:]
     for old, new in sorted(P, key=lambda p: -len(p[0])):
         EN = EN.replace(old, new)
     # ID page: clearer error for opening as a local file, same as EN
@@ -158,5 +162,38 @@ def build():
     print("built", OUT / "index.html", len(EN), "and", OUT / "index.id.html", len(ID))
 
 
+def offline(datasets):
+    """One self-contained HTML file per language: the page's fetch() calls for data/... are answered from
+    JSON embedded in the page. Nothing about the GitHub Pages build changes."""
+    import json
+    data = OUT / "data"
+    files = {"data/summary.json": (data / "summary.json").read_text(encoding="utf-8")}
+    for ds in datasets:
+        for f in sorted((data / ds).glob("*.json")) + sorted((data / ds / "runs").glob("*.json")):
+            files[f.relative_to(OUT).as_posix()] = f.read_text(encoding="utf-8")
+    blob = json.dumps(files, separators=(",", ":")).replace("</", "<\\/")
+    shim = ('<script id="cnn-offline-data" type="application/json">' + blob + "</script>\n<script>window.CNN_OFFLINE=true;(function(){"
+            "var F=JSON.parse(document.getElementById('cnn-offline-data').textContent),f=window.fetch.bind(window);"
+            "window.fetch=function(u,o){var k=String(u).replace(/^\\.\\//,'');if(Object.prototype.hasOwnProperty.call(F,k))"
+            "return Promise.resolve(new Response(F[k],{status:200,headers:{'Content-Type':'application/json'}}));"
+            "if(k.indexOf('data/')===0)return Promise.resolve(new Response('',{status:404}));return f(u,o);};})();</script>\n")
+    dist = OUT / "dist"
+    dist.mkdir(exist_ok=True)
+    for name, out in (("index.html", "cnn-explorer-offline.html"), ("index.id.html", "cnn-explorer-offline.id.html")):
+        page = (OUT / name).read_text(encoding="utf-8")
+        page = re.sub(r'<link rel="preconnect"[^>]*>\n|<link href="https://fonts.googleapis.com[^>]*>\n', "", page)
+        page = page.replace('href="index.html"', 'href="cnn-explorer-offline.html"').replace('href="index.id.html"', 'href="cnn-explorer-offline.id.html"')
+        i = page.index("\n<script>\n")
+        (dist / out).write_text(page[:i] + "\n" + shim + page[i + 1:], encoding="utf-8", newline="\n")
+        print("offline:", dist / out, f"{(dist / out).stat().st_size / 1e6:.1f} MB", "datasets:", ", ".join(datasets))
+
+
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--offline", action="store_true", help="also write a single-file offline copy to dashboard/dist/")
+    ap.add_argument("--dataset", choices=["all", "fashion", "cifar10"], default="all")
+    a = ap.parse_args()
     build()
+    if a.offline:
+        offline(["cifar10", "fashion"] if a.dataset == "all" else [a.dataset])

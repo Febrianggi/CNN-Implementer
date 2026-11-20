@@ -25,12 +25,16 @@ The layout of the network view is inspired by [CNN Explainer](https://poloclub.g
 
 Everything starts at the top of the page: choose a **dataset** (CIFAR-10 or Fashion-MNIST), then a **model** (MLP, CNN, or EfficientNetV2B0), then an **optimizer**. The large number next to the buttons is that model's test accuracy on all 10,000 test images, with its rank among every trained model. Every section below follows this choice. Only models that have actually been trained are listed.
 
-The page has four sections, reachable from the sidebar. The header keeps two buttons in place: the menu button on the left opens and closes the sidebar, and **Dark mode** on the right switches the theme.
+The page has five sections, reachable from the sidebar. The header keeps two buttons in place: the menu button on the left opens and closes the sidebar, and **Dark mode** on the right switches the theme.
 
 1. **Accuracy.** The ranking lists all 19 trained models of the dataset (8 MLP, 8 CNN, 3 EfficientNetV2B0) on one scale. Click a row to select that model. The note under the ranking says how each model was trained, because EfficientNetV2B0 was fine-tuned on a 3,000-image subset at 96 × 96 while MLP and CNN used the full training set.
-2. **Network flow** runs the selected model in your browser. Pick one of the ten example thumbnails, press **+** to upload a JPG or PNG, or drop an image anywhere on the page. For MLP and CNN, read the flow from left to right: the input channels, then conv1 and conv2 feature maps with max pooling for the CNN (or flatten and two dense layers for the MLP), then the class probabilities. Click any square to enlarge it and see the weights behind it. "Compare all optimizers" shows each optimizer's prediction for the current image. For EfficientNetV2B0 the section shows the predicted class and all 10 probabilities, without feature maps: the model is exported to ONNX and runs with ONNX Runtime Web, and its file (about 12 MB) is downloaded the first time you use it.
-3. **Test results** shows the selected model's predictions on a fixed set of 1,000 test images (100 per class). Filter by match status and true class, and optionally compare with a second model to filter by *Both right*, *Only selected right*, *Only comparison right*, or *Both wrong*. The counts in the summary line always use all 10,000 test images.
+2. **Network flow** starts with one input panel. Choose a source: one of the ten *built-in examples* (test images, used as they are), a *drawing* on a canvas (adjustable brush, undo, clear), or *upload image* (press **+** or drop an image anywhere on the page). An image opened from **Evaluate your own data** also lands here, with its file name, its label, and a *Back to the gallery* button that returns to the same gallery page and filter. For drawings and files the panel shows the original next to the exact model input, so you can see the preprocessing: grayscale and automatic inversion for Fashion-MNIST (light object on a dark background, as in the training data), optional cropping to the object and centering, and resizing. An image that is already 28 × 28 or 32 × 32 keeps its pixels unchanged, the same way the test images are fed. The selected model then runs on that input below the panel. For MLP and CNN, read the flow from left to right: the input channels, the conv1 and conv2 feature maps with max pooling for the CNN (or flatten and two dense layers for the MLP), then the class probabilities. Click any square to enlarge it and see the weights behind it. "Compare all optimizers" shows each optimizer's prediction for the same input, and *Download prediction (.json)* saves the input, the preprocessing, and all probabilities. For EfficientNetV2B0 the section shows the predicted class and all 10 probabilities, without feature maps: the model runs with ONNX Runtime Web, and its file (about 12 MB) is downloaded the first time you use it.
+3. **Official test results** shows the selected model's predictions on a fixed set of 1,000 test images (100 per class). Filter by match status and true class, and optionally compare with a second model to filter by *Both right*, *Only selected right*, *Only comparison right*, or *Both wrong*. The counts in the summary line always use all 10,000 test images.
 4. **Model details** shows the selected model's training curves, per-class accuracy, and confusion matrix, then a summary of every optimizer of that model with its overall rank, the validation curves of those optimizers, and a table comparing MLP, CNN, and EfficientNetV2B0 on both datasets with the selected optimizer. Click a class or an off-diagonal cell to open those images in the gallery.
+
+5. **Evaluate your own data** loads your own labelled images from a ZIP, a folder, or loose files. Labels come from a `labels.csv` (a filename column and a label column with 0 to 9 or a class name) or from folder names such as `0_T_shirt_top/`, `3/`, or `cat/`. An import check reports labelled and unlabelled images, unknown labels, unmatched CSV rows, and skipped files (limits: 3,000 images, 5 MB per image, 100 MB in total). After an import, the number of labelled images and *Run evaluation* sit above the gallery; the comparison model and the preprocessing are under *Advanced options*. *Run evaluation* classifies every labelled image in the browser and reports accuracy, macro precision, macro recall, macro F1, a per-class table, and a confusion matrix, optionally against a second model. The gallery filters by class (and by right or wrong after an evaluation) and pages through the images; *View in Network flow* on an image opens it there with its label. These numbers are always labelled as results on the imported sample, separate from the official 10,000-image benchmark. Per-image predictions and the metrics download as CSV.
+
+Imported files, uploads, and drawings are read in the browser and never uploaded anywhere.
 
 On a wide screen the sidebar is open by default and the content widens when you close it. On a phone it opens as a drawer; close it with ×, Escape, a tap outside it, or by choosing a section. An English/Indonesian switch sits at the bottom of the sidebar.
 
@@ -41,6 +45,10 @@ On a wide screen the sidebar is open by default and the content widens when you 
 | Network flow (MLP) | Test results compared with another model |
 |---|---|
 | ![MLP network flow](docs/screenshots/en/mlp.png) | ![Gallery with a comparison](docs/screenshots/en/gallery.png) |
+
+| Input panel: a drawing, its preprocessing, and the feature maps below | Live evaluation on an imported sample |
+|---|---|
+| ![Input panel and network flow](docs/screenshots/en/lab.png) | ![Live evaluation](docs/screenshots/en/evaluation.png) |
 
 | Model details | Dark mode, phone |
 |---|---|
@@ -121,7 +129,7 @@ Historical sweep setup: seed 42 (identical starting weights), 10 epochs, batch s
 
 The historical sweep below compares optimizers with one seed and no checkpoint selection. The controlled experiments ask the architecture and training-length questions properly: the same split for every model, three paired seeds, checkpoints chosen on validation data, and the test set used only at the end.
 
-**Status.** Everything in this section was trained on a 2-core CPU without a GPU. The MLP and CNN runs are complete (3 seeds, both datasets, both data budgets). EfficientNetV2B0 at the full recipe (224 px, full training split) was **not run**: one fine-tuning epoch takes about an hour on that CPU, and the plan needs up to 71 epochs per dataset and seed. EfficientNet was run instead on a fixed small subset at 96 px: 1 seed on CIFAR-10 and 3 seeds on Fashion-MNIST. The dashboard lists the missing runs as *not trained yet*, and the commands to run them are under [Run it yourself](#rerun-the-controlled-experiments).
+**Status.** Everything in this section was trained on a 2-core CPU without a GPU. The MLP and CNN runs are complete (3 seeds, both datasets, both data budgets). EfficientNetV2B0 at the full recipe (224 px, full training split) was **not run**: one fine-tuning epoch takes about an hour on that CPU, and the plan needs up to 71 epochs per dataset and seed. EfficientNet was run instead on a fixed small subset at 96 px: 1 seed on CIFAR-10 and 3 seeds on Fashion-MNIST. The dashboard shows only the runs that exist; the commands to run them are under [Run it yourself](#rerun-the-controlled-experiments).
 
 ### Protocol
 
@@ -250,7 +258,8 @@ Citations:
 ├── dashboard/
 │   ├── index.html              the dashboard (English), built from dashboard/src
 │   ├── index.id.html           the dashboard (Indonesian), built from dashboard/src
-│   ├── src/                    page sources: head, CSS, markup, app.js, English strings, build.py
+│   ├── src/                    page sources: head, CSS, markup, app.js, lab.js (input panel, import,
+│   │                           evaluation), English strings, build.py (also --offline)
 │   └── data/
 │       ├── summary.json        historical MLP vs CNN accuracy for both datasets
 │       └── <dataset>/          data.json, w-<model>-<optimizer>.json (historical sweep),
@@ -289,6 +298,8 @@ python -m http.server 8000
 Then open http://localhost:8000 (English) or http://localhost:8000/index.id.html (Indonesian).
 
 The two pages are generated. After editing anything in `dashboard/src/`, rebuild them with `python dashboard/src/build.py`; it stops if an English string no longer matches the Indonesian source.
+
+For a copy that opens straight from disk, without a web server or internet, run `python dashboard/src/build.py --offline` (add `--dataset fashion` or `--dataset cifar10` for a smaller file). It writes `dashboard/dist/cnn-explorer-offline.html` and `.id.html` with the data, MLP and CNN weights, and run files embedded (about 41 MB for both datasets, 12.5 MB for Fashion-MNIST alone). EfficientNetV2B0 needs ONNX Runtime Web from a CDN, so the offline copy shows its results but cannot run it. `dashboard/dist/` is ignored by git and is not part of the GitHub Pages site.
 
 ### Publish your own copy with GitHub Pages
 
