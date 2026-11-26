@@ -21,6 +21,17 @@ CNN biasanya dijelaskan dengan diagram kotak dan panah. Halaman ini memperlihatk
 
 Tata letak tampilan jaringannya terinspirasi dari [CNN Explainer](https://poloclub.github.io/cnn-explainer/).
 
+## Ringkasan temuan utama
+
+Dari eksperimen terkontrol (split tetap 90/10, seed berpasangan, checkpoint dipilih dengan macro-F1 validasi; tabel lengkap di bagian [Eksperimen terkontrol](#eksperimen-terkontrol)):
+
+- **Konvolusi paling berpengaruh pada foto berwarna yang lebih sulit:** Pada split latih penuh (3 seed), CNN kecil mengungguli MLP biasa sebesar **20,21 poin persen** di CIFAR-10 (`69,42 ± 1,19%` dibanding `49,21%`) dan **3,23 poin** di Fashion-MNIST (`91,15 ± 0,18%`).
+- **Pretraining memberi lonjakan terbesar di CIFAR-10:** Fine-tuning EfficientNetV2B0 hasil pretraining ImageNet hanya dengan 3.000 citra (96 px, 1 seed) mencapai akurasi uji **90,51%** di CIFAR-10, jauh melampaui CNN kecil yang dilatih pada 45.000 citra.
+- **Pilihan optimizer fine-tuning nyaris tidak mengubah akurasi:** Di CIFAR-10 (1 seed), Adam (`90,51%`), AdamW (`90,51%`), dan Nadam (`89,98%`) hanya terpaut sekitar setengah poin persen.
+- **AdamW identik bit-demi-bit dengan Adam pada konfigurasi ini:** Dengan weight decay `1e-5` pada learning rate yang dipakai, penyusutan per langkah lebih kecil dari presisi float32.
+
+Langsung ke bagian [Menjalankan sendiri](#menjalankan-sendiri) untuk membuka dashboard di lokal (`python -m http.server 8000`) atau melatih ulang model.
+
 ## Cara memakai dashboard
 
 Semuanya dimulai dari bagian atas halaman: pilih **dataset** (CIFAR-10 atau Fashion-MNIST), lalu **model** (MLP, CNN, atau EfficientNetV2B0), lalu **optimizer**. Angka besar di samping tombol adalah akurasi uji model itu pada 10.000 citra uji, beserta peringkatnya di antara semua model yang sudah dilatih. Semua bagian di bawahnya mengikuti pilihan ini. Hanya model yang benar-benar sudah dilatih yang ditampilkan.

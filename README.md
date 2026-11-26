@@ -21,6 +21,17 @@ A CNN is often explained with diagrams of boxes and arrows. This page shows the 
 
 The layout of the network view is inspired by [CNN Explainer](https://poloclub.github.io/cnn-explainer/).
 
+## Key findings at a glance
+
+From the controlled experiments (fixed 90/10 split, paired seeds, validation macro-F1 checkpointing; full tables under [Controlled experiments](#controlled-experiments)):
+
+- **Convolution matters most on harder color images:** On the full training split (3 seeds), the small CNN beats the plain MLP by **20.21 percentage points** on CIFAR-10 (`69.42 ± 1.19%` vs `49.21%`) and by **3.23 points** on Fashion-MNIST (`91.15 ± 0.18%`).
+- **Pretraining gives the largest jump on CIFAR-10:** Fine-tuning an ImageNet-pretrained EfficientNetV2B0 on just 3,000 images (96 px, 1 seed) reaches **90.51%** test accuracy on CIFAR-10, far ahead of the small CNN trained on 45,000 images.
+- **Fine-tuning optimizer choice barely moves accuracy:** On CIFAR-10 (1 seed), Adam (`90.51%`), AdamW (`90.51%`), and Nadam (`89.98%`) finish within roughly half a percentage point of each other.
+- **AdamW matches Adam bit-for-bit in this setup:** With `1e-5` weight decay at this learning rate, the per-step decay falls below float32 precision.
+
+Jump straight to [Run it yourself](#run-it-yourself) to open the dashboard locally (`python -m http.server 8000`) or rerun training.
+
 ## How to use the dashboard
 
 Everything starts at the top of the page: choose a **dataset** (CIFAR-10 or Fashion-MNIST), then a **model** (MLP, CNN, or EfficientNetV2B0), then an **optimizer**. The large number next to the buttons is that model's test accuracy on all 10,000 test images, with its rank among every trained model. Every section below follows this choice. Only models that have actually been trained are listed.
